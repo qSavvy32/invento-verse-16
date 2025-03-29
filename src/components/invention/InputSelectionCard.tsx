@@ -88,7 +88,8 @@ export const InputSelectionCard = ({
             initial={{ 
               opacity: 0, 
               scale: 0.95, 
-              top: cardPosition.top, 
+              position: "fixed",
+              top: cardPosition.top,
               left: cardPosition.left,
               width: cardPosition.width,
               height: cardPosition.height,
@@ -96,25 +97,31 @@ export const InputSelectionCard = ({
             animate={{ 
               opacity: 1, 
               scale: 1,
-              top: Math.max(window.innerHeight * 0.125, cardPosition.top - 100),
-              left: Math.max(window.innerWidth * 0.125, cardPosition.left - 150),
-              width: "75%",
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              width: "75vw",
               height: "auto",
+              y: "-50%",
+              x: "-50%",
+              maxWidth: "1200px"
             }}
             exit={{ 
               opacity: 0, 
               scale: 0.95,
+              position: "fixed",
               top: cardPosition.top,
               left: cardPosition.left,
               width: cardPosition.width,
               height: cardPosition.height,
+              y: 0,
+              x: 0
             }}
             transition={{ 
               duration: 0.5, 
-              ease: [0.19, 1, 0.22, 1],
-              scale: { duration: 0.4 }
+              ease: [0.19, 1, 0.22, 1]
             }}
-            className="absolute bg-background border rounded-lg p-6 shadow-lg z-50"
+            className="bg-background border rounded-lg p-6 shadow-lg z-50"
             style={{ 
               maxHeight: "75vh",
               overflow: "auto"
@@ -142,7 +149,7 @@ export const InputSelectionCard = ({
       
       {isActive && (
         <div 
-          className="fixed inset-0 bg-black/30 z-40" 
+          className="fixed inset-0 bg-black/50 z-40" 
           onClick={() => setIsActive(false)}
         />
       )}
