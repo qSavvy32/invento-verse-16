@@ -141,7 +141,7 @@ Generate the JSON structure based on the multimodal input provided in the user's
         "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify({
-        model: "claude-3-sonnet-20240229",
+        model: "claude-3-7-sonnet-20250219",
         max_tokens: 4096,
         temperature: 0.5,
         system: system_prompt,
