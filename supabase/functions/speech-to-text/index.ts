@@ -29,6 +29,7 @@ serve(async (req) => {
 
     // Check if ElevenLabs API key is set
     if (!ELEVENLABS_API_KEY) {
+      console.error("ElevenLabs API key is not configured");
       throw new Error("ElevenLabs API key is not configured");
     }
 
@@ -56,7 +57,8 @@ serve(async (req) => {
     
     formData.append("diarize", "true");
 
-    // Call ElevenLabs API
+    // Call ElevenLabs API with proper debugging
+    console.log("Sending request to ElevenLabs API...");
     const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
       method: "POST",
       headers: {

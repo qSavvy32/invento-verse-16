@@ -6,11 +6,13 @@ const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
 const SENTRY_API_KEY = Deno.env.get("SENTRY_API_KEY");
 
 // Initialize Sentry
-Sentry.init({
-  dsn: SENTRY_API_KEY,
-  environment: "production",
-  release: "text-to-speech@1.0.0",
-});
+if (SENTRY_API_KEY) {
+  Sentry.init({
+    dsn: SENTRY_API_KEY,
+    environment: "production",
+    release: "text-to-speech@1.0.0",
+  });
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +46,12 @@ serve(async (req) => {
       );
     }
 
+    // Check if ElevenLabs API key is set
+    if (!ELEVENLABS_API_KEY) {
+      console.error("ElevenLabs API key is not configured");
+      throw new Error("ElevenLabs API key is not configured");
+    }
+
     console.log(`Converting text to speech with ElevenLabs API, language: ${language || 'default'}`);
 
     // Configure request parameters
@@ -66,11 +74,12 @@ serve(async (req) => {
     }
 
     // Call ElevenLabs API
+    console.log("Sending request to ElevenLabs API...");
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "xi-api-key": ELEVENLABS_API_KEY as string,
+        "xi-api-key": ELEVENLABS_API_KEY,
         "Accept": "audio/mpeg",
       },
       body: JSON.stringify(requestParams),
@@ -100,7 +109,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Error in text-to-speech function:", error);
-    Sentry.captureException(error);
+    if (SENTRY_API_KEY) {
+      Sentry.captureException(error);
+    }
     
     return new Response(
       JSON.stringify({ error: error.message || "An unexpected error occurred" }),
