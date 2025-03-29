@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { fabric } from "fabric";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Pen, Eraser, UndoIcon, RedoIcon, Download, FileUp, Trash2 } from "lucide-react";
+import { Pen, Eraser, UndoIcon, RedoIcon, Download, FileUp, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 
 interface SketchCanvasProps {
@@ -19,6 +19,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
 
   // Initialize canvas
   useEffect(() => {
@@ -79,11 +80,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
       
       setHistory(prev => [...prev, currentState]);
       setHistoryIndex(prev => prev + 1);
-      
-      // Important: Save the sketch when a path is created
-      if (onSketchSave) {
-        onSketchSave(currentState);
-      }
+      setUnsavedChanges(true);
     };
     
     canvas.on("path:created", handlePathCreated);
@@ -91,7 +88,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     return () => {
       canvas.off("path:created", handlePathCreated);
     };
-  }, [canvas, history, historyIndex, onSketchSave]);
+  }, [canvas, history, historyIndex]);
   
   // Toggle between pen and eraser
   const toggleDrawingMode = (mode: "pen" | "eraser") => {
@@ -116,6 +113,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     const newIndex = historyIndex - 1;
     setHistoryIndex(newIndex);
     loadCanvasState(history[newIndex]);
+    setUnsavedChanges(true);
   };
   
   const redo = () => {
@@ -124,6 +122,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     const newIndex = historyIndex + 1;
     setHistoryIndex(newIndex);
     loadCanvasState(history[newIndex]);
+    setUnsavedChanges(true);
   };
   
   const loadCanvasState = (state: string) => {
@@ -135,11 +134,6 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
         scaleX: canvas.width! / img.width!,
         scaleY: canvas.height! / img.height!,
       });
-      
-      // Important: Save the sketch when state is loaded
-      if (onSketchSave) {
-        onSketchSave(state);
-      }
     });
   };
   
@@ -154,16 +148,12 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     const clearedState = canvas.toDataURL();
     setHistory(prev => [...prev, clearedState]);
     setHistoryIndex(prev => prev + 1);
-    
-    // Important: Save the cleared state
-    if (onSketchSave) {
-      onSketchSave(clearedState);
-    }
+    setUnsavedChanges(true);
     
     toast.success("Canvas cleared");
   };
   
-  // Save sketch
+  // Save sketch explicitly
   const saveSketch = () => {
     if (!canvas) return;
     
@@ -175,6 +165,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     if (onSketchSave) {
       onSketchSave(dataUrl);
       toast.success("Sketch saved!");
+      setUnsavedChanges(false);
     } else {
       // Download if no save handler provided
       const link = document.createElement('a');
@@ -182,6 +173,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
       link.href = dataUrl;
       link.click();
       toast.success("Sketch downloaded!");
+      setUnsavedChanges(false);
     }
   };
   
@@ -220,11 +212,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
           const newState = canvas.toDataURL();
           setHistory(prev => [...prev, newState]);
           setHistoryIndex(prev => prev + 1);
-          
-          // Important: Save the state with the loaded image
-          if (onSketchSave) {
-            onSketchSave(newState);
-          }
+          setUnsavedChanges(true);
           
           toast.success("Image loaded");
         });
@@ -288,10 +276,30 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
           <FileUp size={20} />
         </Button>
         <Button
-          variant="outline"
+          variant={unsavedChanges ? "default" : "outline"}
           size="icon"
           onClick={saveSketch}
           title="Save Sketch"
+        >
+          <Save size={20} />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            const dataUrl = canvas?.toDataURL({
+              format: 'png',
+              quality: 1
+            });
+            if (dataUrl) {
+              const link = document.createElement('a');
+              link.download = 'invention-sketch.png';
+              link.href = dataUrl;
+              link.click();
+              toast.success("Sketch downloaded!");
+            }
+          }}
+          title="Download Sketch"
         >
           <Download size={20} />
         </Button>
@@ -312,10 +320,28 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
         <canvas ref={canvasRef} className="sketch-canvas" />
       </div>
       
-      {isDrawing && (
-        <div className="text-xs text-muted-foreground text-center">
-          Drawing in progress...
-        </div>
+      <div className="flex items-center justify-between">
+        {isDrawing && (
+          <div className="text-xs text-muted-foreground">
+            Drawing in progress...
+          </div>
+        )}
+        {unsavedChanges && (
+          <div className="text-xs text-amber-500 ml-auto">
+            Unsaved changes
+          </div>
+        )}
+      </div>
+      
+      {unsavedChanges && (
+        <Button 
+          className="w-full" 
+          variant="default" 
+          onClick={saveSketch}
+        >
+          <Save size={16} className="mr-2" />
+          Save Changes
+        </Button>
       )}
     </div>
   );
