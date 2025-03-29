@@ -97,7 +97,7 @@ export const generate3DImage = async (request: VisualizationRequest) => {
   } catch (error) {
     console.error("Error generating 3D image:", error);
     
-    // If HuggingFace fails, try using OpenAI DALL-E as fallback
+    // If primary service fails, try using OpenAI DALL-E as fallback
     toast.info("Primary image service unavailable, trying fallback service...");
     
     try {
@@ -152,6 +152,12 @@ export const generateRealistic3DImage = async (request: VisualizationRequest) =>
       throw new Error(error.message);
     }
 
+    // Check if this is a fallback image from DALL-E
+    const isFallback = data.fallback === "openai";
+    if (isFallback) {
+      toast.success("Image generated using fallback service (DALL-E)");
+    }
+
     return {
       dataUrl: data.image_url,
       storageUrl: data.storage_url || null,
@@ -160,7 +166,7 @@ export const generateRealistic3DImage = async (request: VisualizationRequest) =>
   } catch (error) {
     console.error("Error generating realistic 3D image:", error);
     
-    // If HuggingFace fails, try using OpenAI DALL-E as fallback
+    // If primary service fails, try using OpenAI DALL-E as fallback
     toast.info("Primary image service unavailable, trying fallback service...");
     
     try {
@@ -237,6 +243,12 @@ export const generateCustomMarketingImage = async (request: VisualizationRequest
       throw new Error(error.message);
     }
 
+    // Check if this is a fallback image from DALL-E
+    const isFallback = data.fallback === "openai";
+    if (isFallback) {
+      toast.success("Image generated using fallback service (DALL-E)");
+    }
+
     return {
       dataUrl: data.image_url,
       storageUrl: data.storage_url || null,
@@ -245,7 +257,7 @@ export const generateCustomMarketingImage = async (request: VisualizationRequest
   } catch (error) {
     console.error("Error generating custom marketing image:", error);
     
-    // If HuggingFace fails, try using OpenAI DALL-E as fallback
+    // If primary service fails, try using OpenAI DALL-E as fallback
     toast.info("Primary image service unavailable, trying fallback service...");
     
     try {
