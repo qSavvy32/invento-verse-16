@@ -12,7 +12,7 @@ import {
   Box,
   Zap,
   BarChart4,
-  Camera3
+  Camera
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -229,7 +229,7 @@ export const VisualizationTools = () => {
               {isLoading.realistic3d ? (
                 <Loader2 className="h-5 w-5 animate-spin mb-1" />
               ) : (
-                <Camera3 className="h-5 w-5 mb-1" />
+                <Camera className="h-5 w-5 mb-1" />
               )}
               <span className="text-sm">Realistic 3D Image</span>
             </Button>
