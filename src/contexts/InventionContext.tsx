@@ -74,7 +74,7 @@ interface InventionContextType {
   removeAsset: (assetId: string) => void;
   update3DVisualization: (dataUrl: string | null) => void;
   updateVisualizations: (prompts: VisualizationPrompts) => void;
-  saveToDatabase: (showToast?: boolean) => Promise<string | null>;
+  saveToDatabase: (showToast?: boolean) => Promise<void>;
   loadInvention: (id: string) => Promise<boolean>;
   setThreejsVisualization: (code: string | null, html: string | null) => void;
   setBusinessStrategySvg: (svgData: string | null) => void;
@@ -181,7 +181,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
   const update3DVisualization = (dataUrl: string | null) => dispatch({ type: 'UPDATE_3D_VISUALIZATION', payload: dataUrl });
   const updateVisualizations = (prompts: VisualizationPrompts) => dispatch({ type: 'UPDATE_VISUALIZATIONS', payload: prompts });
   
-  const saveToDatabase = useCallback(async (showToast: boolean = false): Promise<string | null> => {
+  const saveToDatabase = useCallback(async (showToast: boolean = false): Promise<void> => {
     try {
       if (showToast) {
         toast.loading("Saving your invention...");
@@ -212,7 +212,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         });
       }
       
-      return null;
+      throw error; // Re-throw the error to allow handling by caller
     }
   }, [state]);
   

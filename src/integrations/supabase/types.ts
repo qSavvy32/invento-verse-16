@@ -9,7 +9,150 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      analysis_results: {
+        Row: {
+          analysis_type: string
+          created_at: string
+          id: string
+          invention_id: string
+          result: string
+        }
+        Insert: {
+          analysis_type: string
+          created_at?: string
+          id?: string
+          invention_id: string
+          result: string
+        }
+        Update: {
+          analysis_type?: string
+          created_at?: string
+          id?: string
+          invention_id?: string
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_results_invention_id_fkey"
+            columns: ["invention_id"]
+            isOneToOne: false
+            referencedRelation: "inventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_transcriptions: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          id: string
+          invention_id: string
+          language: string
+          text: string
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          id?: string
+          invention_id: string
+          language?: string
+          text: string
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          id?: string
+          invention_id?: string
+          language?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_transcriptions_invention_id_fkey"
+            columns: ["invention_id"]
+            isOneToOne: false
+            referencedRelation: "inventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invention_assets: {
+        Row: {
+          created_at: string
+          id: string
+          invention_id: string
+          name: string | null
+          thumbnail_url: string | null
+          type: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invention_id: string
+          name?: string | null
+          thumbnail_url?: string | null
+          type: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invention_id?: string
+          name?: string | null
+          thumbnail_url?: string | null
+          type?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invention_assets_invention_id_fkey"
+            columns: ["invention_id"]
+            isOneToOne: false
+            referencedRelation: "inventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventions: {
+        Row: {
+          business_strategy_svg: string | null
+          created_at: string
+          description: string | null
+          id: string
+          sketch_data_url: string | null
+          threejs_html: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          visualization_3d_url: string | null
+        }
+        Insert: {
+          business_strategy_svg?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          sketch_data_url?: string | null
+          threejs_html?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          visualization_3d_url?: string | null
+        }
+        Update: {
+          business_strategy_svg?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          sketch_data_url?: string | null
+          threejs_html?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visualization_3d_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

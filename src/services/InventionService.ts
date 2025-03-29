@@ -6,7 +6,6 @@ import {
   AudioTranscription 
 } from "@/contexts/InventionContext";
 import { toast } from "sonner";
-import { DatabaseWithTables } from "@/integrations/supabase/schema";
 
 export interface SavedInvention {
   id: string;
@@ -17,9 +16,6 @@ export interface SavedInvention {
   assets: InventionAsset[];
   transcriptions: AudioTranscription[];
 }
-
-// Create a typed supabase client
-const typedSupabase = supabase as unknown as ReturnType<typeof supabase<DatabaseWithTables>>;
 
 export const InventionService = {
   // Save an invention and all related data to Supabase
@@ -128,7 +124,7 @@ export const InventionService = {
         state.analysisResults.technical.forEach(result => {
           analysisToInsert.push({
             invention_id: inventionId,
-            analysis_type: 'technical' as const,
+            analysis_type: 'technical',
             result
           });
         });
@@ -139,7 +135,7 @@ export const InventionService = {
         state.analysisResults.market.forEach(result => {
           analysisToInsert.push({
             invention_id: inventionId,
-            analysis_type: 'market' as const,
+            analysis_type: 'market',
             result
           });
         });
@@ -150,7 +146,7 @@ export const InventionService = {
         state.analysisResults.legal.forEach(result => {
           analysisToInsert.push({
             invention_id: inventionId,
-            analysis_type: 'legal' as const,
+            analysis_type: 'legal',
             result
           });
         });
@@ -161,7 +157,7 @@ export const InventionService = {
         state.analysisResults.business.forEach(result => {
           analysisToInsert.push({
             invention_id: inventionId,
-            analysis_type: 'business' as const,
+            analysis_type: 'business',
             result
           });
         });

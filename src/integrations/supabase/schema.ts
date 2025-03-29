@@ -1,5 +1,7 @@
 
-// Extend the Database type to include our custom tables
+import type { Database } from './types';
+
+// Define our custom tables to extend the Database type
 export interface InventionTables {
   inventions: {
     id: string;
@@ -39,9 +41,5 @@ export interface InventionTables {
   };
 }
 
-// Update the client.ts file to include our custom Database interface
-export type DatabaseWithTables = {
-  public: {
-    Tables: InventionTables;
-  };
-};
+// Use public table definitions from Database type
+export type DatabaseWithTables = Database;
