@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, Video, ImageIcon, SwitchCamera, X, Circle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CameraInputProps {
   onCapture: (imageData: string) => void;
@@ -65,13 +66,17 @@ export const CameraInput = ({ onCapture }: CameraInputProps) => {
 
   const toggleCamera = () => {
     setIsActive(prev => !prev);
+    // If we're toggling the camera on and we already have a captured image, clear it
+    if (capturedImage) {
+      setCapturedImage(null);
+    }
   };
 
   const switchCamera = () => {
     setIsFrontCamera(prev => !prev);
   };
 
-  const captureImage = () => {
+  const captureImage = async () => {
     if (!videoRef.current) return;
     
     const canvas = document.createElement("canvas");
@@ -83,15 +88,64 @@ export const CameraInput = ({ onCapture }: CameraInputProps) => {
     
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
     
-    const imageData = canvas.toDataURL("image/png");
-    setCapturedImage(imageData);
-    onCapture(imageData);
+    // Get the image data as a Blob
+    const imageBlob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          toast.error("Failed to capture image");
+        }
+      }, "image/jpeg", 0.95);
+    });
+
+    if (!imageBlob) return;
     
-    // Stop the camera after capturing
-    stopCamera();
-    setIsActive(false);
-    
-    toast.success("Image captured!");
+    // Upload to Supabase Storage
+    try {
+      const fileName = `invention-sketch-${Date.now()}.jpg`;
+      const { data, error } = await supabase.storage
+        .from('invention-assets')
+        .upload(`sketches/${fileName}`, imageBlob, {
+          contentType: 'image/jpeg',
+          cacheControl: '3600',
+        });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Get the public URL for the image
+      const { data: publicUrlData } = supabase.storage
+        .from('invention-assets')
+        .getPublicUrl(`sketches/${fileName}`);
+      
+      const imageUrl = publicUrlData.publicUrl;
+      
+      // Also set the data URL for preview
+      const imageDataUrl = canvas.toDataURL("image/jpeg");
+      setCapturedImage(imageDataUrl);
+      
+      // Send back the public URL to be used with Anthropic
+      onCapture(imageUrl);
+      
+      // Stop the camera after capturing
+      stopCamera();
+      setIsActive(false);
+      
+      toast.success("Image captured and uploaded!");
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      // Fallback to using data URL if upload fails
+      const imageDataUrl = canvas.toDataURL("image/jpeg");
+      setCapturedImage(imageDataUrl);
+      onCapture(imageDataUrl);
+      
+      stopCamera();
+      setIsActive(false);
+      
+      toast.warning("Image captured locally (upload failed)");
+    }
   };
 
   const clearImage = () => {

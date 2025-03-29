@@ -60,8 +60,35 @@ serve(async (req) => {
     
     // If there's a sketch, add it as an image
     if (sketchDataUrl) {
-      // Handle base64 data URLs correctly
-      if (sketchDataUrl.startsWith('data:')) {
+      // If it's a URL to an image in Supabase Storage
+      if (sketchDataUrl.startsWith('http')) {
+        try {
+          // Fetch the image and convert to base64
+          const response = await fetch(sketchDataUrl);
+          const imageBlob = await response.blob();
+          
+          // Convert blob to base64
+          const arrayBuffer = await imageBlob.arrayBuffer();
+          const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          
+          // Determine media type
+          const mediaType = response.headers.get('content-type') || 'image/jpeg';
+          
+          contentItems.push({
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: mediaType,
+              data: base64Data
+            }
+          });
+        } catch (error) {
+          console.error("Error fetching image from URL:", error);
+          // Continue without the image
+        }
+      } 
+      // Handle base64 data URLs
+      else if (sketchDataUrl.startsWith('data:')) {
         const [mediaTypeWithEncoding, base64Data] = sketchDataUrl.split(',');
         const mediaType = mediaTypeWithEncoding.split(':')[1].split(';')[0];
         
@@ -73,24 +100,24 @@ serve(async (req) => {
             data: base64Data
           }
         });
-        
-        // Add instructions for the image
-        contentItems.push({
-          type: "text",
-          text: "Above is a visual representation of the invention idea. Please analyze it alongside the textual description."
-        });
       }
+      
+      // Add instructions for the image
+      contentItems.push({
+        type: "text",
+        text: "Above is a visual representation of the invention idea. Please analyze it alongside the textual description."
+      });
     }
 
     console.log(`Sending request to Anthropic API for ${analysisType || "comprehensive"} analysis...`);
 
-    // Make request to Anthropic API
+    // Make request to Anthropic API with a larger max_tokens
     const systemPrompt = getSystemPrompt(analysisType);
     
     const response = await anthropic.messages.create({
       model: "claude-3-haiku-20240307",
       system: systemPrompt,
-      max_tokens: 2000,
+      max_tokens: 4000, // Increased to allow for more detailed responses
       messages: [
         { 
           role: "user", 
@@ -136,7 +163,7 @@ function getAnalysisTypeInstructions(analysisType: string): string {
     case "challenges":
       return "\n\nFocus on potential obstacles, risks, and challenges that might impact development or adoption.";
     default:
-      return "\n\nProvide a comprehensive analysis covering technical, market, legal, and business aspects.";
+      return "\n\nProvide a comprehensive analysis covering technical, market, legal, and business aspects. Be thorough and detailed in your analysis.";
   }
 }
 
@@ -157,7 +184,7 @@ function getSystemPrompt(analysisType: string): string {
     case "challenges":
       return basePrompt + "Focus on identifying obstacles, risks, and potential failure points.";
     default:
-      return basePrompt + "Provide a comprehensive analysis with actionable insights for the invention idea.";
+      return basePrompt + "Provide a comprehensive analysis with actionable insights for the invention idea. Be thorough and detailed, as the inventor will use your analysis to improve their invention.";
   }
 }
 

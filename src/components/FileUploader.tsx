@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, X, FileText, ImageIcon, FileIcon } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FileUploaderProps {
   onFileUpload: (dataUrl: string) => void;
@@ -13,7 +14,7 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
   const [preview, setPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
       return;
     }
@@ -35,77 +36,71 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
       return;
     }
     
-    // Check file size (max 20MB)
-    if (selectedFile.size > 20 * 1024 * 1024) {
-      toast.error("File size must be less than 20MB");
+    // Check file size (max 50MB to accommodate Anthropic's limits)
+    if (selectedFile.size > 50 * 1024 * 1024) {
+      toast.error("File size must be less than 50MB");
       return;
     }
     
     setFile(selectedFile);
-    
-    // Create a preview for images and set file data for other types
-    if (selectedFile.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          const dataUrl = event.target.result as string;
-          setPreview(dataUrl);
-          onFileUpload(dataUrl);
-        }
-      };
-      reader.readAsDataURL(selectedFile);
-    } else {
-      // For non-image files, we'll show an icon but still process the file
-      setPreview(null);
-      
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          const dataUrl = event.target.result as string;
-          onFileUpload(dataUrl);
-        }
-      };
-      reader.readAsDataURL(selectedFile);
-    }
-  };
-
-  const handleAnalyzeVision = async () => {
-    if (!file) return;
-    
     setIsLoading(true);
     
     try {
-      // Convert file to base64 for sending to the edge function
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const base64 = reader.result?.toString().split(',')[1];
-        
-        const response = await fetch('/api/analyze-vision', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            image: base64,
-            prompt: "Analyze this content carefully. If it's an image, describe what you see. If it's a document, summarize the key information. Identify key components, potential functionality, and any notable elements."
-          }),
+      // Create a preview for images
+      if (selectedFile.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            const dataUrl = event.target.result as string;
+            setPreview(dataUrl);
+          }
+        };
+        reader.readAsDataURL(selectedFile);
+      } else {
+        // For non-image files, we'll show an icon
+        setPreview(null);
+      }
+      
+      // Upload the file to Supabase Storage
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `invention-asset-${Date.now()}.${fileExt}`;
+      const folderPath = selectedFile.type.startsWith('image/') ? 'images' : 'documents';
+      
+      const { data, error } = await supabase.storage
+        .from('invention-assets')
+        .upload(`${folderPath}/${fileName}`, selectedFile, {
+          cacheControl: '3600',
         });
-        
-        if (!response.ok) {
-          throw new Error('Failed to analyze file');
-        }
-        
-        const data = await response.json();
-        
-        toast.success("Analysis complete");
-        console.log("Analysis results:", data);
-        
-        setIsLoading(false);
-      };
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Get the public URL for the file
+      const { data: publicUrlData } = supabase.storage
+        .from('invention-assets')
+        .getPublicUrl(`${folderPath}/${fileName}`);
+      
+      const fileUrl = publicUrlData.publicUrl;
+      
+      // Send back the public URL to be used with Anthropic
+      onFileUpload(fileUrl);
+      
+      toast.success("File uploaded successfully!");
     } catch (error) {
-      console.error("Error analyzing file:", error);
-      toast.error("Failed to analyze file");
+      console.error("Error uploading file:", error);
+      toast.error("Failed to upload file. Falling back to local processing.");
+      
+      // Fallback to using data URL if upload fails
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const dataUrl = event.target.result as string;
+          onFileUpload(dataUrl);
+        }
+      };
+      reader.readAsDataURL(selectedFile);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -138,9 +133,9 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
           </p>
           <div className="flex gap-2">
             <div className="relative">
-              <Button>
+              <Button disabled={isLoading}>
                 <Upload className="mr-2 h-4 w-4" />
-                Choose File
+                {isLoading ? "Uploading..." : "Choose File"}
               </Button>
               <input
                 id="file-upload"
@@ -148,11 +143,12 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
                 className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={handleFileChange}
                 accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                disabled={isLoading}
               />
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Supported formats: Images, PDF, Word, Excel, CSV, TXT (max 20MB)
+            Supported formats: Images, PDF, Word, Excel, CSV, TXT (max 50MB)
           </p>
         </div>
       ) : (
@@ -200,9 +196,9 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
           
           <div className="flex gap-2">
             <div className="relative">
-              <Button>
+              <Button disabled={isLoading}>
                 <Upload className="mr-2 h-4 w-4" />
-                Replace File
+                {isLoading ? "Uploading..." : "Replace File"}
               </Button>
               <input
                 id="file-upload-replace"
@@ -210,6 +206,7 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
                 className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={handleFileChange}
                 accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
+                disabled={isLoading}
               />
             </div>
           </div>
