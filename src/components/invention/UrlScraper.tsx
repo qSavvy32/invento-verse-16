@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useInvention } from "@/contexts/InventionContext";
 import { FirecrawlService } from "@/services/FirecrawlService";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,47 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
 
+// Local storage key for saving URL input state
+const URL_INPUT_STORAGE_KEY = 'invention_url_scraper_input';
+
 export const UrlScraper = ({ onAddAsset }: { onAddAsset?: (asset: any) => void }) => {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { updateDescription } = useInvention();
+  
+  // Load saved URL from storage on component mount
+  useEffect(() => {
+    const savedUrl = localStorage.getItem(URL_INPUT_STORAGE_KEY);
+    if (savedUrl) {
+      setUrl(savedUrl);
+      // Clear storage after restoring
+      localStorage.removeItem(URL_INPUT_STORAGE_KEY);
+    }
+  }, []);
+  
+  // Save URL to local storage when it changes
+  useEffect(() => {
+    if (url) {
+      localStorage.setItem(URL_INPUT_STORAGE_KEY, url);
+    }
+  }, [url]);
+  
+  // Save URL to storage when window is about to unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (url) {
+        localStorage.setItem(URL_INPUT_STORAGE_KEY, url);
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('visibilitychange', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('visibilitychange', handleBeforeUnload);
+    };
+  }, [url]);
   
   const handleScrape = async () => {
     if (!url.trim()) {
@@ -65,8 +102,9 @@ export const UrlScraper = ({ onAddAsset }: { onAddAsset?: (asset: any) => void }
         description: "URL scraped and added to your invention"
       });
       
-      // Reset URL input
+      // Clear URL input and storage after successful scrape
       setUrl("");
+      localStorage.removeItem(URL_INPUT_STORAGE_KEY);
       
     } catch (error) {
       console.error("Error scraping URL:", error);

@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,9 @@ interface UseVoiceRecorderProps {
   onTranscriptionComplete: (text: string) => void;
 }
 
+// Save current transcription in session storage to prevent data loss on tab switch
+const TRANSCRIPTION_STORAGE_KEY = 'voice_transcription_pending';
+
 export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -17,6 +20,48 @@ export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderPr
   const audioChunksRef = useRef<Blob[]>([]);
   const { user } = useAuth();
   const { addAudioTranscription } = useInvention();
+  
+  // Check for pending transcriptions from session storage on mount
+  useEffect(() => {
+    const pendingTranscription = sessionStorage.getItem(TRANSCRIPTION_STORAGE_KEY);
+    if (pendingTranscription) {
+      try {
+        const storedData = JSON.parse(pendingTranscription);
+        if (storedData.text) {
+          console.log("Restoring pending transcription from session storage");
+          onTranscriptionComplete(storedData.text);
+          
+          // Add to context if user is authenticated
+          if (user && storedData.language) {
+            addAudioTranscription({
+              language: storedData.language,
+              text: storedData.text,
+              timestamp: storedData.timestamp || Date.now()
+            });
+          }
+          
+          // Clear stored transcription after restoring
+          sessionStorage.removeItem(TRANSCRIPTION_STORAGE_KEY);
+        }
+      } catch (e) {
+        console.error("Error parsing stored transcription:", e);
+        sessionStorage.removeItem(TRANSCRIPTION_STORAGE_KEY);
+      }
+    }
+  }, [user]);
+  
+  // Save the transcription locally before processing
+  const savePendingTranscription = (text: string) => {
+    try {
+      sessionStorage.setItem(TRANSCRIPTION_STORAGE_KEY, JSON.stringify({ 
+        text, 
+        language, 
+        timestamp: Date.now() 
+      }));
+    } catch (e) {
+      console.error("Error saving pending transcription:", e);
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -64,20 +109,28 @@ export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderPr
       const fileName = `audio_${user.id}_${timestamp}.webm`;
       const filePath = `audio/${fileName}`;
       
-      const { error: uploadError } = await supabase.storage
+      // Added error logging
+      console.log("Attempting to upload audio to Supabase storage");
+      
+      const { data, error: uploadError } = await supabase.storage
         .from('invention-assets')
-        .upload(filePath, audioBlob);
+        .upload(filePath, audioBlob, {
+          cacheControl: '3600',
+          upsert: false
+        });
         
       if (uploadError) {
         console.error("Error uploading audio:", uploadError);
         return null;
       }
       
-      const { data } = supabase.storage
+      console.log("Audio successfully uploaded", data);
+      
+      const { data: urlData } = supabase.storage
         .from('invention-assets')
         .getPublicUrl(filePath);
         
-      return data.publicUrl;
+      return urlData.publicUrl;
     } catch (error) {
       console.error("Error saving audio:", error);
       return null;
@@ -134,8 +187,14 @@ export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderPr
             return;
           }
           
+          // Temporarily save transcription before processing to prevent loss on tab switch
+          savePendingTranscription(elevenLabsData.text);
+          
           setIsProcessing(false);
           onTranscriptionComplete(elevenLabsData.text);
+          
+          // Clear saved transcription after successful processing
+          sessionStorage.removeItem(TRANSCRIPTION_STORAGE_KEY);
           
           // Add transcription to context
           addAudioTranscription({
@@ -179,7 +238,13 @@ export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderPr
       }
       
       if (data?.text) {
+        // Temporarily save transcription before processing to prevent loss on tab switch
+        savePendingTranscription(data.text);
+        
         onTranscriptionComplete(data.text);
+        
+        // Clear saved transcription after successful processing
+        sessionStorage.removeItem(TRANSCRIPTION_STORAGE_KEY);
         
         // Add transcription to context (without audio URL since not authenticated)
         addAudioTranscription({

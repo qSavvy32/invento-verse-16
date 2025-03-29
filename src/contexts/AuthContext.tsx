@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
@@ -20,39 +20,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const initialized = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Initial session check
-    if (!initialized) {
-      const initAuth = async () => {
-        try {
-          // Get current session
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
-          
-          // Update state with current session data
+    // Skip re-initialization if already done
+    if (initialized.current) return;
+    
+    const initAuth = async () => {
+      try {
+        console.log("Initializing auth session...");
+        // Get current session
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (currentSession) {
+          console.log("Found existing session, user ID:", currentSession.user?.id);
+        } else {
+          console.log("No existing session found");
+        }
+        
+        // Only update state if needed
+        if (JSON.stringify(currentSession) !== JSON.stringify(session)) {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
-        } catch (error) {
-          console.error("Error initializing auth:", error);
-        } finally {
-          setLoading(false);
-          setInitialized(true);
         }
-      };
-      
-      initAuth();
-    }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+      } finally {
+        setLoading(false);
+        initialized.current = true;
+      }
+    };
     
-    // Set up auth state listener after initial load
+    initAuth();
+    
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        // Only update if there's an actual change to avoid unnecessary rerenders
+        console.log("Auth state change event:", event);
+        
+        // Avoid unnecessary state updates
         const sessionChanged = JSON.stringify(newSession) !== JSON.stringify(session);
         const userChanged = newSession?.user?.id !== user?.id;
         
         if (sessionChanged || userChanged) {
+          console.log("Updating session state due to auth change");
           setSession(newSession);
           setUser(newSession?.user ?? null);
           
@@ -69,11 +81,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               description: "You have been signed out.",
             });
           }
+        } else {
+          console.log("Skipping redundant session update");
         }
       }
     );
 
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, [session, user]);
