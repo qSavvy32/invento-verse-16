@@ -14,7 +14,7 @@ const FEATURED_INVENTIONS = [
     likes: 142,
     views: 845,
     tags: ["Sustainable", "Packaging", "Food Tech"],
-    image: "https://images.unsplash.com/photo-1605600659873-d808a13e4d9a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80"
+    image: "/lovable-uploads/6899c777-aa0f-45fe-99fb-607a5c50ec02.png"
   },
   {
     id: 2,
