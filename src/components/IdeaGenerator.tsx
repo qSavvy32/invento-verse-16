@@ -16,7 +16,9 @@ import {
   BookIcon,
   CodeIcon,
   AwardIcon,
-  PieChartIcon
+  PieChartIcon,
+  SparklesIcon,
+  RocketIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +49,7 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
   // Generate ideas using Anthropic
   const generateIdeas = async () => {
     if (!description.trim() && !sketchDataUrl) {
-      toast.error("Please provide a description or sketch of your invention idea");
+      toast.error("Please share your world-changing idea first");
       return;
     }
     
@@ -130,127 +132,156 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
   };
   
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <Label htmlFor="description">Describe your invention idea</Label>
-          <VoiceInput onTranscriptionComplete={handleVoiceTranscription} />
+    <div className="py-16 px-6 bg-gradient-to-br from-invention-accent/10 to-invention-highlight/10 rounded-xl border border-invention-accent/20">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center p-2 bg-invention-accent/20 rounded-full mb-2">
+            <SparklesIcon className="h-8 w-8 text-invention-accent" />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold font-leonardo text-invention-ink">What Will You Invent Today?</h2>
+          <p className="text-lg text-invention-ink/80 max-w-2xl mx-auto">
+            Every groundbreaking invention begins with a simple question: <span className="italic">"What if?"</span> Share your vision for changing the world, and let's bring it to life together.
+          </p>
         </div>
-        <Textarea
-          id="description"
-          placeholder="Describe what problem your invention solves and how it works..."
-          className="h-32"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
         
-        {sketchDataUrl && (
-          <div className="mt-4">
-            <p className="text-sm text-muted-foreground mb-2">Your sketch:</p>
-            <img 
-              src={sketchDataUrl} 
-              alt="Your sketch" 
-              className="max-h-64 border rounded-md" 
-            />
+        <Card className="bg-white/70 backdrop-blur border-invention-accent/30 shadow-md">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl text-invention-ink flex items-center">
+              <RocketIcon className="h-5 w-5 mr-2 text-invention-accent" />
+              Your World-Changing Idea
+            </CardTitle>
+            <CardDescription>
+              Describe the problem you want to solve and how your invention will make a difference
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="description" className="text-invention-ink font-medium">What's your revolutionary concept?</Label>
+                <VoiceInput onTranscriptionComplete={handleVoiceTranscription} />
+              </div>
+              <Textarea
+                id="description"
+                placeholder="I envision a world where... My invention solves... The impact would be..."
+                className="h-36 border-invention-accent/30 focus:border-invention-accent focus-visible:ring-invention-accent/20"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              
+              {sketchDataUrl && (
+                <div className="mt-4">
+                  <p className="text-sm text-muted-foreground mb-2">Your visual concept:</p>
+                  <img 
+                    src={sketchDataUrl} 
+                    alt="Your concept visualization" 
+                    className="max-h-64 border rounded-md shadow-sm" 
+                  />
+                </div>
+              )}
+            </div>
+            
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <Button 
+              onClick={generateIdeas} 
+              disabled={isGenerating}
+              className="w-full bg-invention-accent hover:bg-invention-accent/90 text-white font-medium shadow-sm"
+              size="lg"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                  Bringing your idea to life...
+                </>
+              ) : (
+                <>
+                  <LightbulbIcon className="mr-2 h-5 w-5" />
+                  Transform Your Vision Into Reality
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+        
+        {Object.keys(generatedIdeas).length > 0 && (
+          <div className="space-y-6">
+            <h3 className="text-2xl font-leonardo font-semibold text-center text-invention-ink">Your Invention Blueprint</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <Card className="da-vinci-note border-invention-accent/20 shadow-md transform transition-transform hover:scale-[1.01]">
+                <CardHeader className="pb-2 bg-invention-accent/10">
+                  <CardTitle className="text-invention-ink flex items-center gap-2">
+                    <CodeIcon className="h-5 w-5 text-invention-accent" />
+                    Technical Insights
+                  </CardTitle>
+                  <CardDescription>Engineering and design considerations</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <ul className="list-disc pl-5 space-y-2 font-leonardo">
+                    {generatedIdeas.technical.map((idea, index) => (
+                      <li key={`tech-${index}`} className="text-invention-ink">{idea}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+              
+              <Card className="da-vinci-note border-invention-accent/20 shadow-md transform transition-transform hover:scale-[1.01]">
+                <CardHeader className="pb-2 bg-invention-accent/10">
+                  <CardTitle className="text-invention-ink flex items-center gap-2">
+                    <PieChartIcon className="h-5 w-5 text-invention-accent" />
+                    Market Analysis
+                  </CardTitle>
+                  <CardDescription>Potential market and audience insights</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <ul className="list-disc pl-5 space-y-2 font-leonardo">
+                    {generatedIdeas.market.map((idea, index) => (
+                      <li key={`market-${index}`} className="text-invention-ink">{idea}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+              
+              <Card className="da-vinci-note border-invention-accent/20 shadow-md transform transition-transform hover:scale-[1.01]">
+                <CardHeader className="pb-2 bg-invention-accent/10">
+                  <CardTitle className="text-invention-ink flex items-center gap-2">
+                    <AwardIcon className="h-5 w-5 text-invention-accent" />
+                    Intellectual Property
+                  </CardTitle>
+                  <CardDescription>Patent and legal considerations</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <ul className="list-disc pl-5 space-y-2 font-leonardo">
+                    {generatedIdeas.legal.map((idea, index) => (
+                      <li key={`legal-${index}`} className="text-invention-ink">{idea}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+              
+              <Card className="da-vinci-note border-invention-accent/20 shadow-md transform transition-transform hover:scale-[1.01]">
+                <CardHeader className="pb-2 bg-invention-accent/10">
+                  <CardTitle className="text-invention-ink flex items-center gap-2">
+                    <BookIcon className="h-5 w-5 text-invention-accent" />
+                    Business Strategy
+                  </CardTitle>
+                  <CardDescription>Monetization and business recommendations</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <ul className="list-disc pl-5 space-y-2 font-leonardo">
+                    {generatedIdeas.business.map((idea, index) => (
+                      <li key={`business-${index}`} className="text-invention-ink">{idea}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
       </div>
-      
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      <Button 
-        onClick={generateIdeas} 
-        disabled={isGenerating}
-        className="w-full"
-      >
-        {isGenerating ? (
-          <>
-            <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-            Generating ideas...
-          </>
-        ) : (
-          <>
-            <LightbulbIcon className="mr-2 h-4 w-4" />
-            Generate Ideas
-          </>
-        )}
-      </Button>
-      
-      {Object.keys(generatedIdeas).length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <Card className="da-vinci-note">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-invention-ink flex items-center gap-2">
-                <CodeIcon className="h-5 w-5" />
-                Technical Insights
-              </CardTitle>
-              <CardDescription>Engineering and design considerations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-5 space-y-2 font-leonardo">
-                {generatedIdeas.technical.map((idea, index) => (
-                  <li key={`tech-${index}`} className="text-invention-ink">{idea}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-          
-          <Card className="da-vinci-note">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-invention-ink flex items-center gap-2">
-                <PieChartIcon className="h-5 w-5" />
-                Market Analysis
-              </CardTitle>
-              <CardDescription>Potential market and audience insights</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-5 space-y-2 font-leonardo">
-                {generatedIdeas.market.map((idea, index) => (
-                  <li key={`market-${index}`} className="text-invention-ink">{idea}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-          
-          <Card className="da-vinci-note">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-invention-ink flex items-center gap-2">
-                <AwardIcon className="h-5 w-5" />
-                Intellectual Property
-              </CardTitle>
-              <CardDescription>Patent and legal considerations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-5 space-y-2 font-leonardo">
-                {generatedIdeas.legal.map((idea, index) => (
-                  <li key={`legal-${index}`} className="text-invention-ink">{idea}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-          
-          <Card className="da-vinci-note">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-invention-ink flex items-center gap-2">
-                <BookIcon className="h-5 w-5" />
-                Business Strategy
-              </CardTitle>
-              <CardDescription>Monetization and business recommendations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-5 space-y-2 font-leonardo">
-                {generatedIdeas.business.map((idea, index) => (
-                  <li key={`business-${index}`} className="text-invention-ink">{idea}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 };
