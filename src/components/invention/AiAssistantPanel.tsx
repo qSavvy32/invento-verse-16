@@ -66,29 +66,81 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       
       // Add timestamp to the analysis results
       const timestamp = new Date().toLocaleTimeString();
-      const results = Array.isArray(data[analysisType]) 
-        ? data[analysisType].map((item: string) => `${item}`)
-        : [];
       
-      // Prepend timestamp and analysis type to the first result
-      if (results.length > 0) {
-        results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
-      }
-      
-      // Handle the response differently based on the analysis type
+      // Process technical analysis results
       if (analysisType === "technical") {
-        setAnalysisResults("technical", [...state.analysisResults.technical, ...results]);
-      } else if (analysisType === "challenges") {
+        // Extract key points from the technical analysis response
+        let technicalResults: string[] = [];
+        
+        // Check if we have engineering challenges in the response
+        if (data.engineering_challenges && Array.isArray(data.engineering_challenges)) {
+          technicalResults = data.engineering_challenges.map((challenge: any) => 
+            `${challenge.challenge}: ${challenge.explanation}`
+          );
+        } 
+        // Check if we have design considerations
+        else if (data.design_considerations && Array.isArray(data.design_considerations)) {
+          technicalResults = data.design_considerations.map((item: any) => 
+            `${item.consideration}: ${item.explanation}`
+          );
+        }
+        // Fallback: use the raw technical array if it exists
+        else if (data.technical && Array.isArray(data.technical)) {
+          technicalResults = data.technical;
+        }
+        // Last resort: create a single item from the technical feasibility if it exists
+        else if (data.technical_feasibility) {
+          technicalResults = [`Technical feasibility: ${data.technical_feasibility.explanation || data.technical_feasibility}`];
+        }
+        
+        // If we still have no results, create a simple fallback message
+        if (technicalResults.length === 0) {
+          technicalResults = ["Analysis completed but no specific technical points were identified."];
+        }
+        
+        // Prepend timestamp to the first result
+        if (technicalResults.length > 0) {
+          technicalResults[0] = `[${timestamp} - ${analysisType}] ${technicalResults[0]}`;
+        }
+        
+        setAnalysisResults("technical", [...state.analysisResults.technical, ...technicalResults]);
+      } 
+      // Handle other analysis types
+      else if (analysisType === "challenges") {
+        const results = Array.isArray(data) ? data.map((item: string) => `${item}`) : [];
+        if (results.length > 0) {
+          results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+        }
         setAnalysisResults("technical", [...state.analysisResults.technical, ...results]);
       } else if (analysisType === "materials") {
+        const results = Array.isArray(data) ? data.map((item: string) => `${item}`) : [];
+        if (results.length > 0) {
+          results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+        }
         setAnalysisResults("technical", [...state.analysisResults.technical, ...results]);
       } else if (analysisType === "users") {
+        const results = Array.isArray(data) ? data.map((item: string) => `${item}`) : [];
+        if (results.length > 0) {
+          results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+        }
         setAnalysisResults("market", [...state.analysisResults.market, ...results]);
       } else if (analysisType === "competition") {
+        const results = Array.isArray(data) ? data.map((item: string) => `${item}`) : [];
+        if (results.length > 0) {
+          results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+        }
         setAnalysisResults("market", [...state.analysisResults.market, ...results]);
       } else if (analysisType === "ip") {
+        const results = Array.isArray(data) ? data.map((item: string) => `${item}`) : [];
+        if (results.length > 0) {
+          results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+        }
         setAnalysisResults("legal", [...state.analysisResults.legal, ...results]);
       } else if (analysisType === "regulatory") {
+        const results = Array.isArray(data) ? data.map((item: string) => `${item}`) : [];
+        if (results.length > 0) {
+          results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+        }
         setAnalysisResults("legal", [...state.analysisResults.legal, ...results]);
       } else if (analysisType === "comprehensive") {
         // Append to all categories

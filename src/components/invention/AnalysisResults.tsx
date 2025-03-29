@@ -60,11 +60,12 @@ export const AnalysisResults = () => {
   }>>([]);
   
   useEffect(() => {
-    // When new analysis results come in, add them to the cards collection
-    const newCards = [] as typeof analysisCards;
+    // When analysis results change, update the cards
+    const allCards = [] as typeof analysisCards;
     
+    // Create cards for technical analysis
     if (state.analysisResults.technical.length > 0) {
-      newCards.push({
+      allCards.push({
         id: `technical-${Date.now()}`,
         type: 'technical',
         results: state.analysisResults.technical,
@@ -72,8 +73,9 @@ export const AnalysisResults = () => {
       });
     }
     
+    // Create cards for market analysis
     if (state.analysisResults.market.length > 0) {
-      newCards.push({
+      allCards.push({
         id: `market-${Date.now()}`,
         type: 'market',
         results: state.analysisResults.market,
@@ -81,8 +83,9 @@ export const AnalysisResults = () => {
       });
     }
     
+    // Create cards for legal analysis
     if (state.analysisResults.legal.length > 0) {
-      newCards.push({
+      allCards.push({
         id: `legal-${Date.now()}`,
         type: 'legal',
         results: state.analysisResults.legal,
@@ -90,8 +93,9 @@ export const AnalysisResults = () => {
       });
     }
     
+    // Create cards for business analysis
     if (state.analysisResults.business.length > 0) {
-      newCards.push({
+      allCards.push({
         id: `business-${Date.now()}`,
         type: 'business',
         results: state.analysisResults.business,
@@ -99,12 +103,16 @@ export const AnalysisResults = () => {
       });
     }
     
-    if (newCards.length > 0) {
-      setAnalysisCards(prevCards => [...prevCards, ...newCards]);
-    }
+    setAnalysisCards(allCards);
   }, [state.analysisResults]);
   
-  if (analysisCards.length === 0) return null;
+  if (analysisCards.length === 0 && 
+      !state.analysisResults.technical.length && 
+      !state.analysisResults.market.length && 
+      !state.analysisResults.legal.length && 
+      !state.analysisResults.business.length) {
+    return null;
+  }
   
   return (
     <div className="space-y-6">
