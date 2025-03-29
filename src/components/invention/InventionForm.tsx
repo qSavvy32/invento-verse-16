@@ -1,17 +1,25 @@
-
 import { useInvention } from "@/contexts/InventionContext";
 import { InventionMetadata } from "./InventionMetadata";
 import { MultimodalInputArea } from "./MultimodalInputArea";
 import { AiAssistantPanel } from "./AiAssistantPanel";
 import { AnalysisResults } from "./AnalysisResults";
 import { Visualization3DViewer } from "./Visualization3DViewer";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue 
+} from "@/components/ui/select";
 
 export const InventionForm = () => {
   const { state, saveToDatabase } = useInvention();
-  // Always show results section
+  const [selectedSection, setSelectedSection] = useState("metadata");
+  
+  // Always keep all results
   const [showResults, setShowResults] = useState(true);
   
   const handleSaveDraft = () => {
@@ -41,28 +49,49 @@ export const InventionForm = () => {
   };
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-6">
-        <InventionMetadata />
+    <div className="space-y-8">
+      <div className="border rounded-lg p-4">
+        <h2 className="text-xl font-semibold mb-4">Invention Details</h2>
         
-        <MultimodalInputArea />
-        
-        {state.visualization3dUrl && <Visualization3DViewer />}
-        
-        <AnalysisResults />
-      </div>
-      
-      <div className="space-y-6">
-        <AiAssistantPanel onAnalysisComplete={() => setShowResults(true)} />
-        
-        <div className="border rounded-lg p-4">
-          <h2 className="text-xl font-semibold mb-4">Save Your Work</h2>
-          <div className="space-y-4">
-            <Button onClick={handleSaveDraft} className="w-full">Save Draft</Button>
-            <Button variant="outline" onClick={handleExport} className="w-full">Export</Button>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Select Input Type</label>
+            <Select value={selectedSection} onValueChange={setSelectedSection}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select input type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="metadata">Basic Information</SelectItem>
+                <SelectItem value="sketch">Visual Input</SelectItem>
+                {state.visualization3dUrl && <SelectItem value="3d">3D Visualization</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="mt-4">
+            {selectedSection === "metadata" && <InventionMetadata />}
+            {selectedSection === "sketch" && <MultimodalInputArea />}
+            {selectedSection === "3d" && state.visualization3dUrl && <Visualization3DViewer />}
           </div>
         </div>
       </div>
+      
+      <div className="border rounded-lg p-4">
+        <AiAssistantPanel onAnalysisComplete={() => setShowResults(true)} />
+      </div>
+      
+      <div className="border rounded-lg p-4">
+        <div className="flex justify-between mb-4">
+          <h2 className="text-xl font-semibold">Save Your Work</h2>
+          <div className="space-x-4">
+            <Button onClick={handleSaveDraft}>Save Draft</Button>
+            <Button variant="outline" onClick={handleExport}>Export</Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Analysis Results - always show them all */}
+      <AnalysisResults />
     </div>
   );
 };

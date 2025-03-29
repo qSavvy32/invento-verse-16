@@ -2,7 +2,7 @@
 import { useInvention } from "@/contexts/InventionContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AwardIcon, BookIcon, CodeIcon, PieChartIcon } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AudioPlayer } from "@/components/AudioPlayer";
@@ -14,6 +14,7 @@ interface AnalysisCardProps {
   icon: React.ReactNode;
   insights: string[];
   cardClassName?: string;
+  timestamp: string;
 }
 
 // A cache of already generated audio data to avoid redundant API calls
@@ -21,17 +22,107 @@ const audioCache: Record<string, string> = {};
 
 export const AnalysisResults = () => {
   const { state } = useInvention();
+  const [analysisHistory, setAnalysisHistory] = useState<{
+    technical: { insights: string[], timestamp: string }[];
+    market: { insights: string[], timestamp: string }[];
+    legal: { insights: string[], timestamp: string }[];
+    business: { insights: string[], timestamp: string }[];
+  }>({
+    technical: [],
+    market: [],
+    legal: [],
+    business: []
+  });
   
-  // Only show categories that have results
-  const hasResults = {
-    technical: state.analysisResults.technical.length > 0,
-    market: state.analysisResults.market.length > 0,
-    legal: state.analysisResults.legal.length > 0,
-    business: state.analysisResults.business.length > 0
-  };
+  // Update the history when new results come in
+  useEffect(() => {
+    const currentTime = new Date().toLocaleTimeString();
+    
+    // For each category, check if we have new insights
+    if (state.analysisResults.technical.length > 0) {
+      setAnalysisHistory(prev => {
+        // Check if these exact insights already exist in our history
+        const alreadyExists = prev.technical.some(item => 
+          JSON.stringify(item.insights) === JSON.stringify(state.analysisResults.technical)
+        );
+        
+        if (!alreadyExists) {
+          return {
+            ...prev,
+            technical: [...prev.technical, { 
+              insights: [...state.analysisResults.technical],
+              timestamp: currentTime
+            }]
+          };
+        }
+        return prev;
+      });
+    }
+    
+    if (state.analysisResults.market.length > 0) {
+      setAnalysisHistory(prev => {
+        const alreadyExists = prev.market.some(item => 
+          JSON.stringify(item.insights) === JSON.stringify(state.analysisResults.market)
+        );
+        
+        if (!alreadyExists) {
+          return {
+            ...prev,
+            market: [...prev.market, { 
+              insights: [...state.analysisResults.market],
+              timestamp: currentTime
+            }]
+          };
+        }
+        return prev;
+      });
+    }
+    
+    if (state.analysisResults.legal.length > 0) {
+      setAnalysisHistory(prev => {
+        const alreadyExists = prev.legal.some(item => 
+          JSON.stringify(item.insights) === JSON.stringify(state.analysisResults.legal)
+        );
+        
+        if (!alreadyExists) {
+          return {
+            ...prev,
+            legal: [...prev.legal, { 
+              insights: [...state.analysisResults.legal],
+              timestamp: currentTime
+            }]
+          };
+        }
+        return prev;
+      });
+    }
+    
+    if (state.analysisResults.business.length > 0) {
+      setAnalysisHistory(prev => {
+        const alreadyExists = prev.business.some(item => 
+          JSON.stringify(item.insights) === JSON.stringify(state.analysisResults.business)
+        );
+        
+        if (!alreadyExists) {
+          return {
+            ...prev,
+            business: [...prev.business, { 
+              insights: [...state.analysisResults.business],
+              timestamp: currentTime
+            }]
+          };
+        }
+        return prev;
+      });
+    }
+  }, [state.analysisResults]);
   
-  // Check if we have any results to show
-  const hasAnyResults = Object.values(hasResults).some(result => result);
+  // Check if we have any results in the history to show
+  const hasAnyResults = 
+    analysisHistory.technical.length > 0 ||
+    analysisHistory.market.length > 0 ||
+    analysisHistory.legal.length > 0 ||
+    analysisHistory.business.length > 0;
   
   if (!hasAnyResults) {
     return null;
@@ -41,52 +132,92 @@ export const AnalysisResults = () => {
     <div className="mt-6">
       <h2 className="text-2xl font-bold mb-4">Analysis Results</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {hasResults.technical && (
-          <AnalysisCard
-            title="Technical Insights"
-            description="Engineering and design considerations"
-            icon={<CodeIcon className="h-5 w-5" />}
-            insights={state.analysisResults.technical}
-            cardClassName="da-vinci-note"
-          />
+      <div className="space-y-8">
+        {/* Technical Insights */}
+        {analysisHistory.technical.length > 0 && (
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Technical Insights</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {analysisHistory.technical.map((item, index) => (
+                <AnalysisCard
+                  key={`technical-${index}`}
+                  title={`Technical Analysis ${index + 1}`}
+                  description="Engineering and design considerations"
+                  icon={<CodeIcon className="h-5 w-5" />}
+                  insights={item.insights}
+                  timestamp={item.timestamp}
+                  cardClassName="da-vinci-note"
+                />
+              ))}
+            </div>
+          </div>
         )}
         
-        {hasResults.market && (
-          <AnalysisCard
-            title="Market Analysis"
-            description="Potential market and audience insights"
-            icon={<PieChartIcon className="h-5 w-5" />}
-            insights={state.analysisResults.market}
-            cardClassName="da-vinci-note"
-          />
+        {/* Market Analysis */}
+        {analysisHistory.market.length > 0 && (
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Market Analysis</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {analysisHistory.market.map((item, index) => (
+                <AnalysisCard
+                  key={`market-${index}`}
+                  title={`Market Analysis ${index + 1}`}
+                  description="Potential market and audience insights"
+                  icon={<PieChartIcon className="h-5 w-5" />}
+                  insights={item.insights}
+                  timestamp={item.timestamp}
+                  cardClassName="da-vinci-note"
+                />
+              ))}
+            </div>
+          </div>
         )}
         
-        {hasResults.legal && (
-          <AnalysisCard
-            title="Intellectual Property"
-            description="Patent and legal considerations"
-            icon={<AwardIcon className="h-5 w-5" />}
-            insights={state.analysisResults.legal}
-            cardClassName="da-vinci-note"
-          />
+        {/* Intellectual Property */}
+        {analysisHistory.legal.length > 0 && (
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Intellectual Property</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {analysisHistory.legal.map((item, index) => (
+                <AnalysisCard
+                  key={`legal-${index}`}
+                  title={`IP Analysis ${index + 1}`}
+                  description="Patent and legal considerations"
+                  icon={<AwardIcon className="h-5 w-5" />}
+                  insights={item.insights}
+                  timestamp={item.timestamp}
+                  cardClassName="da-vinci-note"
+                />
+              ))}
+            </div>
+          </div>
         )}
         
-        {hasResults.business && (
-          <AnalysisCard
-            title="Business Strategy"
-            description="Monetization and business recommendations"
-            icon={<BookIcon className="h-5 w-5" />}
-            insights={state.analysisResults.business}
-            cardClassName="da-vinci-note"
-          />
+        {/* Business Strategy */}
+        {analysisHistory.business.length > 0 && (
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Business Strategy</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {analysisHistory.business.map((item, index) => (
+                <AnalysisCard
+                  key={`business-${index}`}
+                  title={`Business Analysis ${index + 1}`}
+                  description="Monetization and business recommendations"
+                  icon={<BookIcon className="h-5 w-5" />}
+                  insights={item.insights}
+                  timestamp={item.timestamp}
+                  cardClassName="da-vinci-note"
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-const AnalysisCard = ({ title, description, icon, insights, cardClassName }: AnalysisCardProps) => {
+const AnalysisCard = ({ title, description, icon, insights, cardClassName, timestamp }: AnalysisCardProps) => {
   const [audioData, setAudioData] = useState<string | null>(null);
   const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
   
@@ -157,6 +288,7 @@ const AnalysisCard = ({ title, description, icon, insights, cardClassName }: Ana
             {title}
           </CardTitle>
           <CardDescription>{description}</CardDescription>
+          <div className="text-xs text-muted-foreground mt-1">Generated at {timestamp}</div>
         </div>
         
         {audioData && (
