@@ -1,4 +1,3 @@
-
 import { useInvention } from "@/contexts/InventionContext";
 import { MultimodalInputArea } from "./MultimodalInputArea";
 import { AiAssistantPanel } from "./AiAssistantPanel";
@@ -16,7 +15,7 @@ import { GenerateButtons } from "./GenerateButtons";
 import { Button } from "../ui/button";
 import PixelCard from "../ui/PixelCard";
 import { Visualization3DViewer } from "./Visualization3DViewer";
-import { DevilsAdvocate } from "../DevilsAdvocate";
+import { DevilsAdvocate } from "../devils-advocate/DevilsAdvocate";
 
 export const InventionForm = () => {
   const { state } = useInvention();
