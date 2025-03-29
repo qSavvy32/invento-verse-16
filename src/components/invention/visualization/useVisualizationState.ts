@@ -52,7 +52,7 @@ export const useVisualizationState = () => {
         const assetId = `sketch-${Date.now()}`;
         addAsset({
           id: assetId,
-          type: 'sketch',
+          type: "sketch",
           url: result.dataUrl,
           thumbnailUrl: result.dataUrl,
           name: `Sketch: ${state.title || "Untitled"}`,
@@ -99,7 +99,7 @@ export const useVisualizationState = () => {
         const assetId = `marketing-${Date.now()}`;
         addAsset({
           id: assetId,
-          type: 'image',
+          type: "image",
           url: result.dataUrl,
           thumbnailUrl: result.dataUrl,
           name: `Marketing: ${state.title || "Untitled"}`,
@@ -109,7 +109,7 @@ export const useVisualizationState = () => {
         // Set as most recent generation
         setMostRecentGeneration({
           id: assetId,
-          type: 'image',
+          type: 'marketing-image',
           url: result.dataUrl,
           name: `Marketing: ${state.title || "Untitled"}`,
           createdAt: Date.now()
@@ -145,7 +145,7 @@ export const useVisualizationState = () => {
         const assetId = `realistic-3d-${Date.now()}`;
         addAsset({
           id: assetId,
-          type: 'image',
+          type: "image",
           url: result.dataUrl,
           thumbnailUrl: result.dataUrl,
           name: `Realistic Mockup: ${state.title || "Untitled"}`,
@@ -155,7 +155,7 @@ export const useVisualizationState = () => {
         // Set as most recent generation
         setMostRecentGeneration({
           id: assetId,
-          type: 'image',
+          type: '3d-model',
           url: result.dataUrl,
           name: `Realistic Mockup: ${state.title || "Untitled"}`,
           createdAt: Date.now()
@@ -234,7 +234,7 @@ export const useVisualizationState = () => {
         const assetId = `custom-marketing-${Date.now()}`;
         addAsset({
           id: assetId,
-          type: 'image',
+          type: "image",
           url: result.dataUrl,
           thumbnailUrl: result.dataUrl,
           name: `Custom Marketing: ${prompt.substring(0, 30)}${prompt.length > 30 ? '...' : ''}`,
@@ -244,7 +244,7 @@ export const useVisualizationState = () => {
         // Set as most recent generation
         setMostRecentGeneration({
           id: assetId,
-          type: 'image',
+          type: 'marketing-image',
           url: result.dataUrl,
           name: `Custom Marketing: ${prompt.substring(0, 30)}${prompt.length > 30 ? '...' : ''}`,
           createdAt: Date.now()

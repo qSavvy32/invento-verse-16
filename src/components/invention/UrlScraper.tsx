@@ -1,156 +1,127 @@
 
-import { useState, useEffect } from "react";
-import { useInvention } from "@/contexts/InventionContext";
-import { FirecrawlService } from "@/services/FirecrawlService";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
-import { v4 as uuidv4 } from "uuid";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useInvention } from '@/contexts/InventionContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Loader2, Globe, Check } from 'lucide-react';
 
-// Local storage key for saving URL input state
-const URL_INPUT_STORAGE_KEY = 'invention_url_scraper_input';
+interface UrlScraperProps {
+  onAddAsset?: (asset: any) => void;
+}
 
-export const UrlScraper = ({ onAddAsset }: { onAddAsset?: (asset: any) => void }) => {
-  const [url, setUrl] = useState("");
+export const UrlScraper = ({ onAddAsset }: UrlScraperProps) => {
+  const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const { updateDescription } = useInvention();
-  
-  // Load saved URL from storage on component mount
-  useEffect(() => {
-    const savedUrl = localStorage.getItem(URL_INPUT_STORAGE_KEY);
-    if (savedUrl) {
-      setUrl(savedUrl);
-      // Clear storage after restoring
-      localStorage.removeItem(URL_INPUT_STORAGE_KEY);
+
+  const isValidUrl = (urlString: string) => {
+    try {
+      new URL(urlString);
+      return true;
+    } catch (err) {
+      return false;
     }
-  }, []);
-  
-  // Save URL to local storage when it changes
-  useEffect(() => {
-    if (url) {
-      localStorage.setItem(URL_INPUT_STORAGE_KEY, url);
-    }
-  }, [url]);
-  
-  // Save URL to storage when window is about to unload
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (url) {
-        localStorage.setItem(URL_INPUT_STORAGE_KEY, url);
-      }
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('visibilitychange', handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('visibilitychange', handleBeforeUnload);
-    };
-  }, [url]);
-  
-  const handleScrape = async () => {
-    if (!url.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid URL",
-        variant: "destructive"
-      });
+  };
+
+  const handleScrapeUrl = async () => {
+    if (!isValidUrl(url)) {
+      toast.error('Please enter a valid URL');
       return;
     }
-    
+
     setIsLoading(true);
-    
+    setIsSuccess(false);
+
     try {
-      const result = await FirecrawlService.scrapeUrl(url);
-      
-      if (!result.success) {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to scrape URL",
-          variant: "destructive"
-        });
-        return;
+      const { data, error } = await supabase.functions.invoke('scrape-url', {
+        body: { url }
+      });
+
+      if (error) {
+        throw new Error(`Failed to scrape URL: ${error.message}`);
       }
-      
-      // Extract summary from response
-      const summary = result.data.summary || 
-        `Content scraped from ${url}. ${result.data.text?.substring(0, 500) || ''}...`;
-      
-      // Update description with scraped content
-      updateDescription((prev) => {
-        if (prev.trim()) {
-          return `${prev}\n\n--- Scraped from ${url} ---\n${summary}`;
+
+      if (!data.content) {
+        throw new Error('No content was scraped from the URL');
+      }
+
+      // Format the scraped content
+      const scrapedContent = `--- Scraped from ${url} ---
+${data.content}
+`;
+
+      // Append to description rather than replacing it
+      updateDescription((currentDescription: string) => {
+        const currentDesc = typeof currentDescription === 'string' ? currentDescription : '';
+        if (currentDesc.trim()) {
+          return `${currentDesc}\n\n${scrapedContent}`;
         }
-        return `--- Scraped from ${url} ---\n${summary}`;
+        return scrapedContent;
       });
-      
-      // Add as asset if callback provided
-      if (onAddAsset) {
+
+      // Add the URL to assets if onAddAsset is provided
+      if (onAddAsset && data.screenshot) {
+        const timestamp = Date.now();
         onAddAsset({
-          id: uuidv4(),
-          type: 'document',
-          url: url,
-          name: `Scraped content from ${new URL(url).hostname}`,
-          createdAt: Date.now()
+          id: `url-scrape-${timestamp}`,
+          type: 'image',
+          url: data.screenshot,
+          thumbnailUrl: data.screenshot,
+          name: `Screenshot of ${new URL(url).hostname}`,
+          createdAt: timestamp
         });
       }
-      
-      toast({
-        title: "Success",
-        description: "URL scraped and added to your invention"
-      });
-      
-      // Clear URL input and storage after successful scrape
-      setUrl("");
-      localStorage.removeItem(URL_INPUT_STORAGE_KEY);
-      
+
+      setIsSuccess(true);
+      toast.success('URL content added to your invention description');
     } catch (error) {
-      console.error("Error scraping URL:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive"
-      });
+      console.error('Error scraping URL:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to scrape the URL');
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="url">Website URL</Label>
-          <div className="flex gap-2">
-            <Input
-              id="url"
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
-              className="flex-1"
-              disabled={isLoading}
-            />
-            <Button 
-              onClick={handleScrape} 
-              disabled={isLoading || !url.trim()}
-            >
-              {isLoading ? "Scraping..." : "Scrape"}
-            </Button>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <div className="text-sm font-medium">Web Scraper</div>
+      <p className="text-sm text-muted-foreground mb-4">
+        Enter a website URL to extract content and add it to your invention description.
+      </p>
+      
+      <div className="flex gap-2">
+        <Input
+          placeholder="Enter URL (e.g., https://example.com)"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          disabled={isLoading}
+          className="flex-grow"
+        />
+        <Button 
+          onClick={handleScrapeUrl}
+          disabled={isLoading || !url.trim()}
+          variant={isSuccess ? "outline" : "default"}
+          className={isSuccess ? "border-green-500 text-green-500" : ""}
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : isSuccess ? (
+            <Check className="h-4 w-4 mr-2" />
+          ) : (
+            <Globe className="h-4 w-4 mr-2" />
+          )}
+          {isLoading ? 'Scraping...' : isSuccess ? 'Added' : 'Scrape'}
+        </Button>
       </div>
       
-      <div className="rounded-md bg-muted p-4">
-        <h4 className="font-medium mb-2">How it works</h4>
-        <p className="text-sm text-muted-foreground">
-          Enter a URL to scrape its content. The system will extract key information, 
-          create a summary, and add it to your invention description. This can help you 
-          research similar products, gather market information, or document inspiration.
+      {isSuccess && (
+        <p className="text-xs text-green-600">
+          Content from {new URL(url).hostname} has been added to your description
         </p>
-      </div>
+      )}
     </div>
   );
 };

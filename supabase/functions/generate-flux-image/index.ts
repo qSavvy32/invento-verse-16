@@ -50,8 +50,8 @@ serve(async (req) => {
       enhancedPrompt = `${prompt}. Photorealistic, studio lighting, detailed, product photography, high quality.`;
     }
 
-    // Call the Hugging Face Inference API with Flux model
-    // Remove the go_fast parameter that's causing the error
+    // Call the Hugging Face Inference API with the FLUX model
+    // Removing the parameters that are causing errors
     const response = await fetch(
       "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
       {
@@ -64,7 +64,6 @@ serve(async (req) => {
           inputs: enhancedPrompt,
           parameters: {
             num_inference_steps: 4,
-            num_outputs: 1,
             aspect_ratio: "1:1",
           }
         }),

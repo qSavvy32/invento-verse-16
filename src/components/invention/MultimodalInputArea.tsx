@@ -21,9 +21,10 @@ export const MultimodalInputArea = () => {
   
   const handleVoiceTranscription = (text: string) => {
     // Append the transcribed text to the description
-    updateDescription((prev) => {
-      if (prev.trim()) {
-        return `${prev}\n\n${text}`;
+    const currentDescription = updateDescription((prev) => {
+      const prevText = typeof prev === 'string' ? prev : '';
+      if (prevText.trim()) {
+        return `${prevText}\n\n${text}`;
       }
       return text;
     });

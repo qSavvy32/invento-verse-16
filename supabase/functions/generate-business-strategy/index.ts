@@ -58,62 +58,8 @@ serve(async (req) => {
       text: textPrompt
     });
     
-    // If there's a sketch, add it as an image
-    if (sketchDataUrl) {
-      // If it's a URL to an image in Supabase Storage
-      if (sketchDataUrl.startsWith('http')) {
-        try {
-          // Fetch the image and convert to base64
-          const response = await fetch(sketchDataUrl);
-          const imageBlob = await response.blob();
-          
-          // Convert blob to base64
-          const arrayBuffer = await imageBlob.arrayBuffer();
-          const base64Data = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-          
-          // Determine media type
-          const mediaType = response.headers.get('content-type') || 'image/jpeg';
-          
-          contentItems.push({
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: mediaType,
-              data: base64Data
-            }
-          });
-          
-          // Add instructions for the image
-          contentItems.push({
-            type: "text",
-            text: "This is a visual representation of the invention. Consider its design and features when creating the business strategy visualization."
-          });
-        } catch (error) {
-          console.error("Error fetching image from URL:", error);
-          // Continue without the image
-        }
-      } 
-      // Handle base64 data URLs
-      else if (sketchDataUrl.startsWith('data:')) {
-        const [mediaTypeWithEncoding, base64Data] = sketchDataUrl.split(',');
-        const mediaType = mediaTypeWithEncoding.split(':')[1].split(';')[0];
-        
-        contentItems.push({
-          type: "image",
-          source: {
-            type: "base64",
-            media_type: mediaType,
-            data: base64Data
-          }
-        });
-        
-        // Add instructions for the image
-        contentItems.push({
-          type: "text",
-          text: "This is a visual representation of the invention. Consider its design and features when creating the business strategy visualization."
-        });
-      }
-    }
+    // We'll skip adding the image for now as it's causing issues
+    // If the user really needs image input for business strategy, we can implement a more robust solution later
 
     console.log("Sending request to Anthropic API for business strategy visualization...");
 

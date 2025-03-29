@@ -50,9 +50,7 @@ export const VisualizationTools = () => {
                 <BusinessStrategyPreview svgCode={state.mostRecentGeneration.svg} />
               )}
               
-              {(state.mostRecentGeneration.type === 'sketch' || 
-                state.mostRecentGeneration.type === 'image' || 
-                state.mostRecentGeneration.type.includes('marketing')) && 
+              {(['sketch', 'image', 'marketing-image', '3d-model'].includes(state.mostRecentGeneration.type)) && 
                 state.mostRecentGeneration.url && (
                 <AspectRatio ratio={1} className="overflow-hidden rounded-md border">
                   <img 

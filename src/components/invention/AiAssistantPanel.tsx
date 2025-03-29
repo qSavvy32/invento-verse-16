@@ -12,7 +12,7 @@ interface AiAssistantPanelProps {
 }
 
 export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) => {
-  const { state, updateVisualizations, update3DVisualization, setAnalysisResults, setThreejsVisualization } = useInvention();
+  const { state, update3DVisualization, updateThreejsCode, updateThreejsHtml, setAnalysisResults } = useInvention();
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({
     technical: false,
     challenges: false,
@@ -74,9 +74,11 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         title: state.title,
         description: state.description,
         sketchDataUrl: state.sketchDataUrl,
-        updateVisualizations,
         update3DVisualization,
-        setThreejsVisualization
+        setThreejsVisualization: (html, code) => {
+          updateThreejsHtml(html);
+          updateThreejsCode(code);
+        }
       },
       setLoadingState
     );
@@ -89,9 +91,11 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         title: state.title,
         description: state.description,
         sketchDataUrl: state.sketchDataUrl,
-        updateVisualizations,
         update3DVisualization,
-        setThreejsVisualization
+        setThreejsVisualization: (html, code) => {
+          updateThreejsHtml(html);
+          updateThreejsCode(code);
+        }
       },
       setLoadingState
     );

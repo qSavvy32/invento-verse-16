@@ -1,382 +1,320 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  InventionState, 
-  InventionAsset, 
-  AudioTranscription 
-} from "@/contexts/InventionContext";
 import { toast } from "sonner";
+import { InventionState, InventionAsset } from "@/contexts/InventionContext";
+import { v4 as uuidv4 } from "uuid";
 
-export interface SavedInvention {
-  id: string;
-  title: string;
-  description: string;
-  created_at: string;
-  updated_at: string;
-  assets: InventionAsset[];
-  transcriptions: AudioTranscription[];
-}
-
-export const InventionService = {
-  // Save an invention and all related data to Supabase
-  async saveInvention(state: InventionState): Promise<string | null> {
+export class InventionService {
+  /**
+   * Save an invention to the database
+   */
+  static async saveInvention(invention: InventionState): Promise<string> {
     try {
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
         throw new Error("You must be logged in to save an invention");
       }
-
-      // First, save or update the main invention record
-      let inventionId = state.inventionId;
       
-      if (inventionId) {
+      const userId = userData.user.id;
+      
+      const inventionId = invention.inventionId || uuidv4();
+      
+      // Prepare invention data
+      const inventionData = {
+        id: inventionId,
+        user_id: userId,
+        title: invention.title,
+        description: invention.description,
+        sketch_data_url: invention.sketchDataUrl,
+        visualization_3d_url: invention.visualization3dUrl,
+        visualization_prompts: invention.visualizationPrompts,
+        threejs_visualization: invention.threejsVisualization,
+        business_strategy_svg: invention.businessStrategySvg,
+        analysis_results: invention.analysisResults,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Check if this is a new invention or an update
+      if (invention.inventionId) {
         // Update existing invention
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('inventions')
-          .update({
-            title: state.title,
-            description: state.description,
-            sketch_data_url: state.sketchDataUrl,
-            visualization_3d_url: state.visualization3dUrl,
-            threejs_html: state.threejsVisualization.html,
-            business_strategy_svg: state.businessStrategySvg,
-            updated_at: new Date().toISOString()
-          })
+          .update(inventionData)
           .eq('id', inventionId);
           
-        if (error) throw error;
+        if (updateError) {
+          throw new Error(`Failed to update invention: ${updateError.message}`);
+        }
       } else {
         // Create new invention
-        const { data, error } = await supabase
+        const { error: insertError } = await supabase
           .from('inventions')
           .insert({
-            user_id: session.user.id,
-            title: state.title,
-            description: state.description,
-            sketch_data_url: state.sketchDataUrl,
-            visualization_3d_url: state.visualization3dUrl,
-            threejs_html: state.threejsVisualization.html,
-            business_strategy_svg: state.businessStrategySvg
-          })
-          .select('id')
-          .single();
+            ...inventionData,
+            created_at: new Date().toISOString()
+          });
           
-        if (error) throw error;
-        inventionId = data?.id;
-        if (!inventionId) throw new Error("Failed to get invention ID");
+        if (insertError) {
+          throw new Error(`Failed to create invention: ${insertError.message}`);
+        }
       }
       
-      // Now that we have the invention ID, we can save related data
-      
-      // 1. Save assets
-      if (state.assets.length > 0) {
-        // Delete existing assets for this invention to avoid duplicates
+      // Save assets
+      if (invention.assets && invention.assets.length > 0) {
+        // First, delete all existing assets for this invention
         await supabase
           .from('invention_assets')
           .delete()
           .eq('invention_id', inventionId);
-          
-        // Insert new assets
-        const assetsToInsert = state.assets.map(asset => ({
+        
+        // Then, insert all current assets
+        const assetsData = invention.assets.map(asset => ({
+          id: asset.id || uuidv4(),
           invention_id: inventionId,
+          user_id: userId,
           type: asset.type,
           url: asset.url,
           thumbnail_url: asset.thumbnailUrl,
-          name: asset.name || `${asset.type} ${new Date(asset.createdAt).toLocaleString()}`
+          name: asset.name || '',
+          created_at: new Date(asset.createdAt).toISOString()
         }));
         
         const { error: assetsError } = await supabase
           .from('invention_assets')
-          .insert(assetsToInsert);
+          .insert(assetsData);
           
-        if (assetsError) throw assetsError;
+        if (assetsError) {
+          console.error("Error saving assets:", assetsError);
+          // Don't throw error, just log it
+        }
       }
       
-      // 2. Save audio transcriptions
-      if (state.audioTranscriptions.length > 0) {
-        // Delete existing transcriptions for this invention
+      // Save audio transcriptions
+      if (invention.audioTranscriptions && invention.audioTranscriptions.length > 0) {
+        // First, delete all existing transcriptions for this invention
         await supabase
-          .from('audio_transcriptions')
+          .from('invention_transcriptions')
           .delete()
           .eq('invention_id', inventionId);
-          
-        // Insert new transcriptions
-        const transcriptionsToInsert = state.audioTranscriptions.map(transcription => ({
+        
+        // Then, insert all current transcriptions
+        const transcriptionsData = invention.audioTranscriptions.map(transcript => ({
+          id: uuidv4(),
           invention_id: inventionId,
-          text: transcription.text,
-          language: transcription.language || 'en',
-          audio_url: transcription.audioUrl
+          user_id: userId,
+          text: transcript.text,
+          language: transcript.language,
+          audio_url: transcript.audioUrl || null,
+          created_at: new Date(transcript.timestamp).toISOString()
         }));
         
         const { error: transcriptionsError } = await supabase
-          .from('audio_transcriptions')
-          .insert(transcriptionsToInsert);
+          .from('invention_transcriptions')
+          .insert(transcriptionsData);
           
-        if (transcriptionsError) throw transcriptionsError;
-      }
-      
-      // 3. Save analysis results
-      const analysisToInsert = [];
-      
-      // Technical analysis
-      if (state.analysisResults.technical.length > 0) {
-        state.analysisResults.technical.forEach(result => {
-          analysisToInsert.push({
-            invention_id: inventionId,
-            analysis_type: 'technical',
-            result
-          });
-        });
-      }
-      
-      // Market analysis
-      if (state.analysisResults.market.length > 0) {
-        state.analysisResults.market.forEach(result => {
-          analysisToInsert.push({
-            invention_id: inventionId,
-            analysis_type: 'market',
-            result
-          });
-        });
-      }
-      
-      // Legal analysis
-      if (state.analysisResults.legal.length > 0) {
-        state.analysisResults.legal.forEach(result => {
-          analysisToInsert.push({
-            invention_id: inventionId,
-            analysis_type: 'legal',
-            result
-          });
-        });
-      }
-      
-      // Business analysis
-      if (state.analysisResults.business.length > 0) {
-        state.analysisResults.business.forEach(result => {
-          analysisToInsert.push({
-            invention_id: inventionId,
-            analysis_type: 'business',
-            result
-          });
-        });
-      }
-      
-      if (analysisToInsert.length > 0) {
-        // Delete existing analysis results
-        await supabase
-          .from('analysis_results')
-          .delete()
-          .eq('invention_id', inventionId);
-          
-        // Insert new analysis results
-        const { error: analysisError } = await supabase
-          .from('analysis_results')
-          .insert(analysisToInsert);
-          
-        if (analysisError) throw analysisError;
+        if (transcriptionsError) {
+          console.error("Error saving transcriptions:", transcriptionsError);
+          // Don't throw error, just log it
+        }
       }
       
       return inventionId;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving invention:", error);
-      throw error;
+      throw new Error(error.message || "Failed to save invention");
     }
-  },
-  
-  // Load an invention and all related data from Supabase
-  async getInventionById(id: string): Promise<InventionState | null> {
+  }
+
+  /**
+   * Get an invention by ID
+   */
+  static async getInventionById(id: string): Promise<InventionState | null> {
     try {
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        throw new Error("You must be logged in to load an invention");
-      }
-      
-      // Get the main invention record
-      const { data: invention, error } = await supabase
+      // Get the invention data
+      const { data: invention, error: inventionError } = await supabase
         .from('inventions')
         .select('*')
         .eq('id', id)
-        .eq('user_id', session.user.id)
         .single();
         
-      if (error) throw error;
-      if (!invention) return null;
+      if (inventionError) {
+        throw new Error(`Failed to fetch invention: ${inventionError.message}`);
+      }
       
-      // Get assets for this invention
+      if (!invention) {
+        throw new Error("Invention not found");
+      }
+      
+      // Get the invention assets
       const { data: assets, error: assetsError } = await supabase
         .from('invention_assets')
         .select('*')
         .eq('invention_id', id);
         
-      if (assetsError) throw assetsError;
+      if (assetsError) {
+        console.error("Error fetching assets:", assetsError);
+        // Don't throw error, just log it
+      }
       
-      // Get audio transcriptions
+      // Get the invention transcriptions
       const { data: transcriptions, error: transcriptionsError } = await supabase
-        .from('audio_transcriptions')
+        .from('invention_transcriptions')
         .select('*')
         .eq('invention_id', id);
         
-      if (transcriptionsError) throw transcriptionsError;
+      if (transcriptionsError) {
+        console.error("Error fetching transcriptions:", transcriptionsError);
+        // Don't throw error, just log it
+      }
       
-      // Get analysis results
-      const { data: analysisResults, error: analysisError } = await supabase
-        .from('analysis_results')
-        .select('*')
-        .eq('invention_id', id);
-        
-      if (analysisError) throw analysisError;
-      
-      // Build the analysis results object
-      const technical = analysisResults
-        .filter(result => result.analysis_type === 'technical')
-        .map(result => result.result);
-        
-      const market = analysisResults
-        .filter(result => result.analysis_type === 'market')
-        .map(result => result.result);
-        
-      const legal = analysisResults
-        .filter(result => result.analysis_type === 'legal')
-        .map(result => result.result);
-        
-      const business = analysisResults
-        .filter(result => result.analysis_type === 'business')
-        .map(result => result.result);
-      
-      // Convert Supabase data to InventionState format
+      // Convert database model to application model
       const inventionState: InventionState = {
         inventionId: invention.id,
         title: invention.title || '',
         description: invention.description || '',
-        sketchDataUrl: invention.sketch_data_url,
-        assets: assets ? assets.map(asset => ({
+        sketchDataUrl: invention.sketch_data_url || null,
+        assets: (assets || []).map((asset): InventionAsset => ({
           id: asset.id,
-          type: asset.type as any,
+          type: asset.type,
           url: asset.url,
-          thumbnailUrl: asset.thumbnail_url,
-          name: asset.name,
+          thumbnailUrl: asset.thumbnail_url || asset.url,
+          name: asset.name || '',
           createdAt: new Date(asset.created_at).getTime()
-        })) : [],
-        visualization3dUrl: invention.visualization_3d_url,
-        visualizationPrompts: {},
+        })),
+        visualization3dUrl: invention.visualization_3d_url || null,
+        visualizationPrompts: invention.visualization_prompts || {},
         savedToDatabase: true,
-        threejsVisualization: {
+        threejsVisualization: invention.threejs_visualization || {
           code: null,
-          html: invention.threejs_html
+          html: null
         },
-        businessStrategySvg: invention.business_strategy_svg,
-        mostRecentGeneration: null, // Add the missing property
-        analysisResults: {
-          technical,
-          market,
-          legal,
-          business
+        businessStrategySvg: invention.business_strategy_svg || null,
+        mostRecentGeneration: null, // Set to null initially
+        analysisResults: invention.analysis_results || {
+          technical: [],
+          market: [],
+          legal: [],
+          business: []
         },
-        audioTranscriptions: transcriptions ? transcriptions.map(t => ({
+        audioTranscriptions: (transcriptions || []).map(t => ({
           text: t.text,
           language: t.language,
-          audioUrl: t.audio_url,
+          audioUrl: t.audio_url || undefined,
           timestamp: new Date(t.created_at).getTime()
-        })) : []
+        }))
       };
       
       return inventionState;
-    } catch (error) {
-      console.error("Error loading invention:", error);
+    } catch (error: any) {
+      console.error("Error fetching invention:", error);
+      toast.error(error.message || "Failed to fetch invention");
       return null;
     }
-  },
-  
-  // Get a list of the user's inventions
-  async getUserInventions(): Promise<SavedInvention[]> {
+  }
+
+  /**
+   * Get all inventions for the current user
+   */
+  static async getUserInventions(): Promise<InventionState[]> {
     try {
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        throw new Error("You must be logged in to load your inventions");
+      const { data: user, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        throw new Error("You must be logged in to view your inventions");
       }
       
-      // Get the user's inventions
-      const { data: inventions, error } = await supabase
+      const userId = user.user.id;
+      
+      // Get all inventions for this user
+      const { data: inventions, error: inventionsError } = await supabase
         .from('inventions')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', userId)
         .order('updated_at', { ascending: false });
         
-      if (error) throw error;
-      if (!inventions) return [];
-      
-      // For each invention, get its assets and transcriptions
-      const result: SavedInvention[] = [];
-      
-      for (const invention of inventions) {
-        // Get assets for this invention
-        const { data: assets } = await supabase
-          .from('invention_assets')
-          .select('*')
-          .eq('invention_id', invention.id);
-          
-        // Get transcriptions for this invention
-        const { data: transcriptions } = await supabase
-          .from('audio_transcriptions')
-          .select('*')
-          .eq('invention_id', invention.id);
-          
-        result.push({
-          id: invention.id,
-          title: invention.title || 'Untitled Invention',
-          description: invention.description || '',
-          created_at: invention.created_at,
-          updated_at: invention.updated_at,
-          assets: (assets || []).map(asset => ({
-            id: asset.id,
-            type: asset.type as any,
-            url: asset.url,
-            thumbnailUrl: asset.thumbnail_url,
-            name: asset.name,
-            createdAt: new Date(asset.created_at).getTime()
-          })),
-          transcriptions: (transcriptions || []).map(t => ({
-            text: t.text,
-            language: t.language,
-            audioUrl: t.audio_url,
-            timestamp: new Date(t.created_at).getTime()
-          }))
-        });
+      if (inventionsError) {
+        throw new Error(`Failed to fetch inventions: ${inventionsError.message}`);
       }
       
-      return result;
-    } catch (error) {
-      console.error("Error loading inventions:", error);
+      // Get all assets for this user's inventions
+      const { data: allAssets, error: assetsError } = await supabase
+        .from('invention_assets')
+        .select('*')
+        .eq('user_id', userId);
+        
+      if (assetsError) {
+        console.error("Error fetching assets:", assetsError);
+        // Don't throw error, just log it
+      }
+      
+      // Convert database models to application models
+      const inventionStates: InventionState[] = inventions.map(invention => {
+        // Find assets for this invention
+        const inventionAssets = (allAssets || [])
+          .filter(asset => asset.invention_id === invention.id)
+          .map((asset): InventionAsset => ({
+            id: asset.id,
+            type: asset.type,
+            url: asset.url,
+            thumbnailUrl: asset.thumbnail_url || asset.url,
+            name: asset.name || '',
+            createdAt: new Date(asset.created_at).getTime()
+          }));
+          
+        return {
+          inventionId: invention.id,
+          title: invention.title || '',
+          description: invention.description || '',
+          sketchDataUrl: invention.sketch_data_url || null,
+          assets: inventionAssets,
+          visualization3dUrl: invention.visualization_3d_url || null,
+          visualizationPrompts: invention.visualization_prompts || {},
+          savedToDatabase: true,
+          threejsVisualization: invention.threejs_visualization || {
+            code: null,
+            html: null
+          },
+          businessStrategySvg: invention.business_strategy_svg || null,
+          mostRecentGeneration: null, // Set to null initially
+          analysisResults: invention.analysis_results || {
+            technical: [],
+            market: [],
+            legal: [],
+            business: []
+          },
+          audioTranscriptions: []
+        };
+      });
+      
+      return inventionStates;
+    } catch (error: any) {
+      console.error("Error fetching user inventions:", error);
+      toast.error(error.message || "Failed to fetch inventions");
       return [];
     }
-  },
-  
-  // Delete an invention
-  async deleteInvention(id: string): Promise<boolean> {
+  }
+
+  /**
+   * Delete an invention by ID
+   */
+  static async deleteInvention(id: string): Promise<boolean> {
     try {
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        throw new Error("You must be logged in to delete an invention");
-      }
-      
-      // Delete the invention (cascading will delete related records)
+      // Delete the invention
       const { error } = await supabase
         .from('inventions')
         .delete()
-        .eq('id', id)
-        .eq('user_id', session.user.id);
+        .eq('id', id);
         
-      if (error) throw error;
+      if (error) {
+        throw new Error(`Failed to delete invention: ${error.message}`);
+      }
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting invention:", error);
+      toast.error(error.message || "Failed to delete invention");
       return false;
     }
   }
-};
+}

@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useContext,
@@ -11,6 +12,7 @@ export type AssetType =
   | "video"
   | "audio"
   | "document"
+  | "sketch"
   | "other";
 
 export interface InventionAsset {
@@ -41,11 +43,13 @@ export interface AnalysisResults {
   business: string[];
 }
 
-// Add this to your type definitions
 export interface MostRecentGeneration {
-  type: 'sketch' | 'mockup' | 'marketing-image' | '3d-model' | 'business-strategy' | 'expert-feedback';
-  data: any;
-  timestamp: number;
+  id: string;
+  type: string;
+  url?: string | null;
+  svg?: string | null;
+  name: string;
+  createdAt: number;
 }
 
 export interface InventionState {
@@ -69,10 +73,10 @@ export interface InventionContextType {
   setState: React.Dispatch<React.SetStateAction<InventionState>>;
   updateTitle: (title: string) => void;
   updateDescription: (description: string) => void;
-  updateSketchDataUrl: (sketchDataUrl: string | null) => void;
+  updateSketchData: (sketchDataUrl: string | null) => void;
   addAsset: (asset: InventionAsset) => void;
   removeAsset: (assetId: string) => void;
-  updateVisualization3dUrl: (visualization3dUrl: string | null) => void;
+  update3DVisualization: (visualization3dUrl: string | null) => void;
   updateVisualizationPrompts: (
     visualizationPrompts: Record<string, string>
   ) => void;
@@ -81,11 +85,12 @@ export interface InventionContextType {
   resetState: () => void;
   updateThreejsCode: (code: string | null) => void;
   updateThreejsHtml: (html: string | null) => void;
-  updateBusinessStrategySvg: (svg: string | null) => void;
+  setBusinessStrategySvg: (svg: string | null) => void;
+  setAnalysisResults: (results: AnalysisResults) => void;
   addAnalysisResult: (type: keyof AnalysisResults, result: string) => void;
   clearAnalysisResults: () => void;
   addAudioTranscription: (transcription: AudioTranscription) => void;
-  updateMostRecentGeneration: (generation: MostRecentGeneration) => void;
+  setMostRecentGeneration: (generation: MostRecentGeneration) => void;
 }
 
 // Define the initial state
@@ -130,7 +135,7 @@ export const InventionContextProvider = ({ children }: { children: React.ReactNo
     setState((prevState) => ({ ...prevState, description }));
   }, []);
 
-  const updateSketchDataUrl = useCallback((sketchDataUrl: string | null) => {
+  const updateSketchData = useCallback((sketchDataUrl: string | null) => {
     setState((prevState) => ({ ...prevState, sketchDataUrl }));
   }, []);
 
@@ -148,7 +153,7 @@ export const InventionContextProvider = ({ children }: { children: React.ReactNo
     }));
   }, []);
 
-  const updateVisualization3dUrl = useCallback((visualization3dUrl: string | null) => {
+  const update3DVisualization = useCallback((visualization3dUrl: string | null) => {
     setState((prevState) => ({ ...prevState, visualization3dUrl }));
   }, []);
 
@@ -173,8 +178,15 @@ export const InventionContextProvider = ({ children }: { children: React.ReactNo
     }));
   }, []);
 
-  const updateBusinessStrategySvg = useCallback((svg: string | null) => {
+  const setBusinessStrategySvg = useCallback((svg: string | null) => {
     setState((prevState) => ({ ...prevState, businessStrategySvg: svg }));
+  }, []);
+
+  const setAnalysisResults = useCallback((results: AnalysisResults) => {
+    setState((prevState) => ({
+      ...prevState,
+      analysisResults: results,
+    }));
   }, []);
 
   const addAnalysisResult = useCallback(
@@ -210,7 +222,7 @@ export const InventionContextProvider = ({ children }: { children: React.ReactNo
   }, []);
   
   // Update the state with the most recent generation
-  const updateMostRecentGeneration = useCallback((generation: MostRecentGeneration) => {
+  const setMostRecentGeneration = useCallback((generation: MostRecentGeneration) => {
     setState(prevState => ({
       ...prevState,
       mostRecentGeneration: generation
@@ -284,21 +296,22 @@ export const InventionContextProvider = ({ children }: { children: React.ReactNo
     setState,
     updateTitle,
     updateDescription,
-    updateSketchDataUrl,
+    updateSketchData,
     addAsset,
     removeAsset,
-    updateVisualization3dUrl,
+    update3DVisualization,
     updateVisualizationPrompts,
     saveToDatabase,
     loadInvention,
     resetState,
     updateThreejsCode,
     updateThreejsHtml,
-    updateBusinessStrategySvg,
+    setBusinessStrategySvg,
+    setAnalysisResults,
     addAnalysisResult,
     clearAnalysisResults,
     addAudioTranscription,
-    updateMostRecentGeneration,
+    setMostRecentGeneration,
   };
 
   return (

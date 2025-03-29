@@ -1,186 +1,125 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useInvention } from "@/contexts/InventionContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { 
-  Construction,
-  Users,
-  Box,
-  Scale,
-  BarChart,
-  Inspect,
-  Zap,
-  Loader2
-} from "lucide-react";
-import { runAnalysis, runAllAnalyses } from "./analysis/AnalysisService";
-import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MarkdownContent } from "./analysis/MarkdownContent";
+import { AiAssistantPanel } from "./AiAssistantPanel";
+import { FlaskConicalIcon, Users, BarChart4, Lightbulb, LucideIcon } from "lucide-react";
+
+interface AnalysisTab {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  resultKey: keyof typeof analyzedContent;
+}
 
 export const AnalysisTools = () => {
   const { state, setAnalysisResults } = useInvention();
-  const [isLoading, setIsLoading] = useState<Record<string, boolean>>({
-    technical: false,
-    challenges: false,
-    materials: false,
-    users: false,
-    competition: false,
-    ip: false,
-    runAll: false,
-  });
+  const [activeTab, setActiveTab] = useState<string>("technical");
+  const [showAnalysis, setShowAnalysis] = useState(false);
   
-  // Helper to update loading state for a specific analysis type
-  const setLoadingState = (type: string, loading: boolean) => {
-    setIsLoading(prev => ({ ...prev, [type]: loading }));
+  // Memoized results
+  const analyzedContent = {
+    technical: state.analysisResults.technical,
+    market: state.analysisResults.market,
+    legal: state.analysisResults.legal,
+    business: state.analysisResults.business,
   };
   
-  // Check if any analysis is currently loading
-  const isAnyLoading = Object.values(isLoading).some(v => v);
+  // Check if we have any analysis results
+  const hasResults = Object.values(analyzedContent).some(arr => arr.length > 0);
   
-  // Handle running a specific analysis
-  const handleRunAnalysis = async (analysisType: string) => {
-    await runAnalysis(
-      analysisType, 
-      {
-        analysisResults: state.analysisResults,
-        title: state.title,
-        description: state.description,
-        sketchDataUrl: state.sketchDataUrl,
-        setAnalysisResults
-      },
-      setLoadingState
-    );
-    toast.success(`${analysisType} analysis completed`);
-  };
-  
-  // Handle running all analyses
-  const handleRunAllAnalyses = async () => {
-    setLoadingState("runAll", true);
-    
-    try {
-      await runAllAnalyses(
-        {
-          analysisResults: state.analysisResults,
-          title: state.title,
-          description: state.description,
-          sketchDataUrl: state.sketchDataUrl,
-          setAnalysisResults
-        },
-        setLoadingState
-      );
-      toast.success("All analyses completed");
-    } catch (error) {
-      console.error("Error running all analyses:", error);
-      toast.error("Failed to complete all analyses");
-    } finally {
-      setLoadingState("runAll", false);
+  // Show analysis panel if we have results
+  useEffect(() => {
+    if (hasResults) {
+      setShowAnalysis(true);
     }
+  }, [hasResults]);
+  
+  // Function to handle completion of analysis
+  const handleAnalysisComplete = () => {
+    setShowAnalysis(true);
   };
   
-  const AnalysisButton = ({ 
-    icon, 
-    title, 
-    description, 
-    type,
-    isLoading
-  }: { 
-    icon: React.ReactNode, 
-    title: string, 
-    description: string,
-    type: string,
-    isLoading: boolean
-  }) => (
-    <Button
-      variant="outline"
-      disabled={isAnyLoading}
-      onClick={() => handleRunAnalysis(type)}
-      className="h-24 relative flex flex-col items-center justify-center text-left"
-    >
-      <div className="flex flex-col items-center">
-        {isLoading ? (
-          <Loader2 className="h-5 w-5 animate-spin mb-1" />
-        ) : (
-          <div className="mb-1">{icon}</div>
-        )}
-        <span className="font-medium text-sm">{title}</span>
-        <span className="text-xs text-muted-foreground">{description}</span>
-      </div>
-    </Button>
-  );
+  // Define tabs
+  const tabs: AnalysisTab[] = [
+    { id: "technical", label: "Technical", icon: FlaskConicalIcon, resultKey: "technical" },
+    { id: "market", label: "Market", icon: Users, resultKey: "market" },
+    { id: "legal", label: "Legal", icon: Lightbulb, resultKey: "legal" },
+    { id: "business", label: "Business", icon: BarChart4, resultKey: "business" },
+  ];
+  
+  // Reset analysis results
+  const handleResetAnalysis = () => {
+    setAnalysisResults({
+      technical: [],
+      market: [],
+      legal: [],
+      business: []
+    });
+    setShowAnalysis(false);
+  };
   
   return (
     <Card className="border-invention-accent/20">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium">Analysis Tools</h3>
-          
-          <Button
-            onClick={handleRunAllAnalyses}
-            disabled={isAnyLoading}
-            variant="default"
-            className="bg-invention-accent hover:bg-invention-accent/90"
-          >
-            {isLoading.runAll ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Running All Analyses...
-              </>
-            ) : (
-              <>
-                <Zap className="mr-2 h-4 w-4" />
-                Run All Analyses
-              </>
-            )}
-          </Button>
+          <h3 className="text-lg font-medium">AI Analysis Tools</h3>
+          {hasResults && (
+            <button 
+              onClick={handleResetAnalysis}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Reset Analysis
+            </button>
+          )}
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <AnalysisButton 
-            icon={<Construction className="h-4 w-4" />}
-            title="Technical Analysis"
-            description="Feasibility and engineering"
-            type="technical"
-            isLoading={isLoading.technical}
-          />
-          
-          <AnalysisButton 
-            icon={<Users className="h-4 w-4" />}
-            title="User Analysis"
-            description="Target audience and needs"
-            type="users"
-            isLoading={isLoading.users}
-          />
-          
-          <AnalysisButton 
-            icon={<Box className="h-4 w-4" />}
-            title="Materials Analysis"
-            description="Components and materials"
-            type="materials"
-            isLoading={isLoading.materials}
-          />
-          
-          <AnalysisButton 
-            icon={<Scale className="h-4 w-4" />}
-            title="IP Analysis"
-            description="Patent and legal issues"
-            type="ip"
-            isLoading={isLoading.ip}
-          />
-          
-          <AnalysisButton 
-            icon={<BarChart className="h-4 w-4" />}
-            title="Market Analysis"
-            description="Competition and positioning"
-            type="competition"
-            isLoading={isLoading.competition}
-          />
-          
-          <AnalysisButton 
-            icon={<Inspect className="h-4 w-4" />}
-            title="Key Challenges"
-            description="Critical issues to solve"
-            type="challenges"
-            isLoading={isLoading.challenges}
-          />
+        <div>
+          {!showAnalysis ? (
+            <AiAssistantPanel onAnalysisComplete={handleAnalysisComplete} />
+          ) : (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-4 mb-4">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const hasContent = analyzedContent[tab.resultKey].length > 0;
+                  
+                  return (
+                    <TabsTrigger 
+                      key={tab.id} 
+                      value={tab.id}
+                      className={!hasContent ? "opacity-50" : ""}
+                      disabled={!hasContent}
+                    >
+                      <Icon className="h-4 w-4 mr-2" />
+                      {tab.label}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+              
+              {tabs.map((tab) => (
+                <TabsContent key={tab.id} value={tab.id} className="space-y-4">
+                  {analyzedContent[tab.resultKey].length > 0 ? (
+                    analyzedContent[tab.resultKey].map((result, index) => (
+                      <MarkdownContent key={index} content={result} />
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-muted-foreground">
+                      <p>No {tab.label.toLowerCase()} analysis available yet.</p>
+                      <p className="text-sm mt-2">Run an analysis to see results here.</p>
+                    </div>
+                  )}
+                </TabsContent>
+              ))}
+              
+              <div className="mt-4">
+                <AiAssistantPanel onAnalysisComplete={handleAnalysisComplete} />
+              </div>
+            </Tabs>
+          )}
         </div>
       </CardContent>
     </Card>
