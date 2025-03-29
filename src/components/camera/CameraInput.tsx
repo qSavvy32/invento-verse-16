@@ -3,12 +3,14 @@ import { CameraView } from "./CameraView";
 import { CameraPlaceholder } from "./CameraPlaceholder";
 import { ImagePreview } from "./ImagePreview";
 import { useCameraControl } from "./useCameraControl";
+import { InventionAsset } from "@/contexts/InventionContext";
 
 interface CameraInputProps {
   onCapture: (imageData: string) => void;
+  onAddAsset?: (asset: InventionAsset) => void;
 }
 
-export const CameraInput = ({ onCapture }: CameraInputProps) => {
+export const CameraInput = ({ onCapture, onAddAsset }: CameraInputProps) => {
   const {
     isActive,
     capturedImage,
@@ -18,7 +20,7 @@ export const CameraInput = ({ onCapture }: CameraInputProps) => {
     captureImage,
     clearImage,
     cancelCamera
-  } = useCameraControl({ onCapture });
+  } = useCameraControl({ onCapture, onAddAsset });
 
   if (capturedImage) {
     return (

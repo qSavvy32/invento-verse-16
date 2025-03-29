@@ -16,10 +16,20 @@ export interface AudioTranscription {
   timestamp: number;
 }
 
+export interface InventionAsset {
+  id: string;
+  type: 'sketch' | 'image' | 'document' | '3d';
+  url: string;
+  thumbnailUrl?: string;
+  name?: string;
+  createdAt: number;
+}
+
 export interface InventionState {
   title: string;
   description: string;
-  sketchDataUrl: string | null;
+  sketchDataUrl: string | null; // Keeping for backward compatibility
+  assets: InventionAsset[]; // New array to store multiple assets
   visualization3dUrl: string | null;
   visualizationPrompts: VisualizationPrompts;
   savedToDatabase: boolean;
@@ -41,6 +51,8 @@ type InventionAction =
   | { type: 'UPDATE_TITLE'; payload: string }
   | { type: 'UPDATE_DESCRIPTION'; payload: string | ((prev: string) => string) }
   | { type: 'UPDATE_SKETCH_DATA'; payload: string | null }
+  | { type: 'ADD_ASSET'; payload: InventionAsset }
+  | { type: 'REMOVE_ASSET'; payload: string } // id of asset to remove
   | { type: 'UPDATE_3D_VISUALIZATION'; payload: string | null }
   | { type: 'UPDATE_VISUALIZATIONS'; payload: VisualizationPrompts }
   | { type: 'SAVE_TO_DATABASE'; payload: boolean }
@@ -54,6 +66,8 @@ interface InventionContextType {
   updateTitle: (title: string) => void;
   updateDescription: (description: string | ((prev: string) => string)) => void;
   updateSketchData: (dataUrl: string | null) => void;
+  addAsset: (asset: InventionAsset) => void;
+  removeAsset: (assetId: string) => void;
   update3DVisualization: (dataUrl: string | null) => void;
   updateVisualizations: (prompts: VisualizationPrompts) => void;
   saveToDatabase: (saved: boolean) => void;
@@ -68,6 +82,7 @@ const initialState: InventionState = {
   title: '',
   description: '',
   sketchDataUrl: null,
+  assets: [],
   visualization3dUrl: null,
   visualizationPrompts: {},
   savedToDatabase: false,
@@ -98,6 +113,16 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
     }
     case 'UPDATE_SKETCH_DATA':
       return { ...state, sketchDataUrl: action.payload };
+    case 'ADD_ASSET':
+      return { 
+        ...state, 
+        assets: [...state.assets, action.payload] 
+      };
+    case 'REMOVE_ASSET':
+      return {
+        ...state,
+        assets: state.assets.filter(asset => asset.id !== action.payload)
+      };
     case 'UPDATE_3D_VISUALIZATION':
       return { ...state, visualization3dUrl: action.payload };
     case 'UPDATE_VISUALIZATIONS':
@@ -139,6 +164,11 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
     dispatch({ type: 'UPDATE_DESCRIPTION', payload: descriptionOrFn });
   
   const updateSketchData = (dataUrl: string | null) => dispatch({ type: 'UPDATE_SKETCH_DATA', payload: dataUrl });
+  
+  const addAsset = (asset: InventionAsset) => dispatch({ type: 'ADD_ASSET', payload: asset });
+  
+  const removeAsset = (assetId: string) => dispatch({ type: 'REMOVE_ASSET', payload: assetId });
+  
   const update3DVisualization = (dataUrl: string | null) => dispatch({ type: 'UPDATE_3D_VISUALIZATION', payload: dataUrl });
   const updateVisualizations = (prompts: VisualizationPrompts) => dispatch({ type: 'UPDATE_VISUALIZATIONS', payload: prompts });
   const saveToDatabase = (saved: boolean) => dispatch({ type: 'SAVE_TO_DATABASE', payload: saved });
@@ -158,6 +188,8 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         updateTitle, 
         updateDescription, 
         updateSketchData, 
+        addAsset,
+        removeAsset,
         update3DVisualization,
         updateVisualizations,
         saveToDatabase,

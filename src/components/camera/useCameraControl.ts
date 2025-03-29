@@ -2,12 +2,14 @@
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { InventionAsset } from "@/contexts/InventionContext";
 
 export interface UseCameraControlProps {
   onCapture: (imageData: string) => void;
+  onAddAsset?: (asset: InventionAsset) => void;
 }
 
-export function useCameraControl({ onCapture }: UseCameraControlProps) {
+export function useCameraControl({ onCapture, onAddAsset }: UseCameraControlProps) {
   const [isActive, setIsActive] = useState(false);
   const [isFrontCamera, setIsFrontCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export function useCameraControl({ onCapture }: UseCameraControlProps) {
 
   const toggleCamera = () => {
     setIsActive(prev => !prev);
-    // If we're toggling the camera on and we already have a captured image, clear it
+    // Clear captured image when toggling camera on
     if (!isActive && capturedImage) {
       setCapturedImage(null);
     }
@@ -127,6 +129,19 @@ export function useCameraControl({ onCapture }: UseCameraControlProps) {
       // Send back the public URL to be used with Anthropic
       onCapture(imageUrl);
       
+      // Add as an asset if the callback is provided
+      if (onAddAsset) {
+        const newAsset: InventionAsset = {
+          id: `sketch-${Date.now()}`,
+          type: 'sketch',
+          url: imageUrl,
+          thumbnailUrl: imageDataUrl,
+          name: `Sketch ${new Date().toLocaleString()}`,
+          createdAt: Date.now()
+        };
+        onAddAsset(newAsset);
+      }
+      
       // Stop the camera after capturing
       stopCamera();
       setIsActive(false);
@@ -138,6 +153,19 @@ export function useCameraControl({ onCapture }: UseCameraControlProps) {
       const imageDataUrl = canvas.toDataURL("image/jpeg");
       setCapturedImage(imageDataUrl);
       onCapture(imageDataUrl);
+      
+      // Add as an asset if the callback is provided
+      if (onAddAsset) {
+        const newAsset: InventionAsset = {
+          id: `sketch-local-${Date.now()}`,
+          type: 'sketch',
+          url: imageDataUrl,
+          thumbnailUrl: imageDataUrl,
+          name: `Sketch ${new Date().toLocaleString()} (Local)`,
+          createdAt: Date.now()
+        };
+        onAddAsset(newAsset);
+      }
       
       stopCamera();
       setIsActive(false);

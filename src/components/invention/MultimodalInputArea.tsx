@@ -9,7 +9,7 @@ import { useStorageSetup } from "@/hooks/useStorageSetup";
 import { VoiceInput } from "@/components/VoiceInput";
 
 export const MultimodalInputArea = () => {
-  const { updateSketchData, updateDescription } = useInvention();
+  const { updateSketchData, updateDescription, addAsset } = useInvention();
   const { isStorageSetup, isLoading } = useStorageSetup();
   
   const handleCapture = (imageData: string) => {
@@ -52,11 +52,11 @@ export const MultimodalInputArea = () => {
           </TabsList>
           
           <TabsContent value="camera">
-            <CameraInput onCapture={handleCapture} />
+            <CameraInput onCapture={handleCapture} onAddAsset={addAsset} />
           </TabsContent>
           
           <TabsContent value="upload">
-            <FileUploader onFileUpload={handleCapture} />
+            <FileUploader onFileUpload={handleCapture} onAddAsset={addAsset} />
           </TabsContent>
           
           <TabsContent value="voice">

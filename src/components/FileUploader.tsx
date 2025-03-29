@@ -1,15 +1,16 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, X, FileText, ImageIcon, FileIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { InventionAsset } from "@/contexts/InventionContext";
 
 interface FileUploaderProps {
   onFileUpload: (dataUrl: string) => void;
+  onAddAsset?: (asset: InventionAsset) => void;
 }
 
-export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
+export const FileUploader = ({ onFileUpload, onAddAsset }: FileUploaderProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +66,7 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `invention-asset-${Date.now()}.${fileExt}`;
       const folderPath = selectedFile.type.startsWith('image/') ? 'images' : 'documents';
+      const assetType = selectedFile.type.startsWith('image/') ? 'image' : 'document';
       
       const { data, error } = await supabase.storage
         .from('invention-assets')
@@ -86,6 +88,19 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
       // Send back the public URL to be used with Anthropic
       onFileUpload(fileUrl);
       
+      // Add as an asset if the callback is provided
+      if (onAddAsset) {
+        const newAsset: InventionAsset = {
+          id: `${assetType}-${Date.now()}`,
+          type: assetType as 'image' | 'document',
+          url: fileUrl,
+          thumbnailUrl: assetType === 'image' ? fileUrl : undefined,
+          name: selectedFile.name,
+          createdAt: Date.now()
+        };
+        onAddAsset(newAsset);
+      }
+      
       toast.success("File uploaded successfully!");
     } catch (error) {
       console.error("Error uploading file:", error);
@@ -97,6 +112,19 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
         if (event.target?.result) {
           const dataUrl = event.target.result as string;
           onFileUpload(dataUrl);
+          
+          // Add as an asset if the callback is provided
+          if (onAddAsset) {
+            const newAsset: InventionAsset = {
+              id: `local-${Date.now()}`,
+              type: file.type.startsWith('image/') ? 'image' : 'document',
+              url: dataUrl,
+              thumbnailUrl: file.type.startsWith('image/') ? dataUrl : undefined,
+              name: `${selectedFile.name} (Local)`,
+              createdAt: Date.now()
+            };
+            onAddAsset(newAsset);
+          }
         }
       };
       reader.readAsDataURL(selectedFile);
