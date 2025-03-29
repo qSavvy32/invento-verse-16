@@ -286,7 +286,7 @@ export class InventionService {
       const { data: allAssets, error: assetsError } = await supabase
         .from('invention_assets')
         .select('*')
-        .eq('user_id', userId);
+        .in('invention_id', inventions.map(inv => inv.id));
         
       if (assetsError) {
         console.error("Error fetching assets:", assetsError);
