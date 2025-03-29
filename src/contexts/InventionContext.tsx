@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useReducer, ReactNode, useCallback } from 'react';
 import { InventionService } from '@/services/InventionService';
 import { toast } from "sonner";
@@ -201,7 +202,8 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         });
       }
       
-      return inventionId;
+      // Remove this return statement that's causing the type error
+      // return inventionId;
     } catch (error) {
       console.error("Error saving to database:", error);
       
