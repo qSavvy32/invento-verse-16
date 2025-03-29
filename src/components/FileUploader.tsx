@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, X, FileText, ImageIcon } from "lucide-react";
+import { Upload, X, FileText, ImageIcon, FileIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface FileUploaderProps {
@@ -20,30 +20,53 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
     
     const selectedFile = e.target.files[0];
     
-    // Check file type (only images for now)
-    if (!selectedFile.type.startsWith('image/')) {
-      toast.error("Only image files are supported");
+    // Check file type (expanded to support multiple formats that Anthropic can process)
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
+      'application/pdf', 'text/plain', 'text/csv', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+      'application/msword', // doc
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+      'application/vnd.ms-excel' // xls
+    ];
+    
+    if (!allowedTypes.includes(selectedFile.type)) {
+      toast.error("Unsupported file type. Please upload an image, PDF, or document.");
       return;
     }
     
-    // Check file size (max 10MB)
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+    // Check file size (max 20MB)
+    if (selectedFile.size > 20 * 1024 * 1024) {
+      toast.error("File size must be less than 20MB");
       return;
     }
     
     setFile(selectedFile);
     
-    // Create a preview
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        const dataUrl = event.target.result as string;
-        setPreview(dataUrl);
-        onFileUpload(dataUrl);
-      }
-    };
-    reader.readAsDataURL(selectedFile);
+    // Create a preview for images and set file data for other types
+    if (selectedFile.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const dataUrl = event.target.result as string;
+          setPreview(dataUrl);
+          onFileUpload(dataUrl);
+        }
+      };
+      reader.readAsDataURL(selectedFile);
+    } else {
+      // For non-image files, we'll show an icon but still process the file
+      setPreview(null);
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const dataUrl = event.target.result as string;
+          onFileUpload(dataUrl);
+        }
+      };
+      reader.readAsDataURL(selectedFile);
+    }
   };
 
   const handleAnalyzeVision = async () => {
@@ -65,24 +88,24 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
           },
           body: JSON.stringify({
             image: base64,
-            prompt: "Analyze this invention or design sketch. Describe what you see, identifying key components, potential functionality, and any notable design elements."
+            prompt: "Analyze this content carefully. If it's an image, describe what you see. If it's a document, summarize the key information. Identify key components, potential functionality, and any notable elements."
           }),
         });
         
         if (!response.ok) {
-          throw new Error('Failed to analyze image');
+          throw new Error('Failed to analyze file');
         }
         
         const data = await response.json();
         
-        toast.success("Vision analysis complete");
-        console.log("Vision analysis results:", data);
+        toast.success("Analysis complete");
+        console.log("Analysis results:", data);
         
         setIsLoading(false);
       };
     } catch (error) {
-      console.error("Error analyzing image:", error);
-      toast.error("Failed to analyze image");
+      console.error("Error analyzing file:", error);
+      toast.error("Failed to analyze file");
       setIsLoading(false);
     }
   };
@@ -92,13 +115,26 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
     setPreview(null);
   };
 
+  // Helper function to get the appropriate icon based on file type
+  const getFileIcon = () => {
+    if (!file) return <Upload size={40} />;
+    
+    if (file.type.startsWith('image/')) {
+      return <ImageIcon size={16} />;
+    } else if (file.type.includes('pdf')) {
+      return <FileText size={16} />;
+    } else {
+      return <FileIcon size={16} />;
+    }
+  };
+
   return (
     <div className="space-y-4">
       {!file ? (
         <div className="flex flex-col items-center justify-center gap-4 p-10 border-2 border-dashed rounded-lg">
           <Upload size={40} className="text-muted-foreground" />
           <p className="text-center text-muted-foreground">
-            Upload images of your invention, sketches, or reference materials
+            Upload images, PDFs, or documents of your invention, sketches, or reference materials
           </p>
           <div className="flex gap-2">
             <div className="relative">
@@ -111,39 +147,52 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
                 type="file"
                 className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={handleFileChange}
-                accept="image/*"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
               />
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Supported formats: JPG, PNG, GIF, BMP (max 10MB)
+            Supported formats: Images, PDF, Word, Excel, CSV, TXT (max 20MB)
           </p>
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="relative rounded-lg overflow-hidden bg-black">
-            <img 
-              src={preview!} 
-              alt="Uploaded file" 
-              className="w-full object-contain max-h-[400px]"
-            />
-            <Button 
-              variant="destructive" 
-              size="icon" 
-              className="absolute top-2 right-2"
-              onClick={clearFile}
-            >
-              <X size={18} />
-            </Button>
-          </div>
+          {preview ? (
+            <div className="relative rounded-lg overflow-hidden bg-black">
+              <img 
+                src={preview} 
+                alt="Uploaded file" 
+                className="w-full object-contain max-h-[400px]"
+              />
+              <Button 
+                variant="destructive" 
+                size="icon" 
+                className="absolute top-2 right-2"
+                onClick={clearFile}
+              >
+                <X size={18} />
+              </Button>
+            </div>
+          ) : (
+            <div className="relative rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center min-h-[200px]">
+              <div className="flex flex-col items-center gap-2 p-6">
+                <FileText size={48} className="text-gray-400" />
+                <p className="font-medium">{file.name}</p>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  className="mt-2"
+                  onClick={clearFile}
+                >
+                  <X size={16} className="mr-2" /> Remove File
+                </Button>
+              </div>
+            </div>
+          )}
           
           <div className="flex items-center text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
-              {file.type.startsWith('image/') ? (
-                <ImageIcon size={16} />
-              ) : (
-                <FileText size={16} />
-              )}
+              {getFileIcon()}
               <span className="font-medium">{file.name}</span>
               <span>({(file.size / 1024).toFixed(1)} KB)</span>
             </div>
@@ -160,7 +209,7 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
                 type="file"
                 className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={handleFileChange}
-                accept="image/*"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt"
               />
             </div>
           </div>

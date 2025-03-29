@@ -98,6 +98,11 @@ export const CameraInput = ({ onCapture }: CameraInputProps) => {
     setCapturedImage(null);
   };
 
+  const cancelCamera = () => {
+    stopCamera();
+    setIsActive(false);
+  };
+
   if (capturedImage) {
     return (
       <div className="relative">
@@ -116,7 +121,7 @@ export const CameraInput = ({ onCapture }: CameraInputProps) => {
             <X size={18} />
           </Button>
         </div>
-        <div className="mt-3 flex justify-center">
+        <div className="mt-3 flex justify-center gap-2">
           <Button onClick={toggleCamera} className="flex items-center gap-2">
             <Camera size={18} />
             Take Another Photo
@@ -154,6 +159,15 @@ export const CameraInput = ({ onCapture }: CameraInputProps) => {
               className="rounded-full bg-white/20 hover:bg-white/30 border-0"
             >
               <SwitchCamera size={18} className="text-white" />
+            </Button>
+            
+            <Button 
+              onClick={cancelCamera}
+              variant="outline"
+              size="icon" 
+              className="rounded-full bg-white/20 hover:bg-white/30 border-0"
+            >
+              <X size={18} className="text-white" />
             </Button>
           </div>
         </div>
