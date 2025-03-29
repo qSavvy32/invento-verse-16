@@ -53,21 +53,21 @@ export const IdeasGrid = ({ generatedIdeas }: IdeasGridProps) => {
         />
       </div>
       
-      {/* Call to Action button to go to "The Lab" */}
-      <div className="mt-10 flex justify-center">
+      {/* Call to Action button to go to "The Lab" - Now full width and larger */}
+      <div className="mt-10">
+        <p className="text-sm text-muted-foreground mb-4 text-center max-w-xl mx-auto italic">
+          Take your idea to the next level in our invention workspace where you can refine, 
+          analyze, and develop your concept with AI assistance.
+        </p>
         <Button 
           onClick={navigateToLab} 
-          className="bg-invention-accent hover:bg-invention-accent/90 text-white font-medium shadow-md group transition-all"
+          className="w-full py-6 bg-invention-accent hover:bg-invention-accent/90 text-white font-medium text-lg shadow-md group transition-all"
           size="lg"
         >
           <FlaskConicalIcon className="mr-2 h-5 w-5" />
           Continue in The Lab
           <ArrowRightIcon className="ml-2 h-4 w-4 opacity-70 group-hover:translate-x-1 transition-transform" />
         </Button>
-        <p className="text-sm text-muted-foreground mt-2 text-center max-w-md">
-          Take your idea to the next level in our invention workspace where you can refine, 
-          analyze, and develop your concept with AI assistance.
-        </p>
       </div>
     </div>
   );

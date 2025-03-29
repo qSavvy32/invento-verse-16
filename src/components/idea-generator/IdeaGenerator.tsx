@@ -48,6 +48,9 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
     contextIsAvailable = false;
   }
   
+  // Check if we should hide the form because results are showing
+  const hasResults = Object.keys(generatedIdeas).length > 0;
+  
   return (
     <div className="py-6 px-0">
       {!isExpanded ? (
@@ -83,45 +86,53 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
               </Button>
             </div>
             
-            {/* Add Basic Information Section */}
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold text-invention-ink">Basic Information</h3>
-              <div className="space-y-3">
-                <div>
-                  <Input
-                    placeholder="Give your invention a name"
-                    value={contextIsAvailable ? inventionContext.state.title : localTitle}
-                    onChange={(e) => contextIsAvailable ? inventionContext.updateTitle(e.target.value) : setLocalTitle(e.target.value)}
-                    className="text-base font-semibold"
-                  />
+            {/* Show the basic info and form only if there are no results yet */}
+            {!hasResults && (
+              <>
+                {/* Add Basic Information Section */}
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-invention-ink">Basic Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <Input
+                        placeholder="Give your invention a name"
+                        value={contextIsAvailable ? inventionContext.state.title : localTitle}
+                        onChange={(e) => contextIsAvailable ? inventionContext.updateTitle(e.target.value) : setLocalTitle(e.target.value)}
+                        className="text-base font-semibold"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Textarea
+                        placeholder="Describe your invention..."
+                        value={contextIsAvailable ? inventionContext.state.description : localDescription}
+                        onChange={(e) => contextIsAvailable ? inventionContext.updateDescription(e.target.value) : setLocalDescription(e.target.value)}
+                        className="min-h-[80px] max-h-[120px] text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
                 
-                <div>
-                  <Textarea
-                    placeholder="Describe your invention..."
-                    value={contextIsAvailable ? inventionContext.state.description : localDescription}
-                    onChange={(e) => contextIsAvailable ? inventionContext.updateDescription(e.target.value) : setLocalDescription(e.target.value)}
-                    className="min-h-[80px] max-h-[120px] text-sm"
-                  />
-                </div>
+                <Separator className="my-4 bg-invention-accent/20" />
+                
+                <IdeaForm
+                  description={description}
+                  setDescription={setDescription}
+                  sketchDataUrl={sketchDataUrl}
+                  onGenerate={() => generateIdeas()}
+                  isGenerating={isGenerating}
+                  error={error}
+                  onVoiceTranscription={handleVoiceTranscription}
+                />
+              </>
+            )}
+            
+            {/* Results are always visible if they exist */}
+            {hasResults && (
+              <div className="mt-6">
+                <IdeasGrid generatedIdeas={generatedIdeas} />
               </div>
-            </div>
-            
-            <Separator className="my-4 bg-invention-accent/20" />
-            
-            <IdeaForm
-              description={description}
-              setDescription={setDescription}
-              sketchDataUrl={sketchDataUrl}
-              onGenerate={() => generateIdeas()}
-              isGenerating={isGenerating}
-              error={error}
-              onVoiceTranscription={handleVoiceTranscription}
-            />
-            
-            <div className="max-h-[200px] overflow-y-auto">
-              <IdeasGrid generatedIdeas={generatedIdeas} />
-            </div>
+            )}
           </div>
           
           {/* Auth Prompt Dialog */}
