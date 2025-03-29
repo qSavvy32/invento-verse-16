@@ -76,6 +76,41 @@ export type Database = {
           },
         ]
       }
+      chat_summaries: {
+        Row: {
+          created_at: string
+          data: string
+          id: string
+          invention_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          id?: string
+          invention_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          id?: string
+          invention_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_summaries_invention_id_fkey"
+            columns: ["invention_id"]
+            isOneToOne: false
+            referencedRelation: "inventions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invention_assets: {
         Row: {
           created_at: string

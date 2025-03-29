@@ -1,4 +1,3 @@
-
 import type { Database } from './types';
 
 // Define our custom tables to extend the Database type
@@ -40,6 +39,15 @@ export interface InventionTables {
     invention_id: string;
     analysis_type: 'technical' | 'market' | 'legal' | 'business';
     result: string;
+    created_at: string;
+  };
+
+  chat_summaries: {
+    id: string;
+    user_id: string;
+    invention_id: string;
+    title: string;
+    data: string;
     created_at: string;
   };
 }

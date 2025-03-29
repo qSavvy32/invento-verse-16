@@ -80,13 +80,12 @@ export class ChatDataService {
       const chatDataAsString = JSON.stringify(summaryData);
       
       const { data, error } = await supabase
-        .from('chat_summaries')
+        .from("chat_summaries")
         .insert({
           user_id: userId,
           invention_id: inventionId,
           title: summaryData.title,
-          data: chatDataAsString,
-          created_at: new Date().toISOString()
+          data: chatDataAsString
         })
         .select('id')
         .single();
