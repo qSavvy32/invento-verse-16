@@ -15,8 +15,8 @@ export const DevilsAdvocate = () => {
     await generateCritique(state.title, state.description, state.sketchDataUrl);
   };
 
-  // Wrapper function that returns a Promise<void> to match the expected type
-  const handleSaveToDatabase = async (showToast?: boolean): Promise<void> => {
+  // Handle saving to database with proper typing
+  const handleSaveToDatabase = async (showToast?: boolean) => {
     await saveToDatabase(showToast);
   };
   
@@ -37,8 +37,8 @@ export const DevilsAdvocate = () => {
         {critiques && <CritiqueCard critiques={critiques} />}
         
         <SaveExportSection 
-          inventionState={state} 
-          onSave={handleSaveToDatabase} 
+          inventionState={state}
+          onSave={handleSaveToDatabase}
         />
       </div>
     </div>
