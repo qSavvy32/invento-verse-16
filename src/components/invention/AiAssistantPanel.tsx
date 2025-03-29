@@ -1,4 +1,3 @@
-
 import { useInvention } from "@/contexts/InventionContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { useState } from "react";
 import { Box, Loader2Icon, BarChart3, Database, Lightbulb, Target, Users, Search, Award, FileText } from "lucide-react";
 import { IdeaGenerator } from "@/components/IdeaGenerator";
 import { supabase } from "@/integrations/supabase/client";
+import { captureException } from "@/integrations/sentry";
 
 interface AiAssistantPanelProps {
   onAnalysisComplete: () => void;
@@ -66,130 +66,21 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       
       console.log(`${analysisType} analysis result:`, data);
       
-      // Process the results based on the analysis type
-      if (analysisType === "technical" || analysisType === "challenges" || analysisType === "materials") {
-        let technicalResults: string[] = [];
-        
-        if (data.technical_analysis) {
-          technicalResults = [
-            ...(data.technical_analysis.key_features_list || []),
-            ...(data.technical_analysis.materials_components_ideas || []),
-            ...(data.technical_analysis.technical_challenges || []).map((c: any) => 
-              `Challenge: ${c.challenge} - Potential solution: ${c.potential_solution}`
-            ),
-            ...(data.technical_analysis.suggested_improvements || [])
-          ];
-        } else if (data.materials_analysis) {
-          technicalResults = [
-            ...(data.materials_analysis.primary_materials || []).map((m: any) => 
-              `${m.material}: ${m.rationale}`
-            ),
-            ...(data.materials_analysis.alternative_materials || []).map((m: any) => 
-              `Alternative: ${m.material} - Pros: ${m.pros}, Cons: ${m.cons}`
-            )
-          ];
-        } else if (data.challenges_analysis) {
-          technicalResults = [
-            ...(data.challenges_analysis.technical_challenges || []).map((c: any) => 
-              `Technical challenge: ${c.challenge} - Potential solution: ${c.potential_solution}`
-            )
-          ];
-        } else {
-          // Fallback for comprehensive analysis
-          technicalResults = [
-            ...(data.key_features_list || []),
-            ...(data.materials_components_ideas || [])
-          ];
-        }
-        
-        setAnalysisResults('technical', technicalResults);
-      } 
-      
-      if (analysisType === "users" || analysisType === "competition") {
-        let marketResults: string[] = [];
-        
-        if (data.users_analysis) {
-          marketResults = [
-            ...(data.users_analysis.primary_users || []).map((u: any) => 
-              `Primary users: ${u.user_group} - ${u.rationale}`
-            ),
-            ...(data.users_analysis.secondary_users || []).map((u: any) => 
-              `Secondary users: ${u.user_group} - ${u.rationale}`
-            ),
-            ...(data.users_analysis.user_needs_addressed || [])
-          ];
-        } else if (data.competition_analysis) {
-          marketResults = [
-            `Market gap: ${data.competition_analysis.market_gap || ''}`,
-            `Competitive advantage: ${data.competition_analysis.competitive_advantage || ''}`,
-            ...(data.competition_analysis.direct_competitors || []).map((c: any) => 
-              `Direct competitor: ${c.competitor} (${c.product}) - Strengths: ${c.strengths}, Weaknesses: ${c.weaknesses}`
-            )
-          ];
-        } else {
-          // Fallback for comprehensive analysis
-          marketResults = [
-            `Problem solved: ${data.problem_solved || ''}`,
-            `Potential users: ${data.potential_target_users || ''}`,
-            ...(data.market_insights || [])
-          ];
-        }
-        
-        setAnalysisResults('market', marketResults);
+      // Check if we got a properly formatted response
+      if (data.technical !== undefined) {
+        setAnalysisResults('technical', data.technical || []);
       }
       
-      if (analysisType === "ip" || analysisType === "regulatory") {
-        let legalResults: string[] = [];
-        
-        if (data.ip_analysis) {
-          legalResults = [
-            `Patentability: ${data.ip_analysis.patentability_assessment || ''}`,
-            `Disclosure considerations: ${data.ip_analysis.disclosure_considerations || ''}`,
-            ...(data.ip_analysis.protection_strategies || []).map((s: any) => 
-              `${s.strategy}: ${s.rationale}`
-            ),
-            ...(data.ip_analysis.documentation_recommendations || [])
-          ];
-        } else if (data.regulatory_analysis) {
-          legalResults = [
-            ...(data.regulatory_analysis.applicable_regulations || []).map((r: any) => 
-              `Regulation: ${r.regulation} - Requirements: ${r.requirements}`
-            ),
-            ...(data.regulatory_analysis.certification_requirements || []).map((c: any) => 
-              `${c.certification}: ${c.rationale}`
-            ),
-            ...(data.regulatory_analysis.compliance_checklist || [])
-          ];
-        } else {
-          // Fallback for comprehensive analysis
-          legalResults = data.unclear_aspects_questions || [];
-        }
-        
-        setAnalysisResults('legal', legalResults);
+      if (data.market !== undefined) {
+        setAnalysisResults('market', data.market || []);
       }
       
-      if (analysisType === "comprehensive") {
-        // For comprehensive analysis, update all categories
-        
-        const technicalResults = [
-          ...(data.key_features_list || []),
-          ...(data.materials_components_ideas || [])
-        ];
-        
-        const marketResults = [
-          `Problem solved: ${data.problem_solved || ''}`,
-          `Potential users: ${data.potential_target_users || ''}`,
-          ...(data.market_insights || [])
-        ];
-        
-        const legalResults = data.unclear_aspects_questions || [];
-        
-        const businessResults = data.suggested_next_steps || [];
-        
-        setAnalysisResults('technical', technicalResults);
-        setAnalysisResults('market', marketResults);
-        setAnalysisResults('legal', legalResults);
-        setAnalysisResults('business', businessResults);
+      if (data.legal !== undefined) {
+        setAnalysisResults('legal', data.legal || []);
+      }
+      
+      if (data.business !== undefined) {
+        setAnalysisResults('business', data.business || []);
       }
       
       // Update visualization prompts if available
@@ -205,6 +96,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       onAnalysisComplete();
     } catch (error) {
       console.error(`Error running ${analysisType} analysis:`, error);
+      captureException(error, { component: "AiAssistantPanel", action: "runAnalysis" });
+      
       toast.error("Analysis failed", {
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });

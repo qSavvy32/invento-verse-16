@@ -72,8 +72,47 @@ serve(async (req) => {
         break;
     }
 
-    // Add instructions for output format
-    systemPrompt += `\n\nOutput your analysis in a structured JSON format appropriate for the analysis type.`;
+    // Add instructions for output format based on analysis type
+    if (analysisType === "challenges") {
+      systemPrompt += `
+        Return your analysis in this JSON format:
+        {
+          "analysis_type": "challenges",
+          "invention_title": "Title of the invention",
+          "invention_description": "Brief description of the invention",
+          "key_challenges": [
+            {
+              "challenge": "Name of the first challenge",
+              "description": "Detailed description of the challenge"
+            },
+            ... more challenges
+          ]
+        }
+      `;
+    } else if (analysisType === "materials") {
+      systemPrompt += `
+        Return your analysis in this JSON format:
+        {
+          "materials_analysis": {
+            "primary_materials": [
+              {
+                "material": "Name of material",
+                "rationale": "Why this material is appropriate"
+              }
+            ],
+            "alternative_materials": [
+              {
+                "material": "Alternative material",
+                "pros": "Benefits of this alternative",
+                "cons": "Drawbacks of this alternative"
+              }
+            ]
+          }
+        }
+      `;
+    } else {
+      systemPrompt += `\n\nOutput your analysis in a structured JSON format appropriate for the analysis type.`;
+    }
 
     // Prepare user message with invention details
     let userMessage = `Here's my invention idea:\n\nTitle: ${title || "Untitled"}\nDescription: ${description || "No description provided"}`;
@@ -108,13 +147,84 @@ serve(async (req) => {
                         
       if (jsonMatch) {
         analysisResults = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+        console.log("Successfully parsed JSON response:", analysisResults);
       } else {
         // If no JSON found, use the full text response
+        console.log("No JSON found in response, using full text");
         analysisResults = { analysis: response.content[0].text };
       }
     } catch (error) {
       console.error("Error parsing JSON from Anthropic response:", error);
       analysisResults = { analysis: response.content[0].text };
+    }
+
+    // For challenges analysis, transform the response to the format expected by the frontend
+    if (analysisType === "challenges" && analysisResults.key_challenges) {
+      const technicalResults = analysisResults.key_challenges.map(challenge => 
+        `${challenge.challenge}: ${challenge.description}`
+      );
+      
+      analysisResults = {
+        technical: technicalResults,
+        market: [],
+        legal: [],
+        business: []
+      };
+    } 
+    // For materials analysis, transform the response
+    else if (analysisType === "materials" && analysisResults.materials_analysis) {
+      const technicalResults = [
+        ...(analysisResults.materials_analysis.primary_materials || []).map(m => 
+          `${m.material}: ${m.rationale}`
+        ),
+        ...(analysisResults.materials_analysis.alternative_materials || []).map(m => 
+          `Alternative: ${m.material} - Pros: ${m.pros}, Cons: ${m.cons}`
+        )
+      ];
+      
+      analysisResults = {
+        technical: technicalResults,
+        market: [],
+        legal: [],
+        business: []
+      };
+    }
+    // If we received raw analysis text, convert it to the expected format
+    else if (analysisResults.analysis) {
+      // Convert plain text analysis to bullet points based on analysis type
+      const analysisLines = analysisResults.analysis.split('\n').filter(line => line.trim().length > 0);
+      
+      if (analysisType === "technical" || analysisType === "challenges" || analysisType === "materials") {
+        analysisResults = {
+          technical: analysisLines.slice(0, Math.min(5, analysisLines.length)),
+          market: [],
+          legal: [],
+          business: []
+        };
+      } else if (analysisType === "users" || analysisType === "competition") {
+        analysisResults = {
+          technical: [],
+          market: analysisLines.slice(0, Math.min(5, analysisLines.length)),
+          legal: [],
+          business: []
+        };
+      } else if (analysisType === "ip" || analysisType === "regulatory") {
+        analysisResults = {
+          technical: [],
+          market: [],
+          legal: analysisLines.slice(0, Math.min(5, analysisLines.length)),
+          business: []
+        };
+      } else {
+        // For comprehensive analysis, distribute points across categories
+        const third = Math.ceil(analysisLines.length / 3);
+        analysisResults = {
+          technical: analysisLines.slice(0, third),
+          market: analysisLines.slice(third, 2 * third),
+          legal: analysisLines.slice(2 * third, analysisLines.length),
+          business: []
+        };
+      }
     }
 
     return new Response(JSON.stringify(analysisResults), {

@@ -5,13 +5,14 @@ import { MultimodalInputArea } from "./MultimodalInputArea";
 import { AiAssistantPanel } from "./AiAssistantPanel";
 import { AnalysisResults } from "./AnalysisResults";
 import { Visualization3DViewer } from "./Visualization3DViewer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export const InventionForm = () => {
   const { state, saveToDatabase } = useInvention();
-  const [showResults, setShowResults] = useState(false);
+  // Always show results section
+  const [showResults, setShowResults] = useState(true);
   
   const handleSaveDraft = () => {
     // In a real implementation, this would save to the database
@@ -48,7 +49,7 @@ export const InventionForm = () => {
         
         {state.visualization3dUrl && <Visualization3DViewer />}
         
-        {showResults && <AnalysisResults />}
+        <AnalysisResults />
       </div>
       
       <div className="space-y-6">
