@@ -19,6 +19,7 @@
   transition: border-color 200ms cubic-bezier(0.5, 1, 0.89, 1);
   user-select: none;
   background-color: #09090b;
+  cursor: pointer;
 }
 
 .pixel-card::before {
@@ -77,22 +78,9 @@
 }
 
 .input-container {
-  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
   width: 100%;
-  padding: 1rem;
-  max-height: calc(100vh - 300px);
+  max-height: calc(90vh - 80px);
   overflow-y: auto;
-}
-
-/* Overlay styles for the expanded card */
-.overlay-active {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 40;
 }
 
 #invention-design-container {
