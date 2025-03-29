@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useInvention } from "@/contexts/InventionContext";
-import { CameraInput } from "@/components/CameraInput";
+import { CameraInput } from "@/components/camera/CameraInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, Upload } from "lucide-react";
