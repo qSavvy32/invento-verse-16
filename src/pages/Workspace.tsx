@@ -1,4 +1,6 @@
 
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AuthHeader } from "@/components/AuthHeader";
 import { Footer } from "@/components/Footer";
 import { InventionForm } from "@/components/invention/InventionForm";
@@ -7,9 +9,30 @@ import { ThreejsVisualizer } from "@/components/invention/ThreejsVisualizer";
 import { AnalysisResults } from "@/components/invention/AnalysisResults";
 import { BusinessStrategyViewer } from "@/components/invention/BusinessStrategyViewer";
 import { Package, FlaskConicalIcon, BarChart4 } from "lucide-react";
+import { toast } from "sonner";
 
 const WorkspaceContent = () => {
-  const { state } = useInvention();
+  const { state, loadInvention } = useInvention();
+  const [searchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Load invention if ID is provided in URL
+  useEffect(() => {
+    const inventionId = searchParams.get('id');
+    if (inventionId) {
+      setIsLoading(true);
+      loadInvention(inventionId)
+        .finally(() => setIsLoading(false));
+    }
+  }, [searchParams, loadInvention]);
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin h-12 w-12 border-4 border-invention-accent rounded-full border-t-transparent"></div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">

@@ -2,14 +2,13 @@
 import { Button } from "@/components/ui/button";
 import { Save, Download } from "lucide-react";
 import { toast } from "sonner";
-import { InventionState } from "@/contexts/InventionContext";
+import { useInvention } from "@/contexts/InventionContext";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface SaveExportSectionProps {
-  state: InventionState;
-  saveToDatabase: (showToast?: boolean) => Promise<void>;
-}
+export const SaveExportSection = () => {
+  const { state, saveToDatabase } = useInvention();
+  const { user } = useAuth();
 
-export const SaveExportSection = ({ state, saveToDatabase }: SaveExportSectionProps) => {
   const handleExport = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
     const downloadAnchorNode = document.createElement('a');
@@ -24,12 +23,21 @@ export const SaveExportSection = ({ state, saveToDatabase }: SaveExportSectionPr
     });
   };
 
+  const handleSave = async () => {
+    if (!user) {
+      toast.error("You need to be logged in to save your invention");
+      return;
+    }
+    
+    await saveToDatabase(true);
+  };
+
   return (
     <div className="border rounded-lg p-4 w-full mt-6">
       <div className="flex justify-between mb-4">
         <h2 className="text-xl font-semibold">Save Your Work</h2>
         <div className="space-x-4">
-          <Button onClick={() => saveToDatabase(true)}>
+          <Button onClick={handleSave}>
             <Save className="mr-2 h-4 w-4" />
             Save Draft
           </Button>

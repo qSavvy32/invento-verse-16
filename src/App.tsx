@@ -8,9 +8,9 @@ import Index from "./pages/Index";
 import Workspace from "./pages/Workspace";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import SavedInventions from "./pages/SavedInventions";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { useEffect } from "react";
 import { initSentry } from "./integrations/sentry";
 
 // Initialize Sentry
@@ -42,6 +42,7 @@ const App = () => (
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/create" element={<Workspace />} />
+              <Route path="/inventions" element={<SavedInventions />} />
               {/* Add more protected routes here */}
             </Route>
             

@@ -1,5 +1,7 @@
 
-import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useCallback } from 'react';
+import { InventionService } from '@/services/InventionService';
+import { toast } from "sonner";
 
 // Types
 export interface VisualizationPrompts {
@@ -26,6 +28,7 @@ export interface InventionAsset {
 }
 
 export interface InventionState {
+  inventionId?: string;
   title: string;
   description: string;
   sketchDataUrl: string | null; // Keeping for backward compatibility
@@ -59,7 +62,9 @@ type InventionAction =
   | { type: 'SET_THREEJS_VISUALIZATION'; payload: { code: string | null; html: string | null } }
   | { type: 'SET_BUSINESS_STRATEGY_SVG'; payload: string | null }
   | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } }
-  | { type: 'ADD_AUDIO_TRANSCRIPTION'; payload: AudioTranscription };
+  | { type: 'ADD_AUDIO_TRANSCRIPTION'; payload: AudioTranscription }
+  | { type: 'LOAD_INVENTION'; payload: InventionState }
+  | { type: 'SET_INVENTION_ID'; payload: string };
 
 interface InventionContextType {
   state: InventionState;
@@ -70,7 +75,8 @@ interface InventionContextType {
   removeAsset: (assetId: string) => void;
   update3DVisualization: (dataUrl: string | null) => void;
   updateVisualizations: (prompts: VisualizationPrompts) => void;
-  saveToDatabase: (saved: boolean) => void;
+  saveToDatabase: (showToast?: boolean) => Promise<string | null>;
+  loadInvention: (id: string) => Promise<boolean>;
   setThreejsVisualization: (code: string | null, html: string | null) => void;
   setBusinessStrategySvg: (svgData: string | null) => void;
   setAnalysisResults: (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => void;
@@ -146,6 +152,10 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
         ...state,
         audioTranscriptions: [...state.audioTranscriptions, action.payload]
       };
+    case 'LOAD_INVENTION':
+      return action.payload;
+    case 'SET_INVENTION_ID':
+      return { ...state, inventionId: action.payload };
     default:
       return state;
   }
@@ -171,7 +181,74 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
   
   const update3DVisualization = (dataUrl: string | null) => dispatch({ type: 'UPDATE_3D_VISUALIZATION', payload: dataUrl });
   const updateVisualizations = (prompts: VisualizationPrompts) => dispatch({ type: 'UPDATE_VISUALIZATIONS', payload: prompts });
-  const saveToDatabase = (saved: boolean) => dispatch({ type: 'SAVE_TO_DATABASE', payload: saved });
+  
+  const saveToDatabase = useCallback(async (showToast: boolean = false): Promise<string | null> => {
+    try {
+      if (showToast) {
+        toast.loading("Saving your invention...");
+      }
+      
+      const inventionId = await InventionService.saveInvention(state);
+      
+      if (inventionId && inventionId !== state.inventionId) {
+        dispatch({ type: 'SET_INVENTION_ID', payload: inventionId });
+      }
+      
+      dispatch({ type: 'SAVE_TO_DATABASE', payload: true });
+      
+      if (showToast) {
+        toast.success("Invention saved successfully!", {
+          id: "saving-invention"
+        });
+      }
+      
+      return inventionId;
+    } catch (error) {
+      console.error("Error saving to database:", error);
+      
+      if (showToast) {
+        toast.error("Failed to save invention", {
+          id: "saving-invention",
+          description: error instanceof Error ? error.message : "An unexpected error occurred"
+        });
+      }
+      
+      return null;
+    }
+  }, [state]);
+  
+  const loadInvention = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      toast.loading("Loading your invention...");
+      
+      const inventionData = await InventionService.getInventionById(id);
+      
+      if (!inventionData) {
+        toast.error("Invention not found", {
+          id: "loading-invention"
+        });
+        return false;
+      }
+      
+      dispatch({ type: 'LOAD_INVENTION', payload: inventionData });
+      
+      toast.success("Invention loaded successfully!", {
+        id: "loading-invention"
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error loading invention:", error);
+      
+      toast.error("Failed to load invention", {
+        id: "loading-invention",
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
+      
+      return false;
+    }
+  }, []);
+  
   const setThreejsVisualization = (code: string | null, html: string | null) => 
     dispatch({ type: 'SET_THREEJS_VISUALIZATION', payload: { code, html } });
   const setBusinessStrategySvg = (svgData: string | null) => 
@@ -193,6 +270,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         update3DVisualization,
         updateVisualizations,
         saveToDatabase,
+        loadInvention,
         setThreejsVisualization,
         setBusinessStrategySvg,
         setAnalysisResults,
