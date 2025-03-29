@@ -1,7 +1,7 @@
 
 import { useInvention } from "@/contexts/InventionContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { 
   ChevronRight, 
   ChevronDown, 
