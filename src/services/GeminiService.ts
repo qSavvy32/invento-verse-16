@@ -2,11 +2,13 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Type definitions
-export type GeminiOperation = 'generateText' | 'generateImage' | 'analyzeFile' | 'createDataObject';
+export type GeminiOperation = 'generateText' | 'generateImage' | 'analyzeFile' | 'createDataObject' | 'chatCompletion';
 
 export interface GeminiRequest {
   operation: GeminiOperation;
-  prompt: string;
+  prompt?: string;
+  messages?: Array<{role: string, content: string}>;
+  systemPrompt?: string;
   fileBase64?: string;
   fileType?: string;
   additionalParams?: Record<string, any>;
@@ -39,7 +41,11 @@ export const GeminiService = {
         throw new Error(error.message);
       }
 
-      return data;
+      if (!data.success) {
+        throw new Error(data.error || "Failed to generate text with Gemini");
+      }
+
+      return data.data;
     } catch (error) {
       console.error("Error generating text with Gemini:", error);
       throw error;
@@ -63,7 +69,11 @@ export const GeminiService = {
         throw new Error(error.message);
       }
 
-      return data;
+      if (!data.success) {
+        throw new Error(data.error || "Failed to generate image with Gemini");
+      }
+
+      return data.data;
     } catch (error) {
       console.error("Error generating image with Gemini:", error);
       throw error;
@@ -88,7 +98,11 @@ export const GeminiService = {
         throw new Error(error.message);
       }
 
-      return data;
+      if (!data.success) {
+        throw new Error(data.error || "Failed to analyze file with Gemini");
+      }
+
+      return data.data;
     } catch (error) {
       console.error("Error analyzing file with Gemini:", error);
       throw error;
@@ -112,7 +126,11 @@ export const GeminiService = {
         throw new Error(error.message);
       }
 
-      return data;
+      if (!data.success) {
+        throw new Error(data.error || "Failed to create data object with Gemini");
+      }
+
+      return data.data;
     } catch (error) {
       console.error("Error creating data object with Gemini:", error);
       throw error;
@@ -141,7 +159,11 @@ export const GeminiService = {
         throw new Error(error.message);
       }
 
-      return data;
+      if (!data.success) {
+        throw new Error(data.error || "Failed to generate chat completion with Gemini");
+      }
+
+      return data.data;
     } catch (error) {
       console.error("Error with chat completion:", error);
       throw error;

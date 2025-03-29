@@ -139,28 +139,40 @@ async function generateText(apiKey: string, prompt: string, params?: Record<stri
   const topK = params?.topK || 40;
   const topP = params?.topP || 0.95;
 
+  // System instruction (if provided)
+  const systemInstruction = params?.systemPrompt || null;
+
+  const requestBody: any = {
+    contents: [
+      {
+        parts: [
+          {
+            text: prompt
+          }
+        ]
+      }
+    ],
+    generation_config: {
+      temperature,
+      max_output_tokens: maxOutputTokens,
+      top_k: topK,
+      top_p: topP
+    }
+  };
+
+  // Add system instruction if provided
+  if (systemInstruction) {
+    requestBody.system_instruction = {
+      parts: [{ text: systemInstruction }]
+    };
+  }
+
   const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelVersion}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt
-            }
-          ]
-        }
-      ],
-      generationConfig: {
-        temperature,
-        maxOutputTokens,
-        topK,
-        topP
-      }
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
@@ -173,9 +185,9 @@ async function generateText(apiKey: string, prompt: string, params?: Record<stri
   console.log("Text generation completed successfully");
   
   return {
-    text: data.candidates[0].content.parts[0].text,
+    text: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
     model: modelVersion,
-    finishReason: data.candidates[0].finishReason
+    finishReason: data.candidates?.[0]?.finishReason
   };
 }
 
@@ -207,13 +219,13 @@ async function generateImage(apiKey: string, prompt: string, params?: Record<str
           ]
         }
       ],
-      generationConfig: {
+      generation_config: {
         temperature,
-        maxOutputTokens,
-        topK,
-        topP,
-        responseModalities: ["image", "text"],
-        responseMimeType: "text/plain",
+        max_output_tokens: maxOutputTokens,
+        top_k: topK,
+        top_p: topP,
+        response_modalities: ["image", "text"],
+        response_mime_type: "text/plain",
       }
     }),
   });
@@ -289,11 +301,11 @@ async function analyzeFile(apiKey: string, prompt: string, fileBase64: string, f
           ]
         }
       ],
-      generationConfig: {
+      generation_config: {
         temperature: 0.4,
-        maxOutputTokens: 1024,
-        topK: 32,
-        topP: 0.95
+        max_output_tokens: 1024,
+        top_k: 32,
+        top_p: 0.95
       }
     }),
   });
@@ -308,9 +320,9 @@ async function analyzeFile(apiKey: string, prompt: string, fileBase64: string, f
   console.log("File analysis completed successfully");
   
   return {
-    analysis: data.candidates[0].content.parts[0].text,
+    analysis: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
     model: modelVersion,
-    finishReason: data.candidates[0].finishReason
+    finishReason: data.candidates?.[0]?.finishReason
   };
 }
 
@@ -345,11 +357,11 @@ async function createDataObject(apiKey: string, prompt: string, params?: Record<
           ]
         }
       ],
-      generationConfig: {
+      generation_config: {
         temperature: 0.2, // Lower temperature for more consistent structured output
-        maxOutputTokens: 1024,
-        topK: 40,
-        topP: 0.95
+        max_output_tokens: 1024,
+        top_k: 40,
+        top_p: 0.95
       }
     }),
   });
@@ -364,7 +376,7 @@ async function createDataObject(apiKey: string, prompt: string, params?: Record<
   console.log("Data object creation completed successfully");
   
   let jsonResult;
-  const responseText = data.candidates[0].content.parts[0].text;
+  const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
   
   try {
     // Extract JSON if it's wrapped in triple backticks
@@ -383,7 +395,7 @@ async function createDataObject(apiKey: string, prompt: string, params?: Record<
     return {
       data: jsonResult,
       model: modelVersion,
-      finishReason: data.candidates[0].finishReason
+      finishReason: data.candidates?.[0]?.finishReason
     };
   } catch (error) {
     console.error("Failed to parse JSON from response:", error);
@@ -393,7 +405,7 @@ async function createDataObject(apiKey: string, prompt: string, params?: Record<
       rawText: responseText,
       parsingError: "Could not parse response as JSON",
       model: modelVersion,
-      finishReason: data.candidates[0].finishReason
+      finishReason: data.candidates?.[0]?.finishReason
     };
   }
 }
@@ -423,17 +435,17 @@ async function chatCompletion(
 
   const requestBody: any = {
     contents,
-    generationConfig: {
+    generation_config: {
       temperature,
-      maxOutputTokens,
-      topK,
-      topP
+      max_output_tokens: maxOutputTokens,
+      top_k: topK,
+      top_p: topP
     }
   };
 
   // Add system instruction if provided
   if (systemPrompt) {
-    requestBody.systemInstruction = {
+    requestBody.system_instruction = {
       parts: [{ text: systemPrompt }]
     };
   }
@@ -456,8 +468,8 @@ async function chatCompletion(
   console.log("Chat completion generated successfully");
   
   return {
-    text: data.candidates[0].content.parts[0].text,
+    text: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
     model: modelVersion,
-    finishReason: data.candidates[0].finishReason
+    finishReason: data.candidates?.[0]?.finishReason
   };
 }

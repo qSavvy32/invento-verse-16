@@ -10,6 +10,7 @@ import { ChatMessage, ChatMode } from "./types";
 import { MessageList } from "./MessageList";
 import { generateSystemPrompt } from "./promptUtils";
 import { processGeminiResponse } from "./responseProcessor";
+import { toast } from "sonner";
 
 export const ChatInterface = () => {
   const { state, addAnalysisResult } = useInvention();
@@ -62,15 +63,36 @@ export const ChatInterface = () => {
         messages
       );
       
-      // Call Gemini API
-      const response = await GeminiService.generateText(
-        inputMessage,
+      // Prepare conversation history for the API
+      const historyMessages = messages
+        .filter(msg => msg.id !== "welcome") // Skip welcome message
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
+      
+      // Add current user message
+      historyMessages.push({
+        role: "user",
+        content: inputMessage
+      });
+      
+      toast.loading("Vinci is thinking...", {
+        id: "vinci-thinking",
+        duration: Infinity
+      });
+      
+      // Call Gemini API with chat history
+      const response = await GeminiService.chatCompletion(
+        historyMessages,
+        systemPrompt,
         {
-          systemPrompt,
           temperature: 0.7,
           modelVersion: "gemini-2.0-flash",
         }
       );
+      
+      toast.dismiss("vinci-thinking");
       
       if (!response) {
         throw new Error("Failed to get response from AI service");
@@ -111,6 +133,9 @@ export const ChatInterface = () => {
       
     } catch (error) {
       console.error("Error in chat:", error);
+      toast.dismiss("vinci-thinking");
+      toast.error("Sorry, I encountered an error. Please try again.");
+      
       // Add error message
       setMessages((prev) => [
         ...prev,
