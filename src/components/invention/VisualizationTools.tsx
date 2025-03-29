@@ -1,4 +1,3 @@
-
 import { useInvention } from "@/contexts/InventionContext";
 import { Button } from "../ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,17 +10,19 @@ import {
   PackageOpen,
   Pencil,
   Box,
-  Zap
+  Zap,
+  BarChart4
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export const VisualizationTools = () => {
-  const { state, updateSketchData, update3DVisualization, setThreejsVisualization } = useInvention();
+  const { state, updateSketchData, update3DVisualization, setThreejsVisualization, setBusinessStrategySvg } = useInvention();
   const [isLoading, setIsLoading] = useState({
     sketch: false,
     image: false,
     threejs: false,
+    businessStrategy: false,
     runAll: false
   });
 
@@ -128,13 +129,47 @@ export const VisualizationTools = () => {
     }
   };
 
+  const generateBusinessStrategy = async () => {
+    if (!state.title && !state.description) {
+      toast.error("Please provide a title and description for your invention first");
+      return;
+    }
+
+    setIsLoading(prev => ({ ...prev, businessStrategy: true }));
+    toast.info("Generating business strategy visualization...");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-business-strategy", {
+        body: {
+          title: state.title,
+          description: state.description,
+          sketchDataUrl: state.sketchDataUrl
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setBusinessStrategySvg(data.svgCode || null);
+      toast.success("Business strategy visualization generated successfully");
+    } catch (error) {
+      console.error("Error generating business strategy:", error);
+      toast.error("Failed to generate business strategy", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
+    } finally {
+      setIsLoading(prev => ({ ...prev, businessStrategy: false }));
+    }
+  };
+
   return (
     <Card className="border-invention-accent/20">
       <CardContent className="p-6">
         <h3 className="text-lg font-medium mb-4">Visualization Tools</h3>
         
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <Button
               variant="outline"
               onClick={generateSketch}
@@ -176,6 +211,20 @@ export const VisualizationTools = () => {
               )}
               <span className="text-sm">Generate 3D Model</span>
             </Button>
+            
+            <Button
+              variant="outline"
+              onClick={generateBusinessStrategy}
+              disabled={isLoading.businessStrategy || (!state.title && !state.description)}
+              className="h-16 flex flex-col justify-center items-center p-2 space-y-1"
+            >
+              {isLoading.businessStrategy ? (
+                <Loader2 className="h-5 w-5 animate-spin mb-1" />
+              ) : (
+                <BarChart4 className="h-5 w-5 mb-1" />
+              )}
+              <span className="text-sm">Business Strategy</span>
+            </Button>
           </div>
           
           {state.threejsVisualization.html && (
@@ -183,6 +232,15 @@ export const VisualizationTools = () => {
               <h4 className="text-sm font-medium mb-2">3D Visualization Preview</h4>
               <div className="bg-gray-50 p-2 rounded-lg overflow-hidden" style={{ height: "300px" }}>
                 <div dangerouslySetInnerHTML={{ __html: state.threejsVisualization.html }} />
+              </div>
+            </div>
+          )}
+          
+          {state.businessStrategySvg && (
+            <div className="mt-4 border p-4 rounded-lg">
+              <h4 className="text-sm font-medium mb-2">Business Strategy Visualization</h4>
+              <div className="bg-gray-50 p-4 rounded-lg overflow-hidden">
+                <div dangerouslySetInnerHTML={{ __html: state.businessStrategySvg }} className="flex justify-center" />
               </div>
             </div>
           )}

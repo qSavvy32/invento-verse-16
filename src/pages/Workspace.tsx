@@ -5,7 +5,8 @@ import { InventionForm } from "@/components/invention/InventionForm";
 import { InventionContextProvider, useInvention } from "@/contexts/InventionContext";
 import { ThreejsVisualizer } from "@/components/invention/ThreejsVisualizer";
 import { AnalysisResults } from "@/components/invention/AnalysisResults";
-import { Package, FlaskConicalIcon } from "lucide-react";
+import { BusinessStrategyViewer } from "@/components/invention/BusinessStrategyViewer";
+import { Package, FlaskConicalIcon, BarChart4 } from "lucide-react";
 
 const WorkspaceContent = () => {
   const { state } = useInvention();
@@ -31,6 +32,12 @@ const WorkspaceContent = () => {
           <div className="mt-8 overflow-hidden max-h-[500px]">
             <AnalysisResults />
           </div>
+          
+          {state.businessStrategySvg && (
+            <div className="mt-8">
+              <BusinessStrategyViewer />
+            </div>
+          )}
           
           {state.threejsVisualization.html && (
             <div className="mt-8">

@@ -27,6 +27,7 @@ export interface InventionState {
     code: string | null;
     html: string | null;
   };
+  businessStrategySvg: string | null;
   analysisResults: {
     technical: string[];
     market: string[];
@@ -44,6 +45,7 @@ type InventionAction =
   | { type: 'UPDATE_VISUALIZATIONS'; payload: VisualizationPrompts }
   | { type: 'SAVE_TO_DATABASE'; payload: boolean }
   | { type: 'SET_THREEJS_VISUALIZATION'; payload: { code: string | null; html: string | null } }
+  | { type: 'SET_BUSINESS_STRATEGY_SVG'; payload: string | null }
   | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } }
   | { type: 'ADD_AUDIO_TRANSCRIPTION'; payload: AudioTranscription };
 
@@ -56,6 +58,7 @@ interface InventionContextType {
   updateVisualizations: (prompts: VisualizationPrompts) => void;
   saveToDatabase: (saved: boolean) => void;
   setThreejsVisualization: (code: string | null, html: string | null) => void;
+  setBusinessStrategySvg: (svgData: string | null) => void;
   setAnalysisResults: (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => void;
   addAudioTranscription: (transcription: AudioTranscription) => void;
 }
@@ -72,6 +75,7 @@ const initialState: InventionState = {
     code: null,
     html: null
   },
+  businessStrategySvg: null,
   analysisResults: {
     technical: [],
     market: [],
@@ -102,6 +106,8 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
       return { ...state, savedToDatabase: action.payload };
     case 'SET_THREEJS_VISUALIZATION':
       return { ...state, threejsVisualization: action.payload };
+    case 'SET_BUSINESS_STRATEGY_SVG':
+      return { ...state, businessStrategySvg: action.payload };
     case 'SET_ANALYSIS_RESULTS':
       return { 
         ...state, 
@@ -138,6 +144,8 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
   const saveToDatabase = (saved: boolean) => dispatch({ type: 'SAVE_TO_DATABASE', payload: saved });
   const setThreejsVisualization = (code: string | null, html: string | null) => 
     dispatch({ type: 'SET_THREEJS_VISUALIZATION', payload: { code, html } });
+  const setBusinessStrategySvg = (svgData: string | null) => 
+    dispatch({ type: 'SET_BUSINESS_STRATEGY_SVG', payload: svgData });
   const setAnalysisResults = (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => 
     dispatch({ type: 'SET_ANALYSIS_RESULTS', payload: { category, results } });
   const addAudioTranscription = (transcription: AudioTranscription) => 
@@ -154,6 +162,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         updateVisualizations,
         saveToDatabase,
         setThreejsVisualization,
+        setBusinessStrategySvg,
         setAnalysisResults,
         addAudioTranscription
       }}
