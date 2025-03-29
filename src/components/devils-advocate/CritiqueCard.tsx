@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle2, Lightbulb } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
-interface Critique {
+export interface Critique {
   title: string;
   description: string;
   positives: string[];
@@ -11,14 +11,62 @@ interface Critique {
   suggestions: string[];
 }
 
-export const CritiqueCard = ({ critiques }: { critiques: Critique[] }) => {
-  if (!critiques || critiques.length === 0) {
+interface CritiqueCardProps {
+  critiques: Critique[] | {
+    technical: string[];
+    market: string[];
+    originality: string[];
+    consequences: string[];
+  };
+}
+
+export const CritiqueCard = ({ critiques }: CritiqueCardProps) => {
+  // Check if we have the new format or the old format
+  if (!critiques) {
+    return <div className="text-center text-muted-foreground">No critiques generated yet</div>;
+  }
+  
+  // Convert the critiques data if it's in the new format
+  const formattedCritiques: Critique[] = Array.isArray(critiques) 
+    ? critiques 
+    : [
+        {
+          title: "Technical Feasibility",
+          description: "Analysis of engineering challenges and technical limitations",
+          positives: [],
+          negatives: critiques.technical || [],
+          suggestions: []
+        },
+        {
+          title: "Market Reality",
+          description: "Assessment of commercial viability and market fit",
+          positives: [],
+          negatives: critiques.market || [],
+          suggestions: []
+        },
+        {
+          title: "Originality Assessment",
+          description: "Evaluation of novelty and potential IP conflicts",
+          positives: [],
+          negatives: critiques.originality || [],
+          suggestions: []
+        },
+        {
+          title: "Unintended Consequences",
+          description: "Potential downsides and regulatory concerns",
+          positives: [],
+          negatives: critiques.consequences || [],
+          suggestions: []
+        }
+      ];
+
+  if (formattedCritiques.length === 0) {
     return <div className="text-center text-muted-foreground">No critiques generated yet</div>;
   }
 
   return (
     <div className="space-y-6">
-      {critiques.map((critique, index) => (
+      {formattedCritiques.map((critique, index) => (
         <Card key={index} className="border-invention-accent/20 bg-gradient-to-br from-invention-paper to-white overflow-hidden">
           <CardHeader className="pb-2 border-b border-invention-accent/10">
             <CardTitle className="text-lg font-leonardo text-invention-ink">
@@ -31,7 +79,7 @@ export const CritiqueCard = ({ critiques }: { critiques: Critique[] }) => {
             </p>
             
             <div className="space-y-4">
-              {critique.positives.length > 0 && (
+              {critique.positives && critique.positives.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold flex items-center gap-1 text-green-700 mb-2">
                     <CheckCircle2 className="h-4 w-4" />
@@ -47,7 +95,7 @@ export const CritiqueCard = ({ critiques }: { critiques: Critique[] }) => {
                 </div>
               )}
               
-              {critique.negatives.length > 0 && (
+              {critique.negatives && critique.negatives.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold flex items-center gap-1 text-red-700 mb-2">
                     <AlertTriangle className="h-4 w-4" />
@@ -63,7 +111,7 @@ export const CritiqueCard = ({ critiques }: { critiques: Critique[] }) => {
                 </div>
               )}
               
-              {critique.suggestions.length > 0 && (
+              {critique.suggestions && critique.suggestions.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold flex items-center gap-1 text-amber-700 mb-2">
                     <Lightbulb className="h-4 w-4" />
