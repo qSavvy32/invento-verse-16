@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useInvention } from "@/contexts/InventionContext";
@@ -16,7 +15,7 @@ import {
   Construction,
   Box,
   Inspect,
-  Box3D
+  Cube
 } from "lucide-react";
 
 interface AiAssistantPanelProps {
@@ -336,7 +335,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           {isLoading.threejs ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Box3D className="mr-2 h-4 w-4" />
+            <Cube className="mr-2 h-4 w-4" />
           )}
           <span>Generate 3D Visualization</span>
         </Button>

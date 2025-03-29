@@ -1,4 +1,3 @@
-
 import { useInvention } from "@/contexts/InventionContext";
 import { InventionMetadata } from "./InventionMetadata";
 import { MultimodalInputArea } from "./MultimodalInputArea";
@@ -21,7 +20,7 @@ import {
   Download, 
   ListTodo, 
   Image, 
-  Box3D, 
+  Cube, 
   LightbulbIcon, 
   Bot 
 } from "lucide-react";
@@ -106,7 +105,7 @@ export const InventionForm = () => {
               {state.visualization3dUrl && (
                 <SelectItem value="3d">
                   <div className="flex items-center gap-2">
-                    <Box3D className="h-4 w-4" />
+                    <Cube className="h-4 w-4" />
                     <span>3D Visualization</span>
                   </div>
                 </SelectItem>

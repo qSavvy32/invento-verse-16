@@ -5,7 +5,7 @@ import { InventionForm } from "@/components/invention/InventionForm";
 import { InventionContextProvider, useInvention } from "@/contexts/InventionContext";
 import { DevilsAdvocate } from "@/components/DevilsAdvocate";
 import { ThreejsVisualizer } from "@/components/invention/ThreejsVisualizer";
-import { Box3D } from "lucide-react";
+import { Cube } from "lucide-react";
 
 const WorkspaceContent = () => {
   const { state } = useInvention();
@@ -31,7 +31,7 @@ const WorkspaceContent = () => {
             {state.threejsVisualization.html && (
               <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Box3D className="h-5 w-5" />
+                  <Cube className="h-5 w-5" />
                   3D Visualization
                 </h2>
                 <ThreejsVisualizer />
