@@ -2,6 +2,22 @@
 import { useInvention } from "@/contexts/InventionContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AwardIcon, BookIcon, CodeIcon, PieChartIcon } from "lucide-react";
+import { useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { AudioPlayer } from "@/components/AudioPlayer";
+import { captureException } from "@/integrations/sentry";
+
+interface AnalysisCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  insights: string[];
+  cardClassName?: string;
+}
+
+// A cache of already generated audio data to avoid redundant API calls
+const audioCache: Record<string, string> = {};
 
 export const AnalysisResults = () => {
   const { state } = useInvention();
@@ -27,81 +43,136 @@ export const AnalysisResults = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {hasResults.technical && (
-          <Card className="da-vinci-note">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-invention-ink flex items-center gap-2">
-                <CodeIcon className="h-5 w-5" />
-                Technical Insights
-              </CardTitle>
-              <CardDescription>Engineering and design considerations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-5 space-y-2 font-leonardo">
-                {state.analysisResults.technical.map((insight, index) => (
-                  <li key={`tech-${index}`} className="text-invention-ink">{insight}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <AnalysisCard
+            title="Technical Insights"
+            description="Engineering and design considerations"
+            icon={<CodeIcon className="h-5 w-5" />}
+            insights={state.analysisResults.technical}
+            cardClassName="da-vinci-note"
+          />
         )}
         
         {hasResults.market && (
-          <Card className="da-vinci-note">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-invention-ink flex items-center gap-2">
-                <PieChartIcon className="h-5 w-5" />
-                Market Analysis
-              </CardTitle>
-              <CardDescription>Potential market and audience insights</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-5 space-y-2 font-leonardo">
-                {state.analysisResults.market.map((insight, index) => (
-                  <li key={`market-${index}`} className="text-invention-ink">{insight}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <AnalysisCard
+            title="Market Analysis"
+            description="Potential market and audience insights"
+            icon={<PieChartIcon className="h-5 w-5" />}
+            insights={state.analysisResults.market}
+            cardClassName="da-vinci-note"
+          />
         )}
         
         {hasResults.legal && (
-          <Card className="da-vinci-note">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-invention-ink flex items-center gap-2">
-                <AwardIcon className="h-5 w-5" />
-                Intellectual Property
-              </CardTitle>
-              <CardDescription>Patent and legal considerations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-5 space-y-2 font-leonardo">
-                {state.analysisResults.legal.map((insight, index) => (
-                  <li key={`legal-${index}`} className="text-invention-ink">{insight}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <AnalysisCard
+            title="Intellectual Property"
+            description="Patent and legal considerations"
+            icon={<AwardIcon className="h-5 w-5" />}
+            insights={state.analysisResults.legal}
+            cardClassName="da-vinci-note"
+          />
         )}
         
         {hasResults.business && (
-          <Card className="da-vinci-note">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-invention-ink flex items-center gap-2">
-                <BookIcon className="h-5 w-5" />
-                Business Strategy
-              </CardTitle>
-              <CardDescription>Monetization and business recommendations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-5 space-y-2 font-leonardo">
-                {state.analysisResults.business.map((insight, index) => (
-                  <li key={`business-${index}`} className="text-invention-ink">{insight}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <AnalysisCard
+            title="Business Strategy"
+            description="Monetization and business recommendations"
+            icon={<BookIcon className="h-5 w-5" />}
+            insights={state.analysisResults.business}
+            cardClassName="da-vinci-note"
+          />
         )}
       </div>
     </div>
+  );
+};
+
+const AnalysisCard = ({ title, description, icon, insights, cardClassName }: AnalysisCardProps) => {
+  const [audioData, setAudioData] = useState<string | null>(null);
+  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+  
+  const generateTextToSpeech = useCallback(async () => {
+    // If we already have audio, don't generate it again
+    if (audioData) return;
+    
+    // Create a cache key based on the content
+    const cacheKey = title + insights.join();
+    
+    // Check if we have this in our cache
+    if (audioCache[cacheKey]) {
+      setAudioData(audioCache[cacheKey]);
+      return;
+    }
+    
+    setIsGeneratingAudio(true);
+    
+    try {
+      // Prepare text for speech - combine title and insights
+      const speechText = `${title}. ${insights.join(". ")}`;
+      
+      // Call our text-to-speech edge function
+      const { data, error } = await supabase.functions.invoke("text-to-speech", {
+        body: {
+          text: speechText,
+        },
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      // Store in cache and state
+      if (data.audio) {
+        audioCache[cacheKey] = data.audio;
+        setAudioData(data.audio);
+        
+        // Show a subtle toast to indicate audio is ready
+        toast.success("Audio generated", {
+          description: `Audio for ${title} is now ready to play`,
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error generating text-to-speech:", error);
+      captureException(error, { component: "AnalysisCard", action: "generateTextToSpeech" });
+      
+      toast.error("Failed to generate audio", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+      });
+    } finally {
+      setIsGeneratingAudio(false);
+    }
+  }, [title, insights, audioData]);
+  
+  // Generate audio as soon as we render with data
+  if (insights.length > 0 && !audioData && !isGeneratingAudio) {
+    generateTextToSpeech();
+  }
+  
+  return (
+    <Card className={cardClassName}>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-invention-ink flex items-center gap-2">
+            {icon}
+            {title}
+          </CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </div>
+        
+        {audioData && (
+          <AudioPlayer 
+            audioData={audioData} 
+            title={`Listen to ${title}`}
+          />
+        )}
+      </CardHeader>
+      <CardContent>
+        <ul className="list-disc pl-5 space-y-2 font-leonardo">
+          {insights.map((insight, index) => (
+            <li key={`insight-${index}`} className="text-invention-ink">{insight}</li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 };

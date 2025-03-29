@@ -108,6 +108,7 @@ serve(async (req) => {
     console.log(`Sending request to Anthropic API for ${analysisType} analysis...`);
 
     // Use the correct anthropic API endpoint and parameters
+    // Note: When using thinking budget, temperature must be set to 0
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -118,7 +119,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "claude-3-7-sonnet-20250219",
         max_tokens: 4000,
-        temperature: 1,
+        temperature: 0,  // When using thinking, temperature must be 0
         thinking: {
           type: "enabled",
           budget_tokens: 16000
