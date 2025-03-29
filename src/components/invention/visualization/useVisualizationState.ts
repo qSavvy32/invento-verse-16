@@ -13,16 +13,18 @@ import {
 export interface LoadingState {
   sketch: boolean;
   image: boolean;
+  threejs: boolean;  // Added missing property
   realistic3d: boolean;
   businessStrategy: boolean;
   runAll: boolean;
 }
 
 export const useVisualizationState = () => {
-  const { state, updateSketchData, update3DVisualization, setBusinessStrategySvg } = useInvention();
+  const { state, updateSketchData, update3DVisualization, setBusinessStrategySvg, addAsset } = useInvention();
   const [isLoading, setIsLoading] = useState<LoadingState>({
     sketch: false,
     image: false,
+    threejs: false,  // Initialize the property
     realistic3d: false,
     businessStrategy: false,
     runAll: false
@@ -40,6 +42,19 @@ export const useVisualizationState = () => {
       
       const sketchUrl = await generateSketch(request);
       updateSketchData(sketchUrl);
+      
+      // Add the sketch to the assets repository
+      if (sketchUrl) {
+        addAsset({
+          id: `sketch-${Date.now()}`,
+          type: 'sketch',
+          url: sketchUrl,
+          thumbnailUrl: sketchUrl,
+          name: `Sketch: ${state.title || "Untitled"}`,
+          createdAt: Date.now()
+        });
+      }
+      
       toast.success("Sketch generated successfully");
     } catch (error) {
       console.error("Error generating sketch:", error);
@@ -63,6 +78,19 @@ export const useVisualizationState = () => {
       
       const imageUrl = await generate3DImage(request);
       update3DVisualization(imageUrl);
+      
+      // Add the 3D image to the assets repository
+      if (imageUrl) {
+        addAsset({
+          id: `3d-${Date.now()}`,
+          type: 'image',
+          url: imageUrl,
+          thumbnailUrl: imageUrl,
+          name: `3D Mockup: ${state.title || "Untitled"}`,
+          createdAt: Date.now()
+        });
+      }
+      
       toast.success("3D mockup generated successfully");
     } catch (error) {
       console.error("Error generating 3D mockup:", error);
@@ -86,6 +114,19 @@ export const useVisualizationState = () => {
       
       const imageUrl = await generateRealistic3DImage(request);
       update3DVisualization(imageUrl);
+      
+      // Add the realistic 3D image to the assets repository
+      if (imageUrl) {
+        addAsset({
+          id: `realistic-3d-${Date.now()}`,
+          type: 'image',
+          url: imageUrl,
+          thumbnailUrl: imageUrl,
+          name: `Realistic Mockup: ${state.title || "Untitled"}`,
+          createdAt: Date.now()
+        });
+      }
+      
       toast.success("Realistic mockup generated successfully");
     } catch (error) {
       console.error("Error generating realistic mockup:", error);

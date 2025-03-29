@@ -7,10 +7,11 @@ export interface VisualizationRequest {
   description?: string;
   sketchDataUrl?: string | null;
   prompt?: string;
+  userId?: string;
 }
 
 export const generateSketch = async (request: VisualizationRequest) => {
-  const { title, description } = request;
+  const { title, description, userId } = request;
   
   if (!title && !description) {
     throw new Error("Please provide a title and description for your invention first");
@@ -21,18 +22,19 @@ export const generateSketch = async (request: VisualizationRequest) => {
   toast.info("Generating sketch using Hugging Face...");
   
   const { data, error } = await supabase.functions.invoke("generate-sketch", {
-    body: { prompt }
+    body: { prompt, userId }
   });
 
   if (error) {
     throw new Error(error.message);
   }
 
+  // Return the data URL of the sketch for immediate display
   return data.sketch_url;
 };
 
 export const generate3DImage = async (request: VisualizationRequest) => {
-  const { sketchDataUrl, description, title } = request;
+  const { title, description, userId } = request;
   
   if (!title && !description) {
     throw new Error("Please provide a title and description first");
@@ -43,7 +45,8 @@ export const generate3DImage = async (request: VisualizationRequest) => {
   const { data, error } = await supabase.functions.invoke("generate-flux-image", {
     body: {
       prompt,
-      style: "3d_model"
+      style: "3d_model",
+      userId
     }
   });
 
@@ -55,7 +58,7 @@ export const generate3DImage = async (request: VisualizationRequest) => {
 };
 
 export const generateRealistic3DImage = async (request: VisualizationRequest) => {
-  const { title, description } = request;
+  const { title, description, userId } = request;
   
   if (!title && !description) {
     throw new Error("Please provide a title and description for your invention first");
@@ -66,7 +69,8 @@ export const generateRealistic3DImage = async (request: VisualizationRequest) =>
   const { data, error } = await supabase.functions.invoke("generate-flux-image", {
     body: {
       prompt,
-      style: "realistic"
+      style: "realistic",
+      userId
     }
   });
 
