@@ -8,14 +8,8 @@ import { Visualization3DViewer } from "./Visualization3DViewer";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue 
-} from "@/components/ui/select";
-import { IdeaGenerator } from "@/components/IdeaGenerator";
+import { InputSelectionCard } from "./InputSelectionCard";
+import { IdeaGenerator } from "@/components/idea-generator/IdeaGenerator";
 import { 
   Save, 
   Download, 
@@ -25,10 +19,10 @@ import {
   LightbulbIcon, 
   Bot 
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 export const InventionForm = () => {
   const { state, saveToDatabase } = useInvention();
-  const [selectedSection, setSelectedSection] = useState("metadata");
   const [showResults, setShowResults] = useState(true);
   
   const handleSaveDraft = () => {
@@ -57,66 +51,53 @@ export const InventionForm = () => {
     });
   };
   
-  const getInputSection = () => {
-    switch (selectedSection) {
-      case "metadata":
-        return <InventionMetadata />;
-      case "sketch":
-        return <MultimodalInputArea />;
-      case "idea":
-        return <IdeaGenerator sketchDataUrl={state.sketchDataUrl || undefined} />;
-      case "3d":
-        return state.visualization3dUrl ? <Visualization3DViewer /> : (
-          <div className="p-8 text-center border rounded-lg bg-muted/10">
-            <p>No 3D visualization available yet. Generate one in the AI Assistant panel.</p>
-          </div>
-        );
-      default:
-        return <InventionMetadata />;
-    }
-  };
-  
   return (
     <div className="space-y-8">
       <div className="border rounded-lg p-4">
-        <div className="mb-4">
-          <Select value={selectedSection} onValueChange={setSelectedSection}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select input type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="metadata" className="flex items-center">
-                <div className="flex items-center gap-2">
-                  <ListTodo className="h-4 w-4" />
-                  <span>Basic Information</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="sketch">
-                <div className="flex items-center gap-2">
-                  <Image className="h-4 w-4" />
-                  <span>Visual Input</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="idea">
-                <div className="flex items-center gap-2">
-                  <LightbulbIcon className="h-4 w-4" />
-                  <span>Idea Generator</span>
-                </div>
-              </SelectItem>
-              {state.visualization3dUrl && (
-                <SelectItem value="3d">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4" />
-                    <span>3D Visualization</span>
-                  </div>
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+        <h2 className="text-xl font-semibold mb-6">Design Your Invention</h2>
         
-        <div className="mt-4">
-          {getInputSection()}
+        <div className="card-container">
+          <InputSelectionCard
+            id="metadata"
+            title="Basic Information"
+            description="Define the core details of your invention"
+            icon={<ListTodo className="h-6 w-6" />}
+            variant="blue"
+          >
+            <InventionMetadata />
+          </InputSelectionCard>
+          
+          <InputSelectionCard
+            id="sketch"
+            title="Visual Input"
+            description="Upload or draw your invention concept"
+            icon={<Image className="h-6 w-6" />}
+            variant="green"
+          >
+            <MultimodalInputArea />
+          </InputSelectionCard>
+          
+          <InputSelectionCard
+            id="idea"
+            title="Idea Generator"
+            description="Get inspiration for your invention"
+            icon={<LightbulbIcon className="h-6 w-6" />}
+            variant="yellow"
+          >
+            <IdeaGenerator sketchDataUrl={state.sketchDataUrl || undefined} />
+          </InputSelectionCard>
+          
+          {state.visualization3dUrl && (
+            <InputSelectionCard
+              id="3d"
+              title="3D Visualization"
+              description="View your invention in 3D space"
+              icon={<Package className="h-6 w-6" />}
+              variant="purple"
+            >
+              <Visualization3DViewer />
+            </InputSelectionCard>
+          )}
         </div>
       </div>
       
