@@ -18,7 +18,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   const [analyzing, setAnalyzing] = useState(false);
   const [generating3D, setGenerating3D] = useState(false);
   
-  const runAnthropicAnalysis = async () => {
+  // Generic function to run analysis with different types
+  const runAnalysis = async (analysisType: string) => {
     if (!state.title && !state.description) {
       toast.error("Missing information", {
         description: "Please provide at least a title or description for your invention."
@@ -29,12 +30,13 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
     setAnalyzing(true);
     
     try {
-      // Call our Supabase Edge Function
+      // Call our Supabase Edge Function with the specified analysis type
       const { data, error } = await supabase.functions.invoke("analyze-invention", {
         body: {
           title: state.title,
           description: state.description,
-          sketchDataUrl: state.sketchDataUrl
+          sketchDataUrl: state.sketchDataUrl,
+          analysisType: analysisType
         }
       });
       
@@ -42,42 +44,146 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         throw new Error(error.message);
       }
       
-      console.log("Analysis result:", data);
+      console.log(`${analysisType} analysis result:`, data);
       
-      // Process results from the AI analysis
-      const technicalResults = [
-        ...data.key_features_list || [],
-        ...data.materials_components_ideas || []
-      ];
+      // Process the results based on the analysis type
+      if (analysisType === "technical" || analysisType === "challenges" || analysisType === "materials") {
+        let technicalResults: string[] = [];
+        
+        if (data.technical_analysis) {
+          technicalResults = [
+            ...(data.technical_analysis.key_features_list || []),
+            ...(data.technical_analysis.materials_components_ideas || []),
+            ...(data.technical_analysis.technical_challenges || []).map((c: any) => 
+              `Challenge: ${c.challenge} - Potential solution: ${c.potential_solution}`
+            ),
+            ...(data.technical_analysis.suggested_improvements || [])
+          ];
+        } else if (data.materials_analysis) {
+          technicalResults = [
+            ...(data.materials_analysis.primary_materials || []).map((m: any) => 
+              `${m.material}: ${m.rationale}`
+            ),
+            ...(data.materials_analysis.alternative_materials || []).map((m: any) => 
+              `Alternative: ${m.material} - Pros: ${m.pros}, Cons: ${m.cons}`
+            )
+          ];
+        } else if (data.challenges_analysis) {
+          technicalResults = [
+            ...(data.challenges_analysis.technical_challenges || []).map((c: any) => 
+              `Technical challenge: ${c.challenge} - Potential solution: ${c.potential_solution}`
+            )
+          ];
+        } else {
+          // Fallback for comprehensive analysis
+          technicalResults = [
+            ...(data.key_features_list || []),
+            ...(data.materials_components_ideas || [])
+          ];
+        }
+        
+        setAnalysisResults('technical', technicalResults);
+      } 
       
-      const marketResults = [
-        `Problem solved: ${data.problem_solved}`,
-        `Potential users: ${data.potential_target_users}`,
-        ...(data.market_insights || [])
-      ];
+      if (analysisType === "users" || analysisType === "competition") {
+        let marketResults: string[] = [];
+        
+        if (data.users_analysis) {
+          marketResults = [
+            ...(data.users_analysis.primary_users || []).map((u: any) => 
+              `Primary users: ${u.user_group} - ${u.rationale}`
+            ),
+            ...(data.users_analysis.secondary_users || []).map((u: any) => 
+              `Secondary users: ${u.user_group} - ${u.rationale}`
+            ),
+            ...(data.users_analysis.user_needs_addressed || [])
+          ];
+        } else if (data.competition_analysis) {
+          marketResults = [
+            `Market gap: ${data.competition_analysis.market_gap || ''}`,
+            `Competitive advantage: ${data.competition_analysis.competitive_advantage || ''}`,
+            ...(data.competition_analysis.direct_competitors || []).map((c: any) => 
+              `Direct competitor: ${c.competitor} (${c.product}) - Strengths: ${c.strengths}, Weaknesses: ${c.weaknesses}`
+            )
+          ];
+        } else {
+          // Fallback for comprehensive analysis
+          marketResults = [
+            `Problem solved: ${data.problem_solved || ''}`,
+            `Potential users: ${data.potential_target_users || ''}`,
+            ...(data.market_insights || [])
+          ];
+        }
+        
+        setAnalysisResults('market', marketResults);
+      }
       
-      const legalResults = data.unclear_aspects_questions || [];
+      if (analysisType === "ip" || analysisType === "regulatory") {
+        let legalResults: string[] = [];
+        
+        if (data.ip_analysis) {
+          legalResults = [
+            `Patentability: ${data.ip_analysis.patentability_assessment || ''}`,
+            `Disclosure considerations: ${data.ip_analysis.disclosure_considerations || ''}`,
+            ...(data.ip_analysis.protection_strategies || []).map((s: any) => 
+              `${s.strategy}: ${s.rationale}`
+            ),
+            ...(data.ip_analysis.documentation_recommendations || [])
+          ];
+        } else if (data.regulatory_analysis) {
+          legalResults = [
+            ...(data.regulatory_analysis.applicable_regulations || []).map((r: any) => 
+              `Regulation: ${r.regulation} - Requirements: ${r.requirements}`
+            ),
+            ...(data.regulatory_analysis.certification_requirements || []).map((c: any) => 
+              `${c.certification}: ${c.rationale}`
+            ),
+            ...(data.regulatory_analysis.compliance_checklist || [])
+          ];
+        } else {
+          // Fallback for comprehensive analysis
+          legalResults = data.unclear_aspects_questions || [];
+        }
+        
+        setAnalysisResults('legal', legalResults);
+      }
       
-      const businessResults = data.suggested_next_steps || [];
+      if (analysisType === "comprehensive") {
+        // For comprehensive analysis, update all categories
+        
+        const technicalResults = [
+          ...(data.key_features_list || []),
+          ...(data.materials_components_ideas || [])
+        ];
+        
+        const marketResults = [
+          `Problem solved: ${data.problem_solved || ''}`,
+          `Potential users: ${data.potential_target_users || ''}`,
+          ...(data.market_insights || [])
+        ];
+        
+        const legalResults = data.unclear_aspects_questions || [];
+        
+        const businessResults = data.suggested_next_steps || [];
+        
+        setAnalysisResults('technical', technicalResults);
+        setAnalysisResults('market', marketResults);
+        setAnalysisResults('legal', legalResults);
+        setAnalysisResults('business', businessResults);
+      }
       
       // Update visualization prompts if available
       if (data.visualization_prompts) {
         updateVisualizations(data.visualization_prompts);
       }
       
-      // Update the context with the results
-      setAnalysisResults('technical', technicalResults);
-      setAnalysisResults('market', marketResults);
-      setAnalysisResults('legal', legalResults);
-      setAnalysisResults('business', businessResults);
-      
       toast.success("Analysis complete", {
-        description: "AI analysis completed successfully."
+        description: `${analysisType.charAt(0).toUpperCase() + analysisType.slice(1)} analysis completed successfully.`
       });
       
       onAnalysisComplete();
     } catch (error) {
-      console.error("Error running analysis:", error);
+      console.error(`Error running ${analysisType} analysis:`, error);
       toast.error("Analysis failed", {
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
@@ -136,286 +242,6 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
     }
   };
   
-  // Enhanced simulation functions with specific responses
-  const simulateSuggestMaterials = () => {
-    if (!state.title && !state.description) {
-      toast.error("Missing information", {
-        description: "Please provide at least a title or description for your invention."
-      });
-      return;
-    }
-    
-    setAnalyzing(true);
-    
-    setTimeout(() => {
-      const materialSuggestions = [
-        "Medical-grade silicone would provide flexibility and biocompatibility.",
-        "Reinforced thermoplastic polymers for durability and lightweight structure.",
-        "Recycled aluminum components would reduce environmental impact.",
-        "Conductive fabric for integrated sensor connectivity."
-      ];
-      
-      // Add visualization prompt for materials
-      const visualizationPrompts = {
-        materials: "An exploded view diagram showing the various materials used in the invention: medical-grade silicone, thermoplastic polymers, recycled aluminum, and conductive fabric, all labeled clearly against a blueprint background"
-      };
-      
-      setAnalysisResults('technical', materialSuggestions);
-      updateVisualizations(visualizationPrompts);
-      
-      setAnalyzing(false);
-      toast.success("Materials suggested", {
-        description: "AI has generated material recommendations for your invention."
-      });
-      
-      onAnalysisComplete();
-    }, 2000);
-  };
-  
-  const simulateIdentifyChallenges = () => {
-    if (!state.title && !state.description) {
-      toast.error("Missing information", {
-        description: "Please provide at least a title or description for your invention."
-      });
-      return;
-    }
-    
-    setAnalyzing(true);
-    
-    setTimeout(() => {
-      const challenges = [
-        "Power efficiency might be a challenge for portable operation.",
-        "Miniaturization could impact durability and performance.",
-        "User interface simplicity vs comprehensive control balance.",
-        "Environmental resistance for outdoor usability."
-      ];
-      
-      // Add visualization prompt for challenges
-      const visualizationPrompts = {
-        concept: "Technical diagram highlighting the core challenges of the invention with callouts showing power efficiency issues, miniaturization constraints, UI complexity, and environmental protection features"
-      };
-      
-      setAnalysisResults('technical', challenges);
-      updateVisualizations(visualizationPrompts);
-      
-      setAnalyzing(false);
-      toast.success("Challenges identified", {
-        description: "AI has identified potential technical challenges for your invention."
-      });
-      
-      onAnalysisComplete();
-    }, 2000);
-  };
-  
-  const simulateTargetUsers = () => {
-    if (!state.title && !state.description) {
-      toast.error("Missing information", {
-        description: "Please provide at least a title or description for your invention."
-      });
-      return;
-    }
-    
-    setAnalyzing(true);
-    
-    setTimeout(() => {
-      const targetUsers = [
-        "Primary demographic: Urban professionals aged 25-45.",
-        "Secondary market: Health-conscious individuals tracking wellness metrics.",
-        "Tertiary potential: Medical professionals requiring remote monitoring solutions.",
-        "Early adopters: Tech enthusiasts and DIY makers."
-      ];
-      
-      // Add visualization prompt for target users
-      const visualizationPrompts = {
-        users: "A visual collage showing the diverse target users of the invention: urban professionals using the device in a modern office, health-conscious individuals using it during exercise, medical professionals in a clinical setting, and tech enthusiasts in a maker space"
-      };
-      
-      setAnalysisResults('market', targetUsers);
-      updateVisualizations(visualizationPrompts);
-      
-      setAnalyzing(false);
-      toast.success("Target users identified", {
-        description: "AI has identified potential target users for your invention."
-      });
-      
-      onAnalysisComplete();
-    }, 2000);
-  };
-  
-  const simulateCompetitionResearch = () => {
-    if (!state.title && !state.description) {
-      toast.error("Missing information", {
-        description: "Please provide at least a title or description for your invention."
-      });
-      return;
-    }
-    
-    setAnalyzing(true);
-    
-    setTimeout(() => {
-      const competitionInsights = [
-        "Direct competitor: TechInnov's Model X3 ($149 retail) with 15% market share.",
-        "Indirect alternatives: Custom DIY kits (lower cost, higher complexity).",
-        "Market gap: No solution currently combines affordability with ease of use.",
-        "Emerging threats: Two startups with seed funding developing similar concepts."
-      ];
-      
-      // Add visualization prompt for competition
-      const visualizationPrompts = {
-        concept: "A comparative market positioning chart showing the invention positioned against competitors on axes of price vs. functionality, highlighting the market gap being filled"
-      };
-      
-      setAnalysisResults('market', competitionInsights);
-      updateVisualizations(visualizationPrompts);
-      
-      setAnalyzing(false);
-      toast.success("Competition analyzed", {
-        description: "AI has analyzed market competition for your invention."
-      });
-      
-      onAnalysisComplete();
-    }, 2000);
-  };
-  
-  const simulateIpProtectionTips = () => {
-    if (!state.title && !state.description) {
-      toast.error("Missing information", {
-        description: "Please provide at least a title or description for your invention."
-      });
-      return;
-    }
-    
-    setAnalyzing(true);
-    
-    setTimeout(() => {
-      const ipTips = [
-        "File a provisional patent application to secure an early priority date.",
-        "Consider design patent protection for the unique visual elements.",
-        "Document all development stages with dated and witnessed laboratory notebooks.",
-        "Execute confidentiality agreements before sharing with potential partners."
-      ];
-      
-      // Add visualization prompt for IP protection
-      const visualizationPrompts = {
-        concept: "A visual guide to IP protection showing the invention with patent document overlays, design patent callouts, documentation process, and confidentiality agreement icons"
-      };
-      
-      setAnalysisResults('legal', ipTips);
-      updateVisualizations(visualizationPrompts);
-      
-      setAnalyzing(false);
-      toast.success("IP protection tips provided", {
-        description: "AI has suggested intellectual property protection strategies."
-      });
-      
-      onAnalysisComplete();
-    }, 2000);
-  };
-  
-  const simulateRegulatoryChecklist = () => {
-    if (!state.title && !state.description) {
-      toast.error("Missing information", {
-        description: "Please provide at least a title or description for your invention."
-      });
-      return;
-    }
-    
-    setAnalyzing(true);
-    
-    setTimeout(() => {
-      const regulatoryItems = [
-        "FCC certification will be required for wireless communication features.",
-        "UL safety certification recommended for electrical components.",
-        "Consider FDA classification if marketing includes health-related claims.",
-        "Review GDPR compliance requirements for data collection features."
-      ];
-      
-      // Add visualization prompt for regulatory checklist
-      const visualizationPrompts = {
-        concept: "A regulatory compliance roadmap showing certification paths for the invention, with FCC, UL, FDA, and GDPR certification processes illustrated as a timeline"
-      };
-      
-      setAnalysisResults('legal', regulatoryItems);
-      updateVisualizations(visualizationPrompts);
-      
-      setAnalyzing(false);
-      toast.success("Regulatory checklist generated", {
-        description: "AI has identified potential regulatory requirements."
-      });
-      
-      onAnalysisComplete();
-    }, 2000);
-  };
-  
-  // Comprehensive analysis properly implemented
-  const simulateComprehensiveAnalysis = () => {
-    if (!state.title && !state.description) {
-      toast.error("Missing information", {
-        description: "Please provide at least a title or description for your invention."
-      });
-      return;
-    }
-    
-    setAnalyzing(true);
-    
-    // Simulate API delay
-    setTimeout(() => {
-      // Technical analysis
-      const technicalInsights = [
-        "The modular design offers flexibility for user customization.",
-        "Energy efficiency could be improved with solar backup options.",
-        "Bluetooth LE connectivity provides optimal battery conservation.",
-        "Physical dimensions could be reduced by 15% with component reorganization."
-      ];
-      
-      // Market analysis
-      const marketInsights = [
-        "Estimated market size: $2.3B globally with 12% annual growth.",
-        "Price point sweet spot: $79-99 based on comparable products.",
-        "Distribution channels: Direct to consumer with specialty retail partnerships.",
-        "Marketing focus: Emphasize ease of use and customization options."
-      ];
-      
-      // Legal analysis
-      const legalInsights = [
-        "Three competing patents exist but your approach has novel elements.",
-        "Trademark search shows no conflicts with proposed product name.",
-        "Consider international PCT application for global market potential.",
-        "Data privacy policy will be required for app component."
-      ];
-      
-      // Business analysis
-      const businessInsights = [
-        "Pilot with small production run before scaling manufacturing.",
-        "Explore crowdfunding to validate market interest and pricing.",
-        "Consider subscription model for premium features and analytics.",
-        "Partner with complementary product makers for bundled offerings."
-      ];
-      
-      // Add visualization prompts for comprehensive analysis
-      const visualizationPrompts = {
-        concept: "A detailed technical diagram of the invention showing its modular components, energy efficiency features, Bluetooth connectivity, and compact design elements",
-        materials: "Cross-section view of the invention showing the internal components and materials used in construction",
-        users: "Diverse users interacting with the invention in different contexts: home, work, and on-the-go scenarios",
-        problem: "Before and after comparison showing the problem being solved by the invention, with clear visual demonstration of the benefits"
-      };
-      
-      // Update all analysis categories
-      setAnalysisResults('technical', technicalInsights);
-      setAnalysisResults('market', marketInsights);
-      setAnalysisResults('legal', legalInsights);
-      setAnalysisResults('business', businessInsights);
-      updateVisualizations(visualizationPrompts);
-      
-      setAnalyzing(false);
-      toast.success("Comprehensive analysis complete", {
-        description: "AI has analyzed all aspects of your invention."
-      });
-      
-      onAnalysisComplete();
-    }, 3000);
-  };
-  
   return (
     <Card>
       <CardHeader>
@@ -432,7 +258,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           <TabsContent value="technical" className="space-y-4">
             <Button 
               className="w-full" 
-              onClick={() => simulateIdentifyChallenges()}
+              onClick={() => runAnalysis("challenges")}
               disabled={analyzing}
             >
               {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
@@ -440,7 +266,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             </Button>
             <Button 
               className="w-full" 
-              onClick={() => simulateSuggestMaterials()}
+              onClick={() => runAnalysis("materials")}
               disabled={analyzing}
             >
               {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
@@ -463,7 +289,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           <TabsContent value="market" className="space-y-4">
             <Button 
               className="w-full" 
-              onClick={() => simulateTargetUsers()}
+              onClick={() => runAnalysis("users")}
               disabled={analyzing}
             >
               {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Users className="mr-2 h-4 w-4" />}
@@ -471,7 +297,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             </Button>
             <Button 
               className="w-full" 
-              onClick={() => simulateCompetitionResearch()}
+              onClick={() => runAnalysis("competition")}
               disabled={analyzing}
             >
               {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
@@ -482,7 +308,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           <TabsContent value="legal" className="space-y-4">
             <Button 
               className="w-full" 
-              onClick={runAnthropicAnalysis}
+              onClick={() => runAnalysis("ip")}
               disabled={analyzing}
             >
               {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
@@ -490,7 +316,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             </Button>
             <Button 
               className="w-full" 
-              onClick={() => simulateIpProtectionTips()}
+              onClick={() => runAnalysis("ip")}
               disabled={analyzing}
             >
               {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
@@ -498,7 +324,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             </Button>
             <Button 
               className="w-full" 
-              onClick={() => simulateRegulatoryChecklist()}
+              onClick={() => runAnalysis("regulatory")}
               disabled={analyzing}
             >
               {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
@@ -511,7 +337,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           <Button 
             className="w-full" 
             variant="default" 
-            onClick={runAnthropicAnalysis}
+            onClick={() => runAnalysis("comprehensive")}
             disabled={analyzing}
           >
             {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -521,7 +347,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           <Button 
             className="w-full" 
             variant="secondary" 
-            onClick={() => simulateComprehensiveAnalysis()}
+            onClick={() => runAnalysis("comprehensive")}
             disabled={analyzing}
           >
             {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <BarChart3 className="mr-2 h-4 w-4" />}
