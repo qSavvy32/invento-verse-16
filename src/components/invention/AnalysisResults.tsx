@@ -1,7 +1,7 @@
 
 import { useInvention } from "@/contexts/InventionContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   ChevronRight, 
   ChevronDown, 
@@ -11,6 +11,7 @@ import {
   BookOpenIcon 
 } from "lucide-react";
 import { MarkdownContent } from "./analysis/MarkdownContent";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AnalysisCardProps {
   title: string;
@@ -39,14 +40,16 @@ const AnalysisCard = ({ title, icon, results, timestamp }: AnalysisCardProps) =>
         </div>
       </CardHeader>
       {isOpen && (
-        <CardContent className="p-4 pt-2 max-h-[400px] overflow-y-auto">
-          <ul className="list-disc pl-5 space-y-2">
-            {results.map((result, index) => (
-              <li key={index} className="markdown-content">
-                <MarkdownContent content={result} />
-              </li>
-            ))}
-          </ul>
+        <CardContent className="p-4 pt-2">
+          <ScrollArea className="h-[300px]">
+            <ul className="list-disc pl-5 space-y-2">
+              {results.map((result, index) => (
+                <li key={index} className="markdown-content">
+                  <MarkdownContent content={result} />
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
         </CardContent>
       )}
     </Card>
@@ -63,7 +66,7 @@ export const AnalysisResults = () => {
   }>>([]);
   
   useEffect(() => {
-    // When analysis results change, update the cards
+    // Create a new array of cards based on the analysis results
     const newCards = [];
     
     // Create cards for technical analysis
@@ -123,40 +126,44 @@ export const AnalysisResults = () => {
   return (
     <div className="space-y-6 mb-8">
       <h2 className="text-xl font-semibold">Analysis Results</h2>
-      <div className="space-y-4 max-h-[1200px] overflow-y-auto pr-2">
-        {analysisCards.map(card => {
-          let title = "";
-          let icon = null;
-          
-          switch (card.type) {
-            case 'technical':
-              title = "Technical Analysis";
-              icon = <CodeIcon className="h-4 w-4" />;
-              break;
-            case 'market':
-              title = "Market Analysis";
-              icon = <BarChart2Icon className="h-4 w-4" />;
-              break;
-            case 'legal':
-              title = "Legal and IP Analysis";
-              icon = <ScaleIcon className="h-4 w-4" />;
-              break;
-            case 'business':
-              title = "Business Strategy";
-              icon = <BookOpenIcon className="h-4 w-4" />;
-              break;
-          }
-          
-          return (
-            <AnalysisCard 
-              key={card.id}
-              title={title}
-              icon={icon}
-              results={card.results}
-              timestamp={card.timestamp}
-            />
-          );
-        })}
+      <div className="space-y-4 max-h-[800px] overflow-hidden">
+        <ScrollArea className="max-h-[800px]">
+          <div className="space-y-4 pr-4">
+            {analysisCards.map(card => {
+              let title = "";
+              let icon = null;
+              
+              switch (card.type) {
+                case 'technical':
+                  title = "Technical Analysis";
+                  icon = <CodeIcon className="h-4 w-4" />;
+                  break;
+                case 'market':
+                  title = "Market Analysis";
+                  icon = <BarChart2Icon className="h-4 w-4" />;
+                  break;
+                case 'legal':
+                  title = "Legal and IP Analysis";
+                  icon = <ScaleIcon className="h-4 w-4" />;
+                  break;
+                case 'business':
+                  title = "Business Strategy";
+                  icon = <BookOpenIcon className="h-4 w-4" />;
+                  break;
+              }
+              
+              return (
+                <AnalysisCard 
+                  key={card.id}
+                  title={title}
+                  icon={icon}
+                  results={card.results}
+                  timestamp={card.timestamp}
+                />
+              );
+            })}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
