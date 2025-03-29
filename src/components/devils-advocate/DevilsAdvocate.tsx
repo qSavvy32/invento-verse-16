@@ -5,7 +5,6 @@ import { GenerateCritiqueButton } from "./GenerateCritiqueButton";
 import { CritiqueCard } from "./CritiqueCard";
 import { SaveExportSection } from "./SaveExportSection";
 import { useCritiqueGeneration } from "./hooks/useCritiqueGeneration";
-import { Card, CardContent } from "@/components/ui/card"; 
 import { Skull } from "lucide-react";
 
 export const DevilsAdvocate = () => {
@@ -16,9 +15,10 @@ export const DevilsAdvocate = () => {
     await generateCritique(state.title, state.description, state.sketchDataUrl);
   };
 
-  // Create a wrapper function that properly returns a Promise
+  // Create a wrapper function that properly returns a Promise<void>
   const handleSaveToDatabase = async (showToast?: boolean): Promise<void> => {
-    return saveToDatabase(showToast);
+    await saveToDatabase(showToast);
+    return;
   };
   
   return (
@@ -37,10 +37,10 @@ export const DevilsAdvocate = () => {
         
         {critiques && <CritiqueCard critiques={critiques} />}
         
-        {/* Save Your Work Section */}
+        {/* Save Your Work Section - Passing the correct props */}
         <SaveExportSection 
-          state={state} 
-          saveToDatabase={handleSaveToDatabase} 
+          inventionState={state} 
+          onSave={handleSaveToDatabase} 
         />
       </div>
     </div>

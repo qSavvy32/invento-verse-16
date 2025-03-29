@@ -15,7 +15,7 @@ export function useCritiqueGeneration() {
   const [error, setError] = useState<string | null>(null);
   const [critiques, setCritiques] = useState<CritiquesData>(null);
 
-  const generateCritique = async (title: string, description: string, sketchDataUrl?: string) => {
+  const generateCritique = async (title: string, description: string, sketchDataUrl?: string | null): Promise<void> => {
     if (!title && !description) {
       toast.error("Please provide a title or description of your invention idea");
       return;

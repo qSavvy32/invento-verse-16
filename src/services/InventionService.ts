@@ -6,6 +6,7 @@ import {
   AudioTranscription 
 } from "@/contexts/InventionContext";
 import { toast } from "sonner";
+import { DatabaseWithTables } from "@/integrations/supabase/schema";
 
 export interface SavedInvention {
   id: string;
@@ -16,6 +17,9 @@ export interface SavedInvention {
   assets: InventionAsset[];
   transcriptions: AudioTranscription[];
 }
+
+// Create a typed supabase client
+const typedSupabase = supabase as unknown as ReturnType<typeof supabase<DatabaseWithTables>>;
 
 export const InventionService = {
   // Save an invention and all related data to Supabase
@@ -63,7 +67,8 @@ export const InventionService = {
           .single();
           
         if (error) throw error;
-        inventionId = data.id;
+        inventionId = data?.id;
+        if (!inventionId) throw new Error("Failed to get invention ID");
       }
       
       // Now that we have the invention ID, we can save related data
@@ -123,7 +128,7 @@ export const InventionService = {
         state.analysisResults.technical.forEach(result => {
           analysisToInsert.push({
             invention_id: inventionId,
-            analysis_type: 'technical',
+            analysis_type: 'technical' as const,
             result
           });
         });
@@ -134,7 +139,7 @@ export const InventionService = {
         state.analysisResults.market.forEach(result => {
           analysisToInsert.push({
             invention_id: inventionId,
-            analysis_type: 'market',
+            analysis_type: 'market' as const,
             result
           });
         });
@@ -145,7 +150,7 @@ export const InventionService = {
         state.analysisResults.legal.forEach(result => {
           analysisToInsert.push({
             invention_id: inventionId,
-            analysis_type: 'legal',
+            analysis_type: 'legal' as const,
             result
           });
         });
@@ -156,7 +161,7 @@ export const InventionService = {
         state.analysisResults.business.forEach(result => {
           analysisToInsert.push({
             invention_id: inventionId,
-            analysis_type: 'business',
+            analysis_type: 'business' as const,
             result
           });
         });
@@ -251,14 +256,14 @@ export const InventionService = {
         title: invention.title || '',
         description: invention.description || '',
         sketchDataUrl: invention.sketch_data_url,
-        assets: assets.map(asset => ({
+        assets: assets ? assets.map(asset => ({
           id: asset.id,
           type: asset.type as any,
           url: asset.url,
           thumbnailUrl: asset.thumbnail_url,
           name: asset.name,
           createdAt: new Date(asset.created_at).getTime()
-        })),
+        })) : [],
         visualization3dUrl: invention.visualization_3d_url,
         visualizationPrompts: {},
         savedToDatabase: true,
@@ -273,12 +278,12 @@ export const InventionService = {
           legal,
           business
         },
-        audioTranscriptions: transcriptions.map(t => ({
+        audioTranscriptions: transcriptions ? transcriptions.map(t => ({
           text: t.text,
           language: t.language,
           audioUrl: t.audio_url,
           timestamp: new Date(t.created_at).getTime()
-        }))
+        })) : []
       };
       
       return inventionState;
@@ -305,6 +310,7 @@ export const InventionService = {
         .order('updated_at', { ascending: false });
         
       if (error) throw error;
+      if (!inventions) return [];
       
       // For each invention, get its assets and transcriptions
       const result: SavedInvention[] = [];
