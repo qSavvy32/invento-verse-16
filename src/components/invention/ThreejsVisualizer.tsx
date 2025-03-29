@@ -28,6 +28,7 @@ export const ThreejsVisualizer = () => {
         // Handle iframe load event
         iframeRef.current.onload = () => {
           setIsLoading(false);
+          console.log("3D visualization iframe loaded successfully");
         };
         
         // Handle iframe error event
