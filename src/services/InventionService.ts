@@ -20,7 +20,7 @@ export class InventionService {
       
       const inventionId = invention.inventionId || uuidv4();
       
-      // Prepare invention data
+      // Prepare invention data (match database schema exactly)
       const inventionData = {
         id: inventionId,
         user_id: userId,
@@ -28,11 +28,28 @@ export class InventionService {
         description: invention.description,
         sketch_data_url: invention.sketchDataUrl,
         visualization_3d_url: invention.visualization3dUrl,
-        visualization_prompts: JSON.stringify(invention.visualizationPrompts),
-        threejs_visualization: JSON.stringify(invention.threejsVisualization),
+        threejs_html: invention.threejsVisualization?.html || null,
         business_strategy_svg: invention.businessStrategySvg,
-        analysis_results: JSON.stringify(invention.analysisResults),
         updated_at: new Date().toISOString()
+      };
+      
+      // Store additional data as JSON in metadata columns
+      const metadataColumns = {
+        // Add custom columns for storing JSON data
+        visualization_prompts_json: JSON.stringify(invention.visualizationPrompts || {}),
+        threejs_visualization_json: JSON.stringify(invention.threejsVisualization || { code: null, html: null }),
+        analysis_results_json: JSON.stringify(invention.analysisResults || {
+          technical: [],
+          market: [],
+          legal: [],
+          business: []
+        })
+      };
+      
+      // Combine base data with metadata
+      const fullInventionData = {
+        ...inventionData,
+        ...metadataColumns
       };
       
       // Check if this is a new invention or an update
@@ -40,7 +57,7 @@ export class InventionService {
         // Update existing invention
         const { error: updateError } = await supabase
           .from('inventions')
-          .update(inventionData)
+          .update(fullInventionData)
           .eq('id', inventionId);
           
         if (updateError) {
@@ -51,7 +68,7 @@ export class InventionService {
         const { error: insertError } = await supabase
           .from('inventions')
           .insert({
-            ...inventionData,
+            ...fullInventionData,
             created_at: new Date().toISOString()
           });
           
@@ -168,6 +185,24 @@ export class InventionService {
         // Don't throw error, just log it
       }
       
+      // Parse JSON data from metadata columns or use defaults
+      const visualizationPrompts = invention.visualization_prompts_json ? 
+        JSON.parse(invention.visualization_prompts_json) : {};
+        
+      const threejsVisualization = invention.threejs_visualization_json ? 
+        JSON.parse(invention.threejs_visualization_json) : {
+          code: null,
+          html: invention.threejs_html
+        };
+        
+      const analysisResults = invention.analysis_results_json ? 
+        JSON.parse(invention.analysis_results_json) : {
+          technical: [],
+          market: [],
+          legal: [],
+          business: []
+        };
+      
       // Convert database model to application model
       const inventionState: InventionState = {
         inventionId: invention.id,
@@ -183,23 +218,12 @@ export class InventionService {
           createdAt: new Date(asset.created_at).getTime()
         })),
         visualization3dUrl: invention.visualization_3d_url || null,
-        visualizationPrompts: invention.visualization_prompts ? 
-          JSON.parse(invention.visualization_prompts) : {},
+        visualizationPrompts: visualizationPrompts,
         savedToDatabase: true,
-        threejsVisualization: invention.threejs_visualization ? 
-          JSON.parse(invention.threejs_visualization) : {
-            code: null,
-            html: null
-          },
+        threejsVisualization: threejsVisualization,
         businessStrategySvg: invention.business_strategy_svg || null,
         mostRecentGeneration: null, // Set to null initially
-        analysisResults: invention.analysis_results ? 
-          JSON.parse(invention.analysis_results) : {
-            technical: [],
-            market: [],
-            legal: [],
-            business: []
-          },
+        analysisResults: analysisResults,
         audioTranscriptions: (transcriptions || []).map(t => ({
           text: t.text,
           language: t.language,
@@ -264,6 +288,24 @@ export class InventionService {
             name: asset.name || '',
             createdAt: new Date(asset.created_at).getTime()
           }));
+        
+        // Parse JSON data from metadata columns or use defaults
+        const visualizationPrompts = invention.visualization_prompts_json ? 
+          JSON.parse(invention.visualization_prompts_json) : {};
+          
+        const threejsVisualization = invention.threejs_visualization_json ? 
+          JSON.parse(invention.threejs_visualization_json) : {
+            code: null,
+            html: invention.threejs_html
+          };
+          
+        const analysisResults = invention.analysis_results_json ? 
+          JSON.parse(invention.analysis_results_json) : {
+            technical: [],
+            market: [],
+            legal: [],
+            business: []
+          };
           
         return {
           inventionId: invention.id,
@@ -272,23 +314,12 @@ export class InventionService {
           sketchDataUrl: invention.sketch_data_url || null,
           assets: inventionAssets,
           visualization3dUrl: invention.visualization_3d_url || null,
-          visualizationPrompts: invention.visualization_prompts ? 
-            JSON.parse(invention.visualization_prompts) : {},
+          visualizationPrompts: visualizationPrompts,
           savedToDatabase: true,
-          threejsVisualization: invention.threejs_visualization ? 
-            JSON.parse(invention.threejs_visualization) : {
-              code: null,
-              html: null
-            },
+          threejsVisualization: threejsVisualization,
           businessStrategySvg: invention.business_strategy_svg || null,
           mostRecentGeneration: null, // Set to null initially
-          analysisResults: invention.analysis_results ? 
-            JSON.parse(invention.analysis_results) : {
-              technical: [],
-              market: [],
-              legal: [],
-              business: []
-            },
+          analysisResults: analysisResults,
           audioTranscriptions: []
         };
       });

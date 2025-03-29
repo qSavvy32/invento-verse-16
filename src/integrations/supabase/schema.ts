@@ -12,6 +12,9 @@ export interface InventionTables {
     visualization_3d_url: string | null;
     threejs_html: string | null;
     business_strategy_svg: string | null;
+    visualization_prompts_json: string | null;
+    threejs_visualization_json: string | null;
+    analysis_results_json: string | null;
     created_at: string;
     updated_at: string;
   };

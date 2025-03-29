@@ -39,7 +39,7 @@ export const AiAssistantPanel = () => {
   });
   
   // Update loading state helper
-  const setIsLoading = (type: keyof AnalysisState["isLoading"], isLoading: boolean) => {
+  const updateLoadingState = (type: string, isLoading: boolean) => {
     setAnalysisState(prev => ({
       ...prev,
       isLoading: {
@@ -81,7 +81,7 @@ export const AiAssistantPanel = () => {
   const handle3DVisualization = () => {
     generate3DVisualization(
       visualizationStateWrapper,
-      setIsLoading
+      updateLoadingState
     );
   };
   
@@ -89,7 +89,7 @@ export const AiAssistantPanel = () => {
   const handleThreejsVisualization = () => {
     generateThreejsVisualization(
       visualizationStateWrapper,
-      setIsLoading
+      updateLoadingState
     );
   };
   
@@ -110,8 +110,9 @@ export const AiAssistantPanel = () => {
           <TabsContent value="analysis" className="pt-4 min-h-[400px]">
             <AnalysisButtonGroup 
               isLoading={analysisState.isLoading}
-              setIsLoading={setIsLoading}
+              isDisabled={false}
               onAnalysisComplete={handleSetAnalysisResults}
+              setIsLoading={updateLoadingState}
             />
             
             {analysisState.analyzedContent && (

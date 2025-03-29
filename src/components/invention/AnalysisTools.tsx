@@ -30,6 +30,11 @@ export const AnalysisTools = () => {
     setAnalysisResults(analysisResults);
   };
   
+  // Update the loading state
+  const updateLoadingState = (type: any, loading: any) => {
+    setIsLoading(prev => ({ ...prev, [type]: loading }));
+  };
+  
   return (
     <Card>
       <CardContent className="pt-6">
@@ -41,8 +46,9 @@ export const AnalysisTools = () => {
           <TabsContent value="analysis" className="pt-4">
             <AnalysisButtonGroup 
               isLoading={isLoading}
-              setIsLoading={(type, loading) => setIsLoading(prev => ({ ...prev, [type]: loading }))}
+              isDisabled={false}
               onAnalysisComplete={handleSetAnalysisResults}
+              setIsLoading={updateLoadingState}
             />
             
             {analysisContent && (
