@@ -1,18 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Anthropic } from "https://esm.sh/@anthropic-ai/sdk@0.16.0";
-import * as Sentry from "https://esm.sh/@sentry/deno@7.94.1";
 
-// Initialize Sentry
-try {
-  Sentry.init({
-    dsn: Deno.env.get("SENTRY_DSN"),
-    environment: 'production',
-    tracesSampleRate: 1.0,
-  });
-} catch (e) {
-  console.error("Invalid Sentry Dsn:", Deno.env.get("SENTRY_DSN"));
-}
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,413 +18,101 @@ serve(async (req) => {
   try {
     const { title, description, sketchDataUrl, analysisType, outputFormat } = await req.json();
 
-    // Validate required inputs
-    if (!title && !description) {
-      throw new Error("At least title or description must be provided");
+    // Validate required inputs - allow for more flexibility with inputs
+    if (!title && !description && !sketchDataUrl) {
+      throw new Error("At least one of title, description, or visual input must be provided");
     }
 
-    console.log(`Received request for ${analysisType} analysis`);
+    console.log(`Received request for ${analysisType || "comprehensive"} analysis`);
+    console.log(`Input data: Title: ${Boolean(title)}, Description: ${Boolean(description)}, Visual input: ${Boolean(sketchDataUrl)}`);
 
     const anthropic = new Anthropic({
-      apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
+      apiKey: ANTHROPIC_API_KEY,
     });
 
-    // Prepare base prompt
-    let systemPrompt = `You are an expert invention analyst with deep knowledge across technical, market, and legal domains.
-      Analyze the provided invention description and sketch (if available) and provide detailed, actionable insights.`;
-
-    // Request markdown formatting
+    // Build content array for the prompt
+    const contentItems = [];
+    
+    // Base text prompt
+    let textPrompt = "You are an innovation analyst tasked with analyzing a new invention idea.";
+    
+    if (title) {
+      textPrompt += `\n\nTitle: ${title}`;
+    }
+    
+    if (description) {
+      textPrompt += `\n\nDescription: ${description}`;
+    }
+    
+    // Add analysis type specific instructions
+    textPrompt += getAnalysisTypeInstructions(analysisType);
+    
+    // Add formatting instructions
     if (outputFormat === "markdown") {
-      systemPrompt += `
-        Format your response using Markdown syntax:
-        - Use **bold** for important points
-        - Use *italics* for emphasis
-        - Use bullet points for lists
-        - Use \`code\` for technical terms
-        - Structure your answer with clear sections
-      `;
+      textPrompt += "\n\nFormat your response using rich Markdown with headings, bullet points, and emphasis where appropriate.";
     }
-
-    // Customize the prompt based on analysis type
-    switch (analysisType) {
-      case "technical":
-        systemPrompt += `Focus on technical feasibility, engineering challenges, and design considerations.`;
-        break;
-      case "challenges":
-        systemPrompt += `Focus on identifying key technical challenges and potential solutions.`;
-        break;
-      case "materials":
-        systemPrompt += `Focus on suggesting appropriate materials and components for this invention.`;
-        break;
-      case "users":
-        systemPrompt += `Focus on target user analysis, primary and secondary user groups, and how the invention addresses their needs.`;
-        break;
-      case "competition":
-        systemPrompt += `Focus on competitive analysis, market positioning, and differentiators.`;
-        break;
-      case "ip":
-        systemPrompt += `Focus on intellectual property considerations, patentability assessment, and protection strategies.`;
-        break;
-      case "regulatory":
-        systemPrompt += `Focus on regulatory compliance requirements and certification needs.`;
-        break;
-      case "comprehensive":
-      default:
-        systemPrompt += `Provide a comprehensive analysis covering technical feasibility, market potential, intellectual property considerations, and next steps.`;
-        break;
-    }
-
-    // Add instructions for output format based on analysis type
-    if (analysisType === "technical") {
-      systemPrompt += `
-        Return your analysis in this JSON format:
-        {
-          "analysis_type": "invention_technical_analysis",
-          "invention_title": "Title of the invention",
-          "invention_description": "Brief description of the invention",
-          "technical": [
-            "First technical point with **markdown** formatting",
-            "Second technical point with *emphasis* where needed"
-          ],
-          "technical_feasibility": {
-            "assessment": "low|medium|high",
-            "explanation": "Explanation of technical feasibility assessment"
-          },
-          "engineering_challenges": [
-            {
-              "challenge": "Name of the challenge",
-              "description": "Detailed description of the challenge with markdown formatting"
-            }
-          ],
-          "design_considerations": [
-            {
-              "consideration": "Name of the consideration",
-              "description": "Description of the design consideration"
-            }
-          ]
-        }
-      `;
-    } else if (analysisType === "challenges") {
-      systemPrompt += `
-        Return your analysis in this JSON format:
-        {
-          "technical": [
-            "First challenge with **markdown** formatting",
-            "Second challenge with *emphasis* where needed"
-          ],
-          "key_challenges": [
-            {
-              "challenge": "Name of the first challenge",
-              "description": "Detailed description of the challenge with markdown formatting"
-            },
-            ... more challenges
-          ]
-        }
-      `;
-    } else if (analysisType === "materials") {
-      systemPrompt += `
-        Return your analysis in this JSON format:
-        {
-          "technical": [
-            "First material suggestion with **markdown** formatting",
-            "Second material suggestion with *emphasis* where needed"
-          ],
-          "materials_analysis": {
-            "primary_materials": [
-              {
-                "material": "Name of material",
-                "rationale": "Why this material is appropriate with markdown formatting"
-              }
-            ],
-            "alternative_materials": [
-              {
-                "material": "Alternative material",
-                "pros": "Benefits of this alternative with markdown",
-                "cons": "Drawbacks of this alternative with markdown"
-              }
-            ]
-          }
-        }
-      `;
-    } else if (analysisType === "users") {
-      systemPrompt += `
-        Return your analysis in this JSON format:
-        {
-          "market": [
-            "First user insight with **markdown** formatting",
-            "Second user insight with *emphasis* where needed"
-          ],
-          "user_analysis": {
-            "target_user_groups": [
-              {
-                "group_name": "Name of user group",
-                "description": "Description of the user group with markdown formatting"
-              }
-            ],
-            "primary_user_group": {
-              "group_name": "Primary user group",
-              "needs_addressed": [
-                "First need addressed by the invention with markdown",
-                "Second need addressed by the invention with markdown"
-              ]
-            }
-          }
-        }
-      `;
-    } else if (analysisType === "competition") {
-      systemPrompt += `
-        Return your analysis in this JSON format:
-        {
-          "market": [
-            "First market insight with **markdown** formatting",
-            "Second market insight with *emphasis* where needed" 
-          ],
-          "competitive_analysis": {
-            "key_competitors": [
-              {
-                "name": "Competitor name",
-                "description": "Description with markdown formatting",
-                "strengths": ["Strength 1", "Strength 2"],
-                "weaknesses": ["Weakness 1", "Weakness 2"]
-              }
-            ],
-            "market_positioning": "Suggested market positioning with markdown",
-            "differentiators": [
-              "First differentiator with markdown formatting",
-              "Second differentiator with markdown formatting"
-            ]
-          }
-        }
-      `;
-    } else if (analysisType === "ip") {
-      systemPrompt += `
-        Return your analysis in this JSON format:
-        {
-          "legal": [
-            "First IP insight with **markdown** formatting",
-            "Second IP insight with *emphasis* where needed"
-          ],
-          "ip_analysis": {
-            "patentability": {
-              "assessment": "low|medium|high",
-              "explanation": "Explanation with markdown formatting"
-            },
-            "similar_patents": [
-              {
-                "description": "Description of similar patent with markdown",
-                "relevance": "How it relates to this invention"
-              }
-            ],
-            "protection_strategies": [
-              "First protection strategy with markdown",
-              "Second protection strategy with markdown"
-            ]
-          }
-        }
-      `;
-    } else if (analysisType === "comprehensive") {
-      systemPrompt += `
-        Return your analysis in this JSON format:
-        {
-          "technical": [
-            "First technical insight with **markdown** formatting",
-            "Second technical insight with *emphasis* where needed"
-          ],
-          "market": [
-            "First market insight with **markdown** formatting",
-            "Second market insight with *emphasis* where needed"
-          ],
-          "legal": [
-            "First legal insight with **markdown** formatting",
-            "Second legal insight with *emphasis* where needed"
-          ],
-          "business": [
-            "First business strategy with **markdown** formatting",
-            "Second business strategy with *emphasis* where needed"
-          ]
-        }
-      `;
-    } else {
-      systemPrompt += `\n\nOutput your analysis in a structured JSON format with insights formatted in markdown.`;
-    }
-
-    // Prepare user message with invention details
-    let userMessage = `Here's my invention idea:\n\nTitle: ${title || "Untitled"}\nDescription: ${description || "No description provided"}`;
-
+    
+    // Add the text component to content items
+    contentItems.push({
+      type: "text",
+      text: textPrompt
+    });
+    
+    // If there's a sketch, add it as an image
     if (sketchDataUrl) {
-      userMessage += `\n\nI've also created a sketch of the invention which you can analyze.`;
+      // Handle base64 data URLs correctly
+      if (sketchDataUrl.startsWith('data:')) {
+        const [mediaTypeWithEncoding, base64Data] = sketchDataUrl.split(',');
+        const mediaType = mediaTypeWithEncoding.split(':')[1].split(';')[0];
+        
+        contentItems.push({
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: mediaType,
+            data: base64Data
+          }
+        });
+        
+        // Add instructions for the image
+        contentItems.push({
+          type: "text",
+          text: "Above is a visual representation of the invention idea. Please analyze it alongside the textual description."
+        });
+      }
     }
 
-    userMessage += `\n\nPlease provide a detailed ${analysisType} analysis of this invention idea.`;
+    console.log(`Sending request to Anthropic API for ${analysisType || "comprehensive"} analysis...`);
 
-    console.log(`Sending request to Anthropic API for ${analysisType} analysis...`);
-
-    // Make request to Anthropic API - correct format with system as a top-level parameter
+    // Make request to Anthropic API
+    const systemPrompt = getSystemPrompt(analysisType);
+    
     const response = await anthropic.messages.create({
-      model: "claude-3-sonnet-20240229",
+      model: "claude-3-haiku-20240307",
       system: systemPrompt,
       max_tokens: 2000,
       messages: [
-        { role: "user", content: userMessage }
+        { 
+          role: "user", 
+          content: contentItems
+        }
       ],
-      temperature: 0.7, // Balanced between creativity and consistency
+      temperature: 0.7,
     });
 
     console.log("Received response from Anthropic API");
 
-    // Parse the response to extract JSON if possible
-    let analysisResults;
-    try {
-      // Try to find and parse JSON in the response
-      const jsonMatch = response.content[0].text.match(/```json\n([\s\S]*?)\n```/) || 
-                      response.content[0].text.match(/\{[\s\S]*\}/);
-                      
-      if (jsonMatch) {
-        analysisResults = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-        console.log("Successfully parsed JSON response");
-      } else {
-        // If no JSON found, convert the full text response into structured format
-        console.log("No JSON found in response, converting text to structured format");
-        
-        // Split by lines and filter out empty lines
-        const lines = response.content[0].text
-          .split('\n')
-          .filter(line => line.trim().length > 0)
-          .map(line => line.replace(/^[•\-*]\s*/, '')); // Remove bullet points
-          
-        // Create structured response based on analysis type
-        if (analysisType === "technical" || analysisType === "challenges" || analysisType === "materials") {
-          analysisResults = {
-            technical: lines
-          };
-        } else if (analysisType === "users" || analysisType === "competition") {
-          analysisResults = {
-            market: lines
-          };
-        } else if (analysisType === "ip" || analysisType === "regulatory") {
-          analysisResults = {
-            legal: lines
-          };
-        } else {
-          // For comprehensive analysis, split into categories
-          const third = Math.ceil(lines.length / 3);
-          analysisResults = {
-            technical: lines.slice(0, third),
-            market: lines.slice(third, 2 * third),
-            legal: lines.slice(2 * third)
-          };
-        }
-      }
-    } catch (error) {
-      console.error("Error parsing JSON from Anthropic response:", error);
-      
-      // Create a basic structured response with the raw text
-      const lines = response.content[0].text
-        .split('\n')
-        .filter(line => line.trim().length > 0)
-        .map(line => line.replace(/^[•\-*]\s*/, '')); // Remove bullet points
-      
-      if (analysisType === "technical" || analysisType === "challenges" || analysisType === "materials") {
-        analysisResults = {
-          technical: lines
-        };
-      } else if (analysisType === "users" || analysisType === "competition") {
-        analysisResults = {
-          market: lines
-        };
-      } else if (analysisType === "ip" || analysisType === "regulatory") {
-        analysisResults = {
-          legal: lines
-        };
-      } else {
-        // For comprehensive analysis, split into categories
-        const third = Math.ceil(lines.length / 3);
-        analysisResults = {
-          technical: lines.slice(0, third),
-          market: lines.slice(third, 2 * third),
-          legal: lines.slice(2 * third)
-        };
-      }
-    }
+    // Process the response based on analysis type
+    const processedResponse = processResponse(response.content[0].text, analysisType);
 
-    // Ensure we're returning a consistent data structure
-    // If we have a specialized format, normalize it to the standard structure
-    if (analysisType === "challenges" && analysisResults.key_challenges) {
-      const technicalResults = analysisResults.key_challenges.map((challenge: any) => 
-        typeof challenge === 'string' ? challenge : `**${challenge.challenge || 'Challenge'}**: ${challenge.description || ''}`
-      );
-      
-      analysisResults = {
-        technical: technicalResults
-      };
-    } 
-    // For materials analysis, transform the response
-    else if (analysisType === "materials" && analysisResults.materials_analysis) {
-      const technicalResults = [
-        ...(analysisResults.materials_analysis.primary_materials || []).map((m: any) => 
-          `**${m.material}**: ${m.rationale}`
-        ),
-        ...(analysisResults.materials_analysis.alternative_materials || []).map((m: any) => 
-          `**Alternative**: *${m.material}* - Pros: ${m.pros}, Cons: ${m.cons}`
-        )
-      ];
-      
-      analysisResults = {
-        technical: technicalResults
-      };
-    }
-    // User analysis transformation
-    else if (analysisType === "users" && analysisResults.user_analysis) {
-      const marketResults = [];
-      
-      // Add primary user group info
-      if (analysisResults.user_analysis.primary_user_group) {
-        const primary = analysisResults.user_analysis.primary_user_group;
-        marketResults.push(`**Primary users**: ${primary.group_name || 'Unknown'}`);
-        
-        if (primary.needs_addressed && Array.isArray(primary.needs_addressed)) {
-          primary.needs_addressed.forEach((need: string) => {
-            marketResults.push(`- *Need*: ${need}`);
-          });
-        }
-      }
-      
-      // Add target user groups
-      if (analysisResults.user_analysis.target_user_groups && Array.isArray(analysisResults.user_analysis.target_user_groups)) {
-        analysisResults.user_analysis.target_user_groups.forEach((group: any) => {
-          marketResults.push(`**User group**: *${group.group_name}* - ${group.description || ''}`);
-        });
-      }
-      
-      analysisResults = {
-        market: marketResults
-      };
-    }
-    // Add markdown formatting to any plain text arrays
-    Object.keys(analysisResults).forEach(key => {
-      if (Array.isArray(analysisResults[key])) {
-        analysisResults[key] = analysisResults[key].map((item: string) => {
-          // If item doesn't already have markdown formatting, add some basic formatting
-          if (typeof item === 'string' && !item.includes('**') && !item.includes('*') && !item.includes('`')) {
-            // Add bold to the beginning of the text or to key phrases
-            return item.replace(/^([^:]+):/, '**$1**:').replace(/\b(important|critical|key|essential)\b/gi, '**$1**');
-          }
-          return item;
-        });
-      }
-    });
-
-    return new Response(JSON.stringify(analysisResults), {
+    return new Response(JSON.stringify(processedResponse), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error in analyze-invention function:", error);
     
-    // Capture exception in Sentry
-    Sentry.captureException(error);
-    
     return new Response(
-      JSON.stringify({ error: `Anthropic API error: ${error.message}` }),
+      JSON.stringify({ error: `Error: ${error.message}` }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -442,3 +120,150 @@ serve(async (req) => {
     );
   }
 });
+
+function getAnalysisTypeInstructions(analysisType: string): string {
+  switch (analysisType) {
+    case "technical":
+      return "\n\nFocus on technical feasibility, engineering challenges, and implementation requirements.";
+    case "users":
+      return "\n\nFocus on target users, user experience, user needs, and potential user adoption challenges.";
+    case "materials":
+      return "\n\nFocus on materials requirements, sustainability, durability, and manufacturing considerations.";
+    case "ip":
+      return "\n\nFocus on intellectual property considerations, patentability, and potential legal challenges.";
+    case "competition":
+      return "\n\nFocus on competitive landscape, market positioning, and differentiation strategy.";
+    case "challenges":
+      return "\n\nFocus on potential obstacles, risks, and challenges that might impact development or adoption.";
+    default:
+      return "\n\nProvide a comprehensive analysis covering technical, market, legal, and business aspects.";
+  }
+}
+
+function getSystemPrompt(analysisType: string): string {
+  const basePrompt = "You are an expert innovation analyst with deep expertise in technology, business, and market analysis. ";
+  
+  switch (analysisType) {
+    case "technical":
+      return basePrompt + "Focus on engineering feasibility, technical innovations, and implementation details.";
+    case "users":
+      return basePrompt + "Focus on user experience, user needs, and adoption considerations.";
+    case "materials":
+      return basePrompt + "Focus on materials science, manufacturing processes, and sustainability.";
+    case "ip":
+      return basePrompt + "Focus on intellectual property, patent strategy, and legal considerations.";
+    case "competition":
+      return basePrompt + "Focus on competitive analysis, market positioning, and differentiation.";
+    case "challenges":
+      return basePrompt + "Focus on identifying obstacles, risks, and potential failure points.";
+    default:
+      return basePrompt + "Provide a comprehensive analysis with actionable insights for the invention idea.";
+  }
+}
+
+function processResponse(responseText: string, analysisType: string): any {
+  // Try to parse JSON if it exists in the response
+  try {
+    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
+                      responseText.match(/\{[\s\S]*\}/);
+                      
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[1] || jsonMatch[0]);
+    }
+  } catch (error) {
+    console.log("No valid JSON found in response, using text processing");
+  }
+  
+  // Default processing based on analysis type
+  if (analysisType === "technical") {
+    return { technical: extractBulletPoints(responseText) };
+  } else if (analysisType === "users") {
+    return { users: extractBulletPoints(responseText) };
+  } else if (analysisType === "materials") {
+    return { materials: extractBulletPoints(responseText) };
+  } else if (analysisType === "ip") {
+    return { ip: extractBulletPoints(responseText) };
+  } else if (analysisType === "competition") {
+    return { competition: extractBulletPoints(responseText) };
+  } else if (analysisType === "challenges") {
+    return { challenges: extractBulletPoints(responseText) };
+  } else {
+    // Comprehensive analysis - extract sections
+    return {
+      technical: extractSectionContent(responseText, ["technical", "engineering", "technology", "implementation"]),
+      market: extractSectionContent(responseText, ["market", "users", "customers", "audience"]),
+      legal: extractSectionContent(responseText, ["legal", "ip", "intellectual property", "patent"]),
+      business: extractSectionContent(responseText, ["business", "monetization", "revenue", "financial"])
+    };
+  }
+}
+
+function extractBulletPoints(text: string): string[] {
+  // Extract all bullet points (lines starting with -, *, or number.)
+  const bulletPoints = text.split("\n")
+    .filter(line => /^(\s*[-*]\s|^\s*\d+\.\s)/.test(line))
+    .map(line => line.replace(/^(\s*[-*]\s|\s*\d+\.\s)/, "").trim());
+  
+  // If no bullet points found, split by paragraphs
+  if (bulletPoints.length === 0) {
+    return text.split("\n\n")
+      .filter(para => para.trim().length > 0)
+      .map(para => para.trim());
+  }
+  
+  return bulletPoints;
+}
+
+function extractSectionContent(text: string, keywords: string[]): string[] {
+  const lines = text.split("\n");
+  const results: string[] = [];
+  let inRelevantSection = false;
+  let currentSection = "";
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    
+    // Check if this is a heading
+    if (line.startsWith("#")) {
+      // If we were in a relevant section, save it
+      if (inRelevantSection && currentSection.trim()) {
+        results.push(currentSection.trim());
+        currentSection = "";
+      }
+      
+      // Check if this heading contains any of our keywords
+      inRelevantSection = keywords.some(keyword => 
+        line.toLowerCase().includes(keyword.toLowerCase()));
+    } 
+    
+    // If we're in a relevant section, collect the content
+    if (inRelevantSection && line) {
+      currentSection += line + "\n";
+    }
+  }
+  
+  // Add the last section if relevant
+  if (inRelevantSection && currentSection.trim()) {
+    results.push(currentSection.trim());
+  }
+  
+  // If no sections found, look for paragraphs containing keywords
+  if (results.length === 0) {
+    const paragraphs = text.split("\n\n");
+    for (const paragraph of paragraphs) {
+      if (keywords.some(keyword => paragraph.toLowerCase().includes(keyword.toLowerCase()))) {
+        results.push(paragraph.trim());
+      }
+    }
+  }
+  
+  // If still nothing found, just split the text into paragraphs
+  if (results.length === 0) {
+    return text.split("\n\n")
+      .filter(para => para.trim().length > 0)
+      .map(para => para.trim())
+      .slice(0, 4); // Limit to first 4 paragraphs
+  }
+  
+  return results;
+}

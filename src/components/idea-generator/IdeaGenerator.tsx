@@ -116,8 +116,11 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
                           const value = e.target.value;
                           if (contextIsAvailable) {
                             inventionContext.updateDescription(value);
+                            // Also update the description in the form for idea generation
+                            setDescription(value);
                           } else {
                             setLocalDescription(value);
+                            setDescription(value);
                           }
                         }}
                         className="min-h-[80px] max-h-[120px] text-sm"
@@ -136,6 +139,7 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
                   isGenerating={isGenerating}
                   error={error}
                   onVoiceTranscription={handleVoiceTranscription}
+                  hideDescriptionInput={true} /* Add this prop to hide the description input in IdeaForm */
                 />
               </>
             )}
