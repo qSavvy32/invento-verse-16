@@ -17,6 +17,11 @@ interface AnalysisState {
     comprehensive: boolean;
     visualization: boolean;
     threejs: boolean;
+    users: boolean;
+    materials: boolean;
+    ip: boolean;
+    competition: boolean;
+    challenges: boolean;
   };
   activeTab: string;
   analyzedContent: string | null;
@@ -33,6 +38,11 @@ export const AiAssistantPanel = () => {
       comprehensive: false,
       visualization: false,
       threejs: false,
+      users: false,
+      materials: false,
+      ip: false,
+      competition: false,
+      challenges: false
     },
     activeTab: "experts",
     analyzedContent: null,
@@ -61,6 +71,11 @@ export const AiAssistantPanel = () => {
     
     setAnalysisResults(analysisResults);
   };
+
+  const handleRunAnalysis = (analysisType: string) => {
+    console.log(`Running analysis for ${analysisType}`);
+    // Implement analysis running logic here
+  };
   
   // Create a wrapper for visualization state
   const visualizationStateWrapper = {
@@ -69,6 +84,7 @@ export const AiAssistantPanel = () => {
     sketchDataUrl: state.sketchDataUrl,
     updateVisualizations: (data: any) => {
       // Handle visualization prompt updates
+      console.log("Updating visualizations with data:", data);
     },
     update3DVisualization,
     setThreejsVisualization: (code: string, html: string) => {
@@ -111,6 +127,7 @@ export const AiAssistantPanel = () => {
             <AnalysisButtonGroup 
               isLoading={analysisState.isLoading}
               isDisabled={false}
+              onRunAnalysis={handleRunAnalysis}
               onAnalysisComplete={handleSetAnalysisResults}
               setIsLoading={updateLoadingState}
             />

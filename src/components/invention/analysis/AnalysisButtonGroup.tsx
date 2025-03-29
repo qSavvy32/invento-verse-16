@@ -1,5 +1,4 @@
 
-import { AnalysisButton } from "./AnalysisButton";
 import { 
   Construction,
   Users,
@@ -8,18 +7,29 @@ import {
   BarChart,
   Inspect
 } from "lucide-react";
+import { AnalysisButton } from "./AnalysisButton";
 
-interface AnalysisButtonGroupProps {
+export interface AnalysisButtonGroupProps {
   isLoading: Record<string, boolean>;
   isDisabled: boolean;
-  onRunAnalysis: (analysisType: string) => void;
+  onRunAnalysis?: (analysisType: string) => void;
+  onAnalysisComplete?: (results: Record<string, string[]>) => void;
+  setIsLoading?: (type: string, isLoading: boolean) => void;
 }
 
 export const AnalysisButtonGroup = ({
   isLoading,
   isDisabled,
-  onRunAnalysis
+  onRunAnalysis,
+  onAnalysisComplete,
+  setIsLoading
 }: AnalysisButtonGroupProps) => {
+  const handleRunAnalysis = (analysisType: string) => {
+    if (onRunAnalysis) {
+      onRunAnalysis(analysisType);
+    }
+  };
+  
   return (
     <div className="space-y-4">
       <h3 className="text-md font-medium mb-2">Analysis Tools</h3>
@@ -30,7 +40,7 @@ export const AnalysisButtonGroup = ({
           description="Feasibility and engineering"
           isLoading={isLoading.technical}
           isDisabled={isDisabled}
-          onClick={() => onRunAnalysis("technical")}
+          onClick={() => handleRunAnalysis("technical")}
         />
         
         <AnalysisButton 
@@ -39,7 +49,7 @@ export const AnalysisButtonGroup = ({
           description="Target audience and needs"
           isLoading={isLoading.users}
           isDisabled={isDisabled}
-          onClick={() => onRunAnalysis("users")}
+          onClick={() => handleRunAnalysis("users")}
         />
         
         <AnalysisButton 
@@ -48,7 +58,7 @@ export const AnalysisButtonGroup = ({
           description="Components and materials"
           isLoading={isLoading.materials}
           isDisabled={isDisabled}
-          onClick={() => onRunAnalysis("materials")}
+          onClick={() => handleRunAnalysis("materials")}
         />
         
         <AnalysisButton 
@@ -57,7 +67,7 @@ export const AnalysisButtonGroup = ({
           description="Patent and legal issues"
           isLoading={isLoading.ip}
           isDisabled={isDisabled}
-          onClick={() => onRunAnalysis("ip")}
+          onClick={() => handleRunAnalysis("ip")}
         />
         
         <AnalysisButton 
@@ -66,7 +76,7 @@ export const AnalysisButtonGroup = ({
           description="Competition and positioning"
           isLoading={isLoading.competition}
           isDisabled={isDisabled}
-          onClick={() => onRunAnalysis("competition")}
+          onClick={() => handleRunAnalysis("competition")}
         />
         
         <AnalysisButton 
@@ -75,7 +85,7 @@ export const AnalysisButtonGroup = ({
           description="Critical issues to solve"
           isLoading={isLoading.challenges}
           isDisabled={isDisabled}
-          onClick={() => onRunAnalysis("challenges")}
+          onClick={() => handleRunAnalysis("challenges")}
         />
       </div>
     </div>

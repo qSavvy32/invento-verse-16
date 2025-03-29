@@ -1,93 +1,39 @@
 
-import { AnalysisButton } from "./AnalysisButton";
-import { 
-  Construction,
-  Users,
-  Box,
-  Scale,
-  BarChart,
-  Inspect
-} from "lucide-react";
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
-interface AnalysisButtonGroupProps {
-  isLoading: Record<string, boolean>;
-  setIsLoading?: (type: string, isLoading: boolean) => void;
-  isDisabled?: boolean;
-  onRunAnalysis?: (analysisType: string) => void;
-  onAnalysisComplete?: (results: Record<string, string[]>) => void;
+interface AnalysisButtonProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  isLoading: boolean;
+  isDisabled: boolean;
+  onClick: () => void;
 }
 
-export const AnalysisButtonGroup = ({
+export const AnalysisButton = ({
+  icon,
+  title,
+  description,
   isLoading,
-  isDisabled = false,
-  onRunAnalysis,
-  setIsLoading,
-  onAnalysisComplete
-}: AnalysisButtonGroupProps) => {
-  const handleRunAnalysis = (analysisType: string) => {
-    if (onRunAnalysis) {
-      onRunAnalysis(analysisType);
-    }
-  };
-  
+  isDisabled,
+  onClick
+}: AnalysisButtonProps) => {
   return (
-    <div className="space-y-4">
-      <h3 className="text-md font-medium mb-2">Analysis Tools</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-        <AnalysisButton 
-          icon={<Construction className="h-4 w-4" />}
-          title="Technical Analysis"
-          description="Feasibility and engineering"
-          isLoading={isLoading.technical}
-          isDisabled={isDisabled}
-          onClick={() => handleRunAnalysis("technical")}
-        />
-        
-        <AnalysisButton 
-          icon={<Users className="h-4 w-4" />}
-          title="User Analysis"
-          description="Target audience and needs"
-          isLoading={isLoading.users}
-          isDisabled={isDisabled}
-          onClick={() => handleRunAnalysis("users")}
-        />
-        
-        <AnalysisButton 
-          icon={<Box className="h-4 w-4" />}
-          title="Materials Analysis"
-          description="Components and materials"
-          isLoading={isLoading.materials}
-          isDisabled={isDisabled}
-          onClick={() => handleRunAnalysis("materials")}
-        />
-        
-        <AnalysisButton 
-          icon={<Scale className="h-4 w-4" />}
-          title="IP Analysis"
-          description="Patent and legal issues"
-          isLoading={isLoading.ip}
-          isDisabled={isDisabled}
-          onClick={() => handleRunAnalysis("ip")}
-        />
-        
-        <AnalysisButton 
-          icon={<BarChart className="h-4 w-4" />}
-          title="Market Analysis"
-          description="Competition and positioning"
-          isLoading={isLoading.competition}
-          isDisabled={isDisabled}
-          onClick={() => handleRunAnalysis("competition")}
-        />
-        
-        <AnalysisButton 
-          icon={<Inspect className="h-4 w-4" />}
-          title="Key Challenges"
-          description="Critical issues to solve"
-          isLoading={isLoading.challenges}
-          isDisabled={isDisabled}
-          onClick={() => handleRunAnalysis("challenges")}
-        />
+    <Button
+      variant="outline"
+      className="h-auto p-4 flex flex-col items-center gap-2 w-full"
+      disabled={isDisabled || isLoading}
+      onClick={onClick}
+    >
+      <div className="flex items-center justify-center h-6 w-6 text-muted-foreground">
+        {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : icon}
       </div>
-    </div>
+      <div className="space-y-1 text-center">
+        <h3 className="font-medium text-sm">{title}</h3>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+    </Button>
   );
 };

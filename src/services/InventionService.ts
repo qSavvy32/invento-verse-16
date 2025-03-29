@@ -89,7 +89,6 @@ export class InventionService {
         const assetsData = invention.assets.map(asset => ({
           id: asset.id || uuidv4(),
           invention_id: inventionId,
-          user_id: userId,
           type: asset.type,
           url: asset.url,
           thumbnail_url: asset.thumbnailUrl,
@@ -119,7 +118,6 @@ export class InventionService {
         const transcriptionsData = invention.audioTranscriptions.map(transcript => ({
           id: uuidv4(),
           invention_id: inventionId,
-          user_id: userId,
           text: transcript.text,
           language: transcript.language,
           audio_url: transcript.audioUrl || null,
@@ -186,22 +184,42 @@ export class InventionService {
       }
       
       // Parse JSON data from metadata columns or use defaults
-      const visualizationPrompts = invention.visualization_prompts_json ? 
-        JSON.parse(invention.visualization_prompts_json) : {};
-        
-      const threejsVisualization = invention.threejs_visualization_json ? 
-        JSON.parse(invention.threejs_visualization_json) : {
-          code: null,
-          html: invention.threejs_html
-        };
-        
-      const analysisResults = invention.analysis_results_json ? 
-        JSON.parse(invention.analysis_results_json) : {
-          technical: [],
-          market: [],
-          legal: [],
-          business: []
-        };
+      let visualizationPrompts = {};
+      try {
+        visualizationPrompts = invention.visualization_prompts_json ? 
+          JSON.parse(invention.visualization_prompts_json) : {};
+      } catch (e) {
+        console.error("Error parsing visualization_prompts_json:", e);
+      }
+      
+      let threejsVisualization = { code: null, html: invention.threejs_html };
+      try {
+        threejsVisualization = invention.threejs_visualization_json ? 
+          JSON.parse(invention.threejs_visualization_json) : {
+            code: null,
+            html: invention.threejs_html
+          };
+      } catch (e) {
+        console.error("Error parsing threejs_visualization_json:", e);
+      }
+      
+      let analysisResults = {
+        technical: [],
+        market: [],
+        legal: [],
+        business: []
+      };
+      try {
+        analysisResults = invention.analysis_results_json ? 
+          JSON.parse(invention.analysis_results_json) : {
+            technical: [],
+            market: [],
+            legal: [],
+            business: []
+          };
+      } catch (e) {
+        console.error("Error parsing analysis_results_json:", e);
+      }
       
       // Convert database model to application model
       const inventionState: InventionState = {
@@ -290,22 +308,42 @@ export class InventionService {
           }));
         
         // Parse JSON data from metadata columns or use defaults
-        const visualizationPrompts = invention.visualization_prompts_json ? 
-          JSON.parse(invention.visualization_prompts_json) : {};
-          
-        const threejsVisualization = invention.threejs_visualization_json ? 
-          JSON.parse(invention.threejs_visualization_json) : {
-            code: null,
-            html: invention.threejs_html
-          };
-          
-        const analysisResults = invention.analysis_results_json ? 
-          JSON.parse(invention.analysis_results_json) : {
-            technical: [],
-            market: [],
-            legal: [],
-            business: []
-          };
+        let visualizationPrompts = {};
+        try {
+          visualizationPrompts = invention.visualization_prompts_json ? 
+            JSON.parse(invention.visualization_prompts_json) : {};
+        } catch (e) {
+          console.error("Error parsing visualization_prompts_json:", e);
+        }
+        
+        let threejsVisualization = { code: null, html: invention.threejs_html };
+        try {
+          threejsVisualization = invention.threejs_visualization_json ? 
+            JSON.parse(invention.threejs_visualization_json) : {
+              code: null,
+              html: invention.threejs_html
+            };
+        } catch (e) {
+          console.error("Error parsing threejs_visualization_json:", e);
+        }
+        
+        let analysisResults = {
+          technical: [],
+          market: [],
+          legal: [],
+          business: []
+        };
+        try {
+          analysisResults = invention.analysis_results_json ? 
+            JSON.parse(invention.analysis_results_json) : {
+              technical: [],
+              market: [],
+              legal: [],
+              business: []
+            };
+        } catch (e) {
+          console.error("Error parsing analysis_results_json:", e);
+        }
           
         return {
           inventionId: invention.id,

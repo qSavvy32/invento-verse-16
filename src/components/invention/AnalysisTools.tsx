@@ -13,7 +13,12 @@ export const AnalysisTools = () => {
     market: false,
     legal: false,
     business: false,
-    comprehensive: false
+    comprehensive: false,
+    users: false,
+    materials: false,
+    ip: false,
+    competition: false,
+    challenges: false
   });
   const [analysisContent, setAnalysisContent] = useState<string | null>(null);
   
@@ -34,6 +39,11 @@ export const AnalysisTools = () => {
   const updateLoadingState = (type: any, loading: any) => {
     setIsLoading(prev => ({ ...prev, [type]: loading }));
   };
+
+  const handleRunAnalysis = (analysisType: string) => {
+    console.log(`Running analysis for ${analysisType}`);
+    // Implement analysis running logic here
+  };
   
   return (
     <Card>
@@ -47,6 +57,7 @@ export const AnalysisTools = () => {
             <AnalysisButtonGroup 
               isLoading={isLoading}
               isDisabled={false}
+              onRunAnalysis={handleRunAnalysis}
               onAnalysisComplete={handleSetAnalysisResults}
               setIsLoading={updateLoadingState}
             />
