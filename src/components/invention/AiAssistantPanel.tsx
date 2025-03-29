@@ -7,6 +7,7 @@ import { AnalysisTab } from "./assistant-panel/AnalysisTab";
 import { VisualizationTab } from "./assistant-panel/VisualizationTab";
 import { ExpertsTab } from "./assistant-panel/ExpertsTab";
 import { AnalysisState } from "./assistant-panel/types";
+import { ChatbotTab } from "./assistant-panel/ChatbotTab";
 
 export const AiAssistantPanel = () => {
   const { state } = useInvention();
@@ -25,7 +26,8 @@ export const AiAssistantPanel = () => {
       competition: false,
       challenges: false,
       runAll: false,
-      customMarketing: false
+      customMarketing: false,
+      chatbot: false
     },
     activeTab: "experts",
     analyzedContent: null,
@@ -50,6 +52,7 @@ export const AiAssistantPanel = () => {
             <TabsTrigger value="experts">Panel of Experts</TabsTrigger>
             <TabsTrigger value="analysis">Analysis Tools</TabsTrigger>
             <TabsTrigger value="visualization">Visualization</TabsTrigger>
+            <TabsTrigger value="chatbot">Vinci Assistant</TabsTrigger>
           </TabsList>
           
           <TabsContent value="experts" className="pt-4 min-h-[400px]">
@@ -70,6 +73,13 @@ export const AiAssistantPanel = () => {
                 threejs: analysisState.isLoading.threejs
               }} 
               updateLoadingState={updateLoadingState} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="chatbot" className="pt-4 min-h-[400px]">
+            <ChatbotTab 
+              isLoading={analysisState.isLoading.chatbot}
+              updateLoadingState={updateLoadingState}
             />
           </TabsContent>
         </Tabs>

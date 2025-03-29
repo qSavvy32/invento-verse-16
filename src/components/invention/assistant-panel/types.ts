@@ -14,6 +14,7 @@ export interface AnalysisLoadingState {
   challenges: boolean;
   runAll: boolean;
   customMarketing: boolean;
+  chatbot: boolean;
 }
 
 export interface AnalysisState {

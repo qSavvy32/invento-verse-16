@@ -117,5 +117,34 @@ export const GeminiService = {
       console.error("Error creating data object with Gemini:", error);
       throw error;
     }
+  },
+  
+  /**
+   * Generate a chat completion with conversation history
+   */
+  chatCompletion: async (
+    messages: Array<{role: string, content: string}>, 
+    systemPrompt?: string,
+    additionalParams?: Record<string, any>
+  ): Promise<any> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("gemini-ai", {
+        body: {
+          operation: 'chatCompletion',
+          messages,
+          systemPrompt,
+          additionalParams
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error with chat completion:", error);
+      throw error;
+    }
   }
 };

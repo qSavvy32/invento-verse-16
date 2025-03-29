@@ -9,8 +9,10 @@ const corsHeaders = {
 
 // Type definitions
 interface GeminiRequest {
-  operation: 'generateText' | 'generateImage' | 'analyzeFile' | 'createDataObject';
-  prompt: string;
+  operation: 'generateText' | 'generateImage' | 'analyzeFile' | 'createDataObject' | 'chatCompletion';
+  prompt?: string;
+  messages?: Array<{role: string, content: string}>;
+  systemPrompt?: string;
   fileBase64?: string;
   fileType?: string;
   additionalParams?: Record<string, any>;
@@ -37,7 +39,15 @@ serve(async (req) => {
 
     // Parse the request body
     const requestData: GeminiRequest = await req.json();
-    const { operation, prompt, fileBase64, fileType, additionalParams } = requestData;
+    const { 
+      operation, 
+      prompt, 
+      messages, 
+      systemPrompt,
+      fileBase64, 
+      fileType, 
+      additionalParams 
+    } = requestData;
     
     console.log(`Processing ${operation} operation with Gemini`);
 
@@ -45,32 +55,44 @@ serve(async (req) => {
     if (!operation) {
       throw new Error('Operation type is required');
     }
-    
-    if (!prompt) {
-      throw new Error('Prompt is required');
-    }
 
     let responseData: any;
 
     // Handle different operations
     switch (operation) {
       case 'generateText':
+        if (!prompt) {
+          throw new Error('Prompt is required for text generation');
+        }
         responseData = await generateText(GEMINI_API_KEY, prompt, additionalParams);
         break;
       
       case 'generateImage':
+        if (!prompt) {
+          throw new Error('Prompt is required for image generation');
+        }
         responseData = await generateImage(GEMINI_API_KEY, prompt, additionalParams);
         break;
       
       case 'analyzeFile':
-        if (!fileBase64 || !fileType) {
-          throw new Error('File data and type are required for file analysis');
+        if (!prompt || !fileBase64 || !fileType) {
+          throw new Error('Prompt, file data and type are required for file analysis');
         }
         responseData = await analyzeFile(GEMINI_API_KEY, prompt, fileBase64, fileType);
         break;
       
       case 'createDataObject':
+        if (!prompt) {
+          throw new Error('Prompt is required for data object creation');
+        }
         responseData = await createDataObject(GEMINI_API_KEY, prompt, additionalParams);
+        break;
+        
+      case 'chatCompletion':
+        if (!messages || !Array.isArray(messages) || messages.length === 0) {
+          throw new Error('Messages array is required for chat completion');
+        }
+        responseData = await chatCompletion(GEMINI_API_KEY, messages, systemPrompt, additionalParams);
         break;
       
       default:
@@ -374,4 +396,68 @@ async function createDataObject(apiKey: string, prompt: string, params?: Record<
       finishReason: data.candidates[0].finishReason
     };
   }
+}
+
+/**
+ * Generate a chat completion with conversation history and system prompt
+ */
+async function chatCompletion(
+  apiKey: string, 
+  messages: Array<{role: string, content: string}>,
+  systemPrompt?: string,
+  params?: Record<string, any>
+): Promise<any> {
+  const modelVersion = params?.modelVersion || 'gemini-2.0-flash';
+  
+  // Configure API parameters
+  const temperature = params?.temperature || 0.7;
+  const maxOutputTokens = params?.maxOutputTokens || 1024;
+  const topK = params?.topK || 40;
+  const topP = params?.topP || 0.95;
+
+  // Convert messages to Gemini format
+  const contents = messages.map(message => ({
+    role: message.role === 'user' ? 'user' : 'model',
+    parts: [{ text: message.content }]
+  }));
+
+  const requestBody: any = {
+    contents,
+    generationConfig: {
+      temperature,
+      maxOutputTokens,
+      topK,
+      topP
+    }
+  };
+
+  // Add system instruction if provided
+  if (systemPrompt) {
+    requestBody.systemInstruction = {
+      parts: [{ text: systemPrompt }]
+    };
+  }
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelVersion}:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("Gemini API error:", errorData);
+    throw new Error(`Gemini API returned ${response.status}: ${JSON.stringify(errorData)}`);
+  }
+
+  const data = await response.json();
+  console.log("Chat completion generated successfully");
+  
+  return {
+    text: data.candidates[0].content.parts[0].text,
+    model: modelVersion,
+    finishReason: data.candidates[0].finishReason
+  };
 }
