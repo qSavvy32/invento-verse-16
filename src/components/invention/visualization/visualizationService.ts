@@ -98,7 +98,7 @@ export const generateRealistic3DImage = async (request: VisualizationRequest) =>
 };
 
 export const generateBusinessStrategy = async (request: VisualizationRequest) => {
-  const { title, description, sketchDataUrl } = request;
+  const { title, description } = request;
   
   if (!title && !description) {
     throw new Error("Please provide a title and description for your invention first");
@@ -108,7 +108,8 @@ export const generateBusinessStrategy = async (request: VisualizationRequest) =>
     body: {
       title,
       description,
-      sketchDataUrl
+      // Removing sketchDataUrl as it's causing an error
+      // sketchDataUrl: state.sketchDataUrl 
     }
   });
 
@@ -124,7 +125,7 @@ export const generateBusinessStrategy = async (request: VisualizationRequest) =>
 
 export const generateCustomMarketingImage = async (request: VisualizationRequest) => {
   if (!request.prompt) {
-    throw new Error("Please provide a prompt for your marketing image");
+    throw new Error("Please enter a prompt for your marketing image");
   }
 
   toast.info("Generating custom marketing imagery using Hugging Face...");

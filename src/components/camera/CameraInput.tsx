@@ -1,4 +1,5 @@
 
+import { useRef } from "react";
 import { CameraView } from "./CameraView";
 import { CameraPlaceholder } from "./CameraPlaceholder";
 import { ImagePreview } from "./ImagePreview";
@@ -11,15 +12,17 @@ interface CameraInputProps {
 }
 
 export const CameraInput = ({ onCapture, onAddAsset }: CameraInputProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
   const {
     isActive,
     capturedImage,
     videoRef,
     toggleCamera,
-    switchCamera,
     captureImage,
     clearImage,
-    cancelCamera
+    cancelCamera,
+    switchCamera
   } = useCameraControl({ onCapture, onAddAsset });
 
   if (capturedImage) {
@@ -34,11 +37,13 @@ export const CameraInput = ({ onCapture, onAddAsset }: CameraInputProps) => {
 
   return (
     <div className="space-y-4">
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      
       {isActive ? (
         <CameraView 
           videoRef={videoRef}
           captureImage={captureImage}
-          switchCamera={switchCamera}
+          switchCamera={() => switchCamera('')}
           cancelCamera={cancelCamera}
         />
       ) : (

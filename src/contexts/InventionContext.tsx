@@ -50,6 +50,7 @@ export interface MostRecentGeneration {
   svg?: string | null;
   name: string;
   createdAt: number;
+  data?: any;
 }
 
 export interface InventionState {
@@ -72,7 +73,7 @@ export interface InventionContextType {
   state: InventionState;
   setState: React.Dispatch<React.SetStateAction<InventionState>>;
   updateTitle: (title: string) => void;
-  updateDescription: (description: string) => void;
+  updateDescription: (description: string | ((prev: string) => string)) => void;
   updateSketchData: (sketchDataUrl: string | null) => void;
   addAsset: (asset: InventionAsset) => void;
   removeAsset: (assetId: string) => void;
@@ -91,6 +92,7 @@ export interface InventionContextType {
   clearAnalysisResults: () => void;
   addAudioTranscription: (transcription: AudioTranscription) => void;
   setMostRecentGeneration: (generation: MostRecentGeneration) => void;
+  updateMostRecentGeneration: (generation: any) => void;
 }
 
 // Define the initial state
@@ -131,8 +133,13 @@ export const InventionContextProvider = ({ children }: { children: React.ReactNo
     setState((prevState) => ({ ...prevState, title }));
   }, []);
 
-  const updateDescription = useCallback((description: string) => {
-    setState((prevState) => ({ ...prevState, description }));
+  const updateDescription = useCallback((description: string | ((prev: string) => string)) => {
+    setState((prevState) => {
+      const newDescription = typeof description === 'function' 
+        ? description(prevState.description)
+        : description;
+      return { ...prevState, description: newDescription };
+    });
   }, []);
 
   const updateSketchData = useCallback((sketchDataUrl: string | null) => {
@@ -228,6 +235,19 @@ export const InventionContextProvider = ({ children }: { children: React.ReactNo
       mostRecentGeneration: generation
     }));
   }, []);
+  
+  // Update the most recent generation with new data
+  const updateMostRecentGeneration = useCallback((generation: any) => {
+    const newGeneration: MostRecentGeneration = {
+      id: `generation-${Date.now()}`,
+      type: generation.type || 'other',
+      name: generation.name || 'Generated Content',
+      createdAt: generation.timestamp || Date.now(),
+      data: generation.data || null
+    };
+    
+    setMostRecentGeneration(newGeneration);
+  }, [setMostRecentGeneration]);
 
   const resetState = useCallback(() => {
     setState(initialState);
@@ -312,6 +332,7 @@ export const InventionContextProvider = ({ children }: { children: React.ReactNo
     clearAnalysisResults,
     addAudioTranscription,
     setMostRecentGeneration,
+    updateMostRecentGeneration,
   };
 
   return (

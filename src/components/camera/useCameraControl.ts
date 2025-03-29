@@ -24,6 +24,7 @@ export const useCameraControl = ({ onCapture, onAddAsset }: CameraControlOptions
   const [isMirrored, setIsMirrored] = useState(true);
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [activeCamera, setActiveCamera] = useState<string | null>(null);
+  const [isActive, setIsActive] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -64,6 +65,7 @@ export const useCameraControl = ({ onCapture, onAddAsset }: CameraControlOptions
       
       setStream(mediaStream);
       setHasPermission(true);
+      setIsActive(true);
       
       // Get list of available cameras after successful initialization
       await getAvailableCameras();
@@ -172,8 +174,32 @@ export const useCameraControl = ({ onCapture, onAddAsset }: CameraControlOptions
     toast.success("Image captured successfully");
   }, [isMirrored, onCapture, onAddAsset]);
   
-  // Retake image
-  const retakeImage = useCallback(() => {
+  // Toggle camera
+  const toggleCamera = useCallback(() => {
+    if (isActive) {
+      // Stop camera
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      setIsActive(false);
+      setStream(null);
+    } else {
+      // Start camera
+      initializeCamera();
+    }
+  }, [isActive, stream, initializeCamera]);
+  
+  // Cancel camera mode
+  const cancelCamera = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setIsActive(false);
+    setStream(null);
+  }, [stream]);
+  
+  // Clear/retake image
+  const clearImage = useCallback(() => {
     setCapturedImage(null);
   }, []);
   
@@ -193,11 +219,13 @@ export const useCameraControl = ({ onCapture, onAddAsset }: CameraControlOptions
     isMirrored,
     availableCameras,
     activeCamera,
+    isActive,
     initializeCamera,
     captureImage,
-    retakeImage,
+    clearImage,
     toggleMirror,
     switchCamera,
+    toggleCamera,
+    cancelCamera,
   };
 };
-

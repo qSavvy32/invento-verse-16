@@ -16,7 +16,7 @@ export const useExpertFeedbackGeneration = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<ExpertFeedback | null>(null);
-  const { state, updateMostRecentGeneration } = useInvention();
+  const { state, setMostRecentGeneration } = useInvention();
 
   const generateFeedback = async (
     title: string,
@@ -66,10 +66,13 @@ export const useExpertFeedbackGeneration = () => {
       
       if (expertFeedback) {
         setFeedback(expertFeedback);
-        updateMostRecentGeneration({
+        setMostRecentGeneration({
+          id: `expert-feedback-${Date.now()}`,
           type: 'expert-feedback',
-          data: expertFeedback,
-          timestamp: Date.now()
+          url: null,
+          name: "Expert Feedback",
+          createdAt: Date.now(),
+          data: expertFeedback
         });
         
         toast.success("Expert feedback generated", {

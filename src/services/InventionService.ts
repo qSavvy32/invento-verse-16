@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { InventionState, InventionAsset } from "@/contexts/InventionContext";
+import { InventionState, InventionAsset, AssetType } from "@/contexts/InventionContext";
 import { v4 as uuidv4 } from "uuid";
 
 export class InventionService {
@@ -28,10 +28,10 @@ export class InventionService {
         description: invention.description,
         sketch_data_url: invention.sketchDataUrl,
         visualization_3d_url: invention.visualization3dUrl,
-        visualization_prompts: invention.visualizationPrompts,
-        threejs_visualization: invention.threejsVisualization,
+        visualization_prompts: JSON.stringify(invention.visualizationPrompts),
+        threejs_visualization: JSON.stringify(invention.threejsVisualization),
         business_strategy_svg: invention.businessStrategySvg,
-        analysis_results: invention.analysisResults,
+        analysis_results: JSON.stringify(invention.analysisResults),
         updated_at: new Date().toISOString()
       };
       
@@ -94,7 +94,7 @@ export class InventionService {
       if (invention.audioTranscriptions && invention.audioTranscriptions.length > 0) {
         // First, delete all existing transcriptions for this invention
         await supabase
-          .from('invention_transcriptions')
+          .from('audio_transcriptions')
           .delete()
           .eq('invention_id', inventionId);
         
@@ -110,7 +110,7 @@ export class InventionService {
         }));
         
         const { error: transcriptionsError } = await supabase
-          .from('invention_transcriptions')
+          .from('audio_transcriptions')
           .insert(transcriptionsData);
           
         if (transcriptionsError) {
@@ -159,7 +159,7 @@ export class InventionService {
       
       // Get the invention transcriptions
       const { data: transcriptions, error: transcriptionsError } = await supabase
-        .from('invention_transcriptions')
+        .from('audio_transcriptions')
         .select('*')
         .eq('invention_id', id);
         
@@ -176,27 +176,30 @@ export class InventionService {
         sketchDataUrl: invention.sketch_data_url || null,
         assets: (assets || []).map((asset): InventionAsset => ({
           id: asset.id,
-          type: asset.type,
+          type: asset.type as AssetType,
           url: asset.url,
           thumbnailUrl: asset.thumbnail_url || asset.url,
           name: asset.name || '',
           createdAt: new Date(asset.created_at).getTime()
         })),
         visualization3dUrl: invention.visualization_3d_url || null,
-        visualizationPrompts: invention.visualization_prompts || {},
+        visualizationPrompts: invention.visualization_prompts ? 
+          JSON.parse(invention.visualization_prompts) : {},
         savedToDatabase: true,
-        threejsVisualization: invention.threejs_visualization || {
-          code: null,
-          html: null
-        },
+        threejsVisualization: invention.threejs_visualization ? 
+          JSON.parse(invention.threejs_visualization) : {
+            code: null,
+            html: null
+          },
         businessStrategySvg: invention.business_strategy_svg || null,
         mostRecentGeneration: null, // Set to null initially
-        analysisResults: invention.analysis_results || {
-          technical: [],
-          market: [],
-          legal: [],
-          business: []
-        },
+        analysisResults: invention.analysis_results ? 
+          JSON.parse(invention.analysis_results) : {
+            technical: [],
+            market: [],
+            legal: [],
+            business: []
+          },
         audioTranscriptions: (transcriptions || []).map(t => ({
           text: t.text,
           language: t.language,
@@ -255,7 +258,7 @@ export class InventionService {
           .filter(asset => asset.invention_id === invention.id)
           .map((asset): InventionAsset => ({
             id: asset.id,
-            type: asset.type,
+            type: asset.type as AssetType,
             url: asset.url,
             thumbnailUrl: asset.thumbnail_url || asset.url,
             name: asset.name || '',
@@ -269,20 +272,23 @@ export class InventionService {
           sketchDataUrl: invention.sketch_data_url || null,
           assets: inventionAssets,
           visualization3dUrl: invention.visualization_3d_url || null,
-          visualizationPrompts: invention.visualization_prompts || {},
+          visualizationPrompts: invention.visualization_prompts ? 
+            JSON.parse(invention.visualization_prompts) : {},
           savedToDatabase: true,
-          threejsVisualization: invention.threejs_visualization || {
-            code: null,
-            html: null
-          },
+          threejsVisualization: invention.threejs_visualization ? 
+            JSON.parse(invention.threejs_visualization) : {
+              code: null,
+              html: null
+            },
           businessStrategySvg: invention.business_strategy_svg || null,
           mostRecentGeneration: null, // Set to null initially
-          analysisResults: invention.analysis_results || {
-            technical: [],
-            market: [],
-            legal: [],
-            business: []
-          },
+          analysisResults: invention.analysis_results ? 
+            JSON.parse(invention.analysis_results) : {
+              technical: [],
+              market: [],
+              legal: [],
+              business: []
+            },
           audioTranscriptions: []
         };
       });

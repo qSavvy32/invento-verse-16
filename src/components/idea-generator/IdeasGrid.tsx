@@ -12,14 +12,14 @@ interface IdeasGridProps {
 
 export const IdeasGrid = ({ generatedIdeas }: IdeasGridProps) => {
   const navigate = useNavigate();
-  const { setAnalysisResults } = useInvention();
+  const { addAnalysisResult } = useInvention();
   
   const navigateToLab = () => {
     // Save the generated ideas to the InventionContext before navigating
-    setAnalysisResults('technical', generatedIdeas.technical || []);
-    setAnalysisResults('market', generatedIdeas.market || []);
-    setAnalysisResults('legal', generatedIdeas.legal || []);
-    setAnalysisResults('business', generatedIdeas.business || []);
+    generatedIdeas.technical?.forEach(item => addAnalysisResult('technical', item));
+    generatedIdeas.market?.forEach(item => addAnalysisResult('market', item));
+    generatedIdeas.legal?.forEach(item => addAnalysisResult('legal', item));
+    generatedIdeas.business?.forEach(item => addAnalysisResult('business', item));
     
     navigate("/create");
   };
