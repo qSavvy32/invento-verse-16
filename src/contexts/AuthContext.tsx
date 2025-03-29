@@ -20,51 +20,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const initialized = useRef(false);
+  const authInitialized = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Skip re-initialization if already done
-    if (initialized.current) return;
+    // Only initialize auth once to prevent multiple refreshes
+    if (authInitialized.current) return;
     
     const initAuth = async () => {
       try {
-        console.log("Initializing auth session...");
         // Get current session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
-        if (currentSession) {
-          console.log("Found existing session, user ID:", currentSession.user?.id);
-        } else {
-          console.log("No existing session found");
-        }
-        
         // Only update state if needed
-        if (JSON.stringify(currentSession) !== JSON.stringify(session)) {
+        if (currentSession) {
           setSession(currentSession);
-          setUser(currentSession?.user ?? null);
+          setUser(currentSession.user);
         }
       } catch (error) {
         console.error("Error initializing auth:", error);
       } finally {
         setLoading(false);
-        initialized.current = true;
+        authInitialized.current = true;
       }
     };
-    
-    initAuth();
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        console.log("Auth state change event:", event);
-        
-        // Avoid unnecessary state updates
+        // Only update state if there's an actual change
         const sessionChanged = JSON.stringify(newSession) !== JSON.stringify(session);
-        const userChanged = newSession?.user?.id !== user?.id;
         
-        if (sessionChanged || userChanged) {
-          console.log("Updating session state due to auth change");
+        if (sessionChanged) {
           setSession(newSession);
           setUser(newSession?.user ?? null);
           
@@ -81,17 +68,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               description: "You have been signed out.",
             });
           }
-        } else {
-          console.log("Skipping redundant session update");
         }
       }
     );
 
+    initAuth();
+
     return () => {
-      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [session, user]);
+  }, []);  // Remove session dependency to prevent re-renders
 
   const signIn = async (email: string, password: string) => {
     try {

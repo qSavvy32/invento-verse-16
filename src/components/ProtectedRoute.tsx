@@ -1,34 +1,19 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 const ProtectedRoute = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-  const authCheckComplete = useRef(false);
   
   useEffect(() => {
     // Only update authorization status when loading is complete
-    // and don't re-run authorization check unnecessarily
-    if (!loading && !authCheckComplete.current) {
-      console.log("Setting authorization status:", !!user);
+    if (!loading) {
       setIsAuthorized(!!user);
-      authCheckComplete.current = true;
     }
-    
-    // Re-check authorization if user changes
-    if (!loading && user !== null && !isAuthorized) {
-      console.log("User authenticated, updating authorization");
-      setIsAuthorized(true);
-      authCheckComplete.current = true;
-    } else if (!loading && user === null && isAuthorized) {
-      console.log("User logged out, updating authorization");
-      setIsAuthorized(false);
-      authCheckComplete.current = true;
-    }
-  }, [user, loading, isAuthorized]);
+  }, [user, loading]);
 
   // Show loading state until we've determined authorization
   if (loading || isAuthorized === null) {

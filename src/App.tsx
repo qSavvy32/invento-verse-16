@@ -22,7 +22,7 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false, // Prevent refetching when window regains focus
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (replaces cacheTime in React Query v5)
+      gcTime: 10 * 60 * 1000, // 10 minutes
       retry: 1, // Only retry failed requests once
     },
   },
@@ -43,10 +43,8 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route path="/create" element={<Workspace />} />
               <Route path="/inventions" element={<SavedInventions />} />
-              {/* Add more protected routes here */}
             </Route>
             
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
