@@ -78,12 +78,10 @@ export const InputSelectionCard = ({
               ease: [0.19, 1, 0.22, 1],
               scale: { duration: 0.4 }
             }}
-            className="fixed inset-0 top-0 left-0 z-50 bg-background border rounded-lg p-6 shadow-lg"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-background border rounded-lg p-6 shadow-lg"
             style={{ 
-              width: "calc(100% - 2rem)", 
-              maxWidth: "100%",
-              margin: "0 auto",
-              maxHeight: "calc(100vh - 10rem)",
+              width: "75%", 
+              maxHeight: "75vh",
               overflow: "auto"
             }}
           >
