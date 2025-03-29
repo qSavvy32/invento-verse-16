@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { captureException } from "@/integrations/sentry";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface IdeaGeneratorProps {
   sketchDataUrl?: string;
@@ -29,6 +31,7 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
   const [description, setDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedIdeas, setGeneratedIdeas] = useState<Record<string, string[]>>({});
+  const [error, setError] = useState<string | null>(null);
   
   // Generate ideas using Anthropic
   const generateIdeas = async () => {
@@ -38,6 +41,7 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
     }
     
     setIsGenerating(true);
+    setError(null);
     
     try {
       // Call our Supabase Edge Function for idea generation
@@ -103,8 +107,11 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
       toast.success("Ideas generated successfully!");
     } catch (error) {
       console.error("Error generating ideas:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      setError(errorMessage);
+      captureException(error, { component: "IdeaGenerator", action: "generateIdeas" });
       toast.error("Failed to generate ideas", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred"
+        description: errorMessage
       });
     } finally {
       setIsGenerating(false);
@@ -134,6 +141,12 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
           </div>
         )}
       </div>
+      
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <Button 
         onClick={generateIdeas} 

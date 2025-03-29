@@ -10,6 +10,11 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useEffect } from "react";
+import { initSentry } from "./integrations/sentry";
+
+// Initialize Sentry
+initSentry();
 
 const queryClient = new QueryClient();
 
