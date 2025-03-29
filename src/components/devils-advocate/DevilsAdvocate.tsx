@@ -30,7 +30,10 @@ export const DevilsAdvocate = () => {
       {critiques && <CritiqueCard critiques={critiques} />}
       
       {/* Save Your Work Section */}
-      <SaveExportSection state={state} saveToDatabase={saveToDatabase} />
+      <SaveExportSection 
+        state={state} 
+        saveToDatabase={saveToDatabase} 
+      />
     </div>
   );
 };
