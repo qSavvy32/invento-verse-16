@@ -5,9 +5,9 @@ import { toast } from "sonner";
 import { 
   generate3DImage, 
   generateRealistic3DImage, 
-  generateCustomMarketingImage,
-  VisualizationRequest 
-} from "../visualizationService";
+  generateCustomMarketingImage
+} from "../imageGeneration";
+import { VisualizationRequest } from "../types";
 
 export interface ImageLoadingState {
   image: boolean;
