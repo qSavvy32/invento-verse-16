@@ -59,9 +59,8 @@ serve(async (req) => {
         break;
       
       case 'generateImage':
-        // Note: Gemini 2.0 Flash doesn't support image generation directly
-        // This is a placeholder for when it becomes available
-        throw new Error('Image generation is not yet supported with Gemini 2.0 Flash');
+        responseData = await generateImage(GEMINI_API_KEY, prompt, additionalParams);
+        break;
       
       case 'analyzeFile':
         if (!fileBase64 || !fileType) {
@@ -155,6 +154,83 @@ async function generateText(apiKey: string, prompt: string, params?: Record<stri
     text: data.candidates[0].content.parts[0].text,
     model: modelVersion,
     finishReason: data.candidates[0].finishReason
+  };
+}
+
+/**
+ * Generate image using Gemini model
+ */
+async function generateImage(apiKey: string, prompt: string, params?: Record<string, any>): Promise<any> {
+  // Currently using experimental image generation model
+  const modelVersion = 'gemini-2.0-flash-exp-image-generation';
+  
+  // Configure API parameters
+  const temperature = params?.temperature || 1.0;
+  const maxOutputTokens = params?.maxOutputTokens || 8192;
+  const topK = params?.topK || 40;
+  const topP = params?.topP || 0.95;
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelVersion}:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            {
+              text: prompt
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature,
+        maxOutputTokens,
+        topK,
+        topP,
+        responseModalities: ["image", "text"],
+        responseMimeType: "text/plain",
+      }
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("Gemini API error:", errorData);
+    throw new Error(`Gemini API returned ${response.status}: ${JSON.stringify(errorData)}`);
+  }
+
+  const data = await response.json();
+  console.log("Image generation completed successfully");
+  
+  // Extract generated images from the response
+  const generatedImages = [];
+  const candidates = data.candidates || [];
+  
+  for (let candidateIndex = 0; candidateIndex < candidates.length; candidateIndex++) {
+    const candidate = candidates[candidateIndex];
+    for (let partIndex = 0; partIndex < candidate.content.parts.length; partIndex++) {
+      const part = candidate.content.parts[partIndex];
+      if (part.inlineData) {
+        generatedImages.push({
+          data: part.inlineData.data, // Base64 encoded image data
+          mimeType: part.inlineData.mimeType,
+          index: `${candidateIndex}_${partIndex}`
+        });
+      }
+    }
+  }
+  
+  // Get any text response as well
+  const textResponse = candidates[0]?.content?.parts?.find(part => part.text)?.text || '';
+  
+  return {
+    images: generatedImages,
+    text: textResponse,
+    model: modelVersion,
+    finishReason: candidates[0]?.finishReason
   };
 }
 

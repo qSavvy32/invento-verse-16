@@ -47,6 +47,30 @@ export const GeminiService = {
   },
 
   /**
+   * Generate image using Gemini model
+   */
+  generateImage: async (prompt: string, additionalParams?: Record<string, any>): Promise<any> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("gemini-ai", {
+        body: {
+          operation: 'generateImage',
+          prompt,
+          additionalParams
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error generating image with Gemini:", error);
+      throw error;
+    }
+  },
+
+  /**
    * Analyze a file (image or document) using Gemini model
    */
   analyzeFile: async (prompt: string, fileBase64: string, fileType: string): Promise<any> => {
