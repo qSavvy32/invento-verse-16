@@ -47,8 +47,7 @@ export const AnalysisTools = () => {
         sketchDataUrl: state.sketchDataUrl,
         setAnalysisResults
       },
-      setLoadingState,
-      true // Add the missing third argument (showToast)
+      setLoadingState
     );
     toast.success(`${analysisType} analysis completed`);
   };

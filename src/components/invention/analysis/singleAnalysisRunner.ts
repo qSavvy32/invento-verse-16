@@ -8,7 +8,8 @@ import { processAnalysisResults } from "./analysisProcessor";
 export const runAnalysis = async (
   analysisType: string,
   state: AnalysisState,
-  setIsLoading: (type: string, isLoading: boolean) => void
+  setIsLoading: (type: string, isLoading: boolean) => void,
+  showToast: boolean = true
 ): Promise<void> => {
   // Don't proceed if there's not enough data
   if (!state.title && !state.description) {
@@ -49,7 +50,9 @@ export const runAnalysis = async (
     // Handle different types of analysis and their response formats
     processAnalysisResults(analysisType, data, state, timestamp);
     
-    toast.success(`${analysisType} analysis complete`);
+    if (showToast) {
+      toast.success(`${analysisType} analysis complete`);
+    }
   } catch (error) {
     console.error(`Error running ${analysisType} analysis:`, error);
     toast.error(`Analysis failed`, {
