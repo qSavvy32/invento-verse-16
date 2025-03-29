@@ -82,28 +82,6 @@ export const DevilsAdvocate = () => {
     }
   };
   
-  const handleSaveDraft = () => {
-    console.log("Saving draft:", state);
-    saveToDatabase(true);
-    toast.success("Draft saved", {
-      description: "Your invention has been saved as a draft.",
-    });
-  };
-  
-  const handleExport = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `invention-${state.title || 'untitled'}.json`);
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-    
-    toast.success("Export successful", {
-      description: "Your invention has been exported as JSON.",
-    });
-  };
-  
   // Only show if there's an idea
   if (!hasIdea) {
     return null;
@@ -119,7 +97,7 @@ export const DevilsAdvocate = () => {
       
       <PixelCard 
         variant="pink" 
-        className="w-full max-w-md"
+        className="w-full"
         onClick={generateCritique}
         active={isAnalyzing}
       >
@@ -211,11 +189,23 @@ export const DevilsAdvocate = () => {
         <div className="flex justify-between mb-4">
           <h2 className="text-xl font-semibold">Save Your Work</h2>
           <div className="space-x-4">
-            <Button onClick={handleSaveDraft}>
+            <Button onClick={() => saveToDatabase(true)}>
               <Save className="mr-2 h-4 w-4" />
               Save Draft
             </Button>
-            <Button variant="outline" onClick={handleExport}>
+            <Button variant="outline" onClick={() => {
+              const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+              const downloadAnchorNode = document.createElement('a');
+              downloadAnchorNode.setAttribute("href", dataStr);
+              downloadAnchorNode.setAttribute("download", `invention-${state.title || 'untitled'}.json`);
+              document.body.appendChild(downloadAnchorNode);
+              downloadAnchorNode.click();
+              downloadAnchorNode.remove();
+              
+              toast.success("Export successful", {
+                description: "Your invention has been exported as JSON.",
+              });
+            }}>
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>

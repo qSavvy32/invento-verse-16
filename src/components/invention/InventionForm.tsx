@@ -2,18 +2,19 @@
 import { useInvention } from "@/contexts/InventionContext";
 import { MultimodalInputArea } from "./MultimodalInputArea";
 import { AiAssistantPanel } from "./AiAssistantPanel";
-import { AnalysisResults } from "./AnalysisResults";
-import { Visualization3DViewer } from "./Visualization3DViewer";
-import { useState } from "react";
-import { toast } from "sonner";
 import { InputSelectionCard } from "./InputSelectionCard";
 import { IdeaGenerator } from "@/components/IdeaGenerator";
+import { useState } from "react";
 import { 
   Image, 
   Package, 
   LightbulbIcon, 
-  Bot 
+  Bot,
+  Zap
 } from "lucide-react";
+import { GenerateButtons } from "./GenerateButtons";
+import { Button } from "../ui/button";
+import PixelCard from "../ui/PixelCard";
 
 export const InventionForm = () => {
   const { state } = useInvention();
@@ -57,6 +58,12 @@ export const InventionForm = () => {
             </InputSelectionCard>
           )}
         </div>
+      </div>
+      
+      {/* Generate buttons section */}
+      <div className="border rounded-lg p-4">
+        <h2 className="text-xl font-semibold mb-4">Generate Visualizations</h2>
+        <GenerateButtons />
       </div>
       
       <div className="border rounded-lg p-4">
