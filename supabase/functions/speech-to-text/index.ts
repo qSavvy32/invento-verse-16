@@ -36,7 +36,6 @@ serve(async (req) => {
     // Sanitize and log API key presence (only showing prefix/suffix for security)
     const keyPrefix = ELEVENLABS_API_KEY.substring(0, 4);
     const keySuffix = ELEVENLABS_API_KEY.substring(ELEVENLABS_API_KEY.length - 4);
-    const maskedKey = `${keyPrefix}...${keySuffix}`;
     console.log(`Converting speech to text with ElevenLabs API, language: ${languageCode}`);
     console.log(`Using API key starting with: ${keyPrefix}*** ending with: ***${keySuffix}`);
     
