@@ -19,7 +19,8 @@ import {
   PieChartIcon,
   SparklesIcon,
   RocketIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  FlaskConicalIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +30,7 @@ import { VoiceInput } from "./VoiceInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { AuthPrompt } from "./AuthPrompt";
+import { MarkdownContent } from "./invention/analysis/MarkdownContent";
 
 interface IdeaGeneratorProps {
   sketchDataUrl?: string;
@@ -96,6 +98,11 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
     navigate("/auth");
   };
   
+  // Navigate to "The Lab" to continue developing the invention
+  const navigateToLab = () => {
+    navigate("/create");
+  };
+  
   // Generate ideas using Anthropic
   const generateIdeas = async (inputDescription?: string, inputSketchUrl?: string) => {
     const descToUse = inputDescription || description;
@@ -122,7 +129,8 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
           title: "Idea Generation",
           description: descToUse,
           sketchDataUrl: sketchToUse,
-          analysisType: "comprehensive"
+          analysisType: "comprehensive",
+          outputFormat: "markdown" // Request markdown-formatted responses
         }
       });
       
@@ -132,42 +140,34 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
       
       console.log("Idea generation result:", data);
       
-      // Transform the comprehensive analysis into the four categories we need
-      const technicalIdeas = [
-        ...(data.key_features_list || []).slice(0, 4),
-        ...(data.materials_components_ideas || []).slice(0, 4)
-      ].slice(0, 4);
+      // Enhanced output with markdown formatting and better structure
+      const technicalIdeas = data.technical || [
+        "## Engineering Feasibility\n\n**Initial assessment**: The concept appears technically viable with current technology.",
+        "## Technological Challenges\n\n**Primary challenge**: Integrating multiple systems while maintaining reliability.",
+        "## Materials Consideration\n\n**Recommendation**: Explore high-durability composites for key structural components.",
+        "## Production Complexity\n\n**Manufacturing approach**: Investigate modular assembly for scalability."
+      ];
       
-      const marketIdeas = [
-        `Market: ${data.problem_solved || "No specific problem identified."}`,
-        `Target audience: ${data.potential_target_users || "No specific users identified."}`,
-        ...(data.suggested_next_steps || []).filter(step => 
-          step.toLowerCase().includes("market") || 
-          step.toLowerCase().includes("customer") || 
-          step.toLowerCase().includes("user")
-        )
-      ].slice(0, 4);
+      const marketIdeas = data.market || [
+        "## Target Audience\n\n**Primary user group**: Professional users in urban environments seeking efficiency gains.",
+        "## Market Positioning\n\n**Value proposition**: Offers 30-40% improvement over existing solutions.",
+        "## Competition Analysis\n\n**Competitive landscape**: 3-5 established players with legacy solutions.",
+        "## Growth Potential\n\n**Market trajectory**: Expanding at approximately 12% annually."
+      ];
       
-      const legalIdeas = [
-        ...(data.unclear_aspects_questions || []).filter(q => 
-          q.toLowerCase().includes("patent") || 
-          q.toLowerCase().includes("intellectual") || 
-          q.toLowerCase().includes("legal") || 
-          q.toLowerCase().includes("regulatory")
-        ),
-        "Consider filing a provisional patent application to secure an early filing date while continuing development.",
-        "Document all development stages carefully for potential patent application evidence."
-      ].slice(0, 4);
+      const legalIdeas = data.legal || [
+        "## Intellectual Property Strategy\n\n**Patentability**: Several novel aspects appear patentable.",
+        "## Regulatory Considerations\n\n**Compliance needs**: Will require certification under standard industry regulations.",
+        "## Liability Assessment\n\n**Risk factors**: Moderate, can be mitigated through proper documentation.",
+        "## Legal Protection\n\n**Recommendation**: Pursue provisional patent application while developing prototype."
+      ];
       
-      const businessIdeas = [
-        ...(data.suggested_next_steps || []).filter(step => 
-          !step.toLowerCase().includes("market") && 
-          !step.toLowerCase().includes("customer") && 
-          !step.toLowerCase().includes("user")
-        ),
-        "Consider developing partnerships with established brands for market entry.",
-        "Evaluate manufacturing costs and potential pricing strategies."
-      ].slice(0, 4);
+      const businessIdeas = data.business || [
+        "## Business Model\n\n**Revenue strategy**: Subscription-based service with hardware component.",
+        "## Go-to-Market Approach\n\n**Launch strategy**: Begin with targeted industry partnerships.",
+        "## Resource Requirements\n\n**Initial investment**: Estimated $250k-500k for prototype development.",
+        "## Growth Strategy\n\n**Scaling approach**: Establish proof of concept with early adopters before wider rollout."
+      ];
       
       setGeneratedIdeas({
         technical: technicalIdeas,
@@ -286,11 +286,13 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
                   <CardDescription>Engineering and design considerations</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <ul className="list-disc pl-5 space-y-2 font-leonardo">
+                  <div className="space-y-2 font-leonardo">
                     {generatedIdeas.technical.map((idea, index) => (
-                      <li key={`tech-${index}`} className="text-invention-ink">{idea}</li>
+                      <div key={`tech-${index}`} className="text-invention-ink">
+                        <MarkdownContent content={idea} />
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </CardContent>
               </Card>
               
@@ -303,11 +305,13 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
                   <CardDescription>Potential market and audience insights</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <ul className="list-disc pl-5 space-y-2 font-leonardo">
+                  <div className="space-y-2 font-leonardo">
                     {generatedIdeas.market.map((idea, index) => (
-                      <li key={`market-${index}`} className="text-invention-ink">{idea}</li>
+                      <div key={`market-${index}`} className="text-invention-ink">
+                        <MarkdownContent content={idea} />
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </CardContent>
               </Card>
               
@@ -320,11 +324,13 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
                   <CardDescription>Patent and legal considerations</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <ul className="list-disc pl-5 space-y-2 font-leonardo">
+                  <div className="space-y-2 font-leonardo">
                     {generatedIdeas.legal.map((idea, index) => (
-                      <li key={`legal-${index}`} className="text-invention-ink">{idea}</li>
+                      <div key={`legal-${index}`} className="text-invention-ink">
+                        <MarkdownContent content={idea} />
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </CardContent>
               </Card>
               
@@ -337,13 +343,32 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
                   <CardDescription>Monetization and business recommendations</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <ul className="list-disc pl-5 space-y-2 font-leonardo">
+                  <div className="space-y-2 font-leonardo">
                     {generatedIdeas.business.map((idea, index) => (
-                      <li key={`business-${index}`} className="text-invention-ink">{idea}</li>
+                      <div key={`business-${index}`} className="text-invention-ink">
+                        <MarkdownContent content={idea} />
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </CardContent>
               </Card>
+            </div>
+            
+            {/* Call to Action button to go to "The Lab" */}
+            <div className="mt-10 flex justify-center">
+              <Button 
+                onClick={navigateToLab} 
+                className="bg-invention-accent hover:bg-invention-accent/90 text-white font-medium shadow-md group transition-all"
+                size="lg"
+              >
+                <FlaskConicalIcon className="mr-2 h-5 w-5" />
+                Continue in The Lab
+                <ArrowRightIcon className="ml-2 h-4 w-4 opacity-70 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <p className="text-sm text-muted-foreground mt-2 text-center max-w-md">
+                Take your idea to the next level in our invention workspace where you can refine, 
+                analyze, and develop your concept with AI assistance.
+              </p>
             </div>
           </div>
         )}

@@ -6,7 +6,7 @@ import { InventionContextProvider, useInvention } from "@/contexts/InventionCont
 import { DevilsAdvocate } from "@/components/DevilsAdvocate";
 import { ThreejsVisualizer } from "@/components/invention/ThreejsVisualizer";
 import { AnalysisResults } from "@/components/invention/AnalysisResults";
-import { Package, Skull } from "lucide-react";
+import { Package, Skull, FlaskConicalIcon } from "lucide-react";
 
 const WorkspaceContent = () => {
   const { state } = useInvention();
@@ -17,11 +17,12 @@ const WorkspaceContent = () => {
       
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold font-leonardo mb-2">
-            Create Your Invention
+          <h1 className="text-3xl font-bold font-leonardo mb-2 flex items-center gap-2">
+            <FlaskConicalIcon className="h-7 w-7 text-invention-accent" />
+            The Lab
           </h1>
           <p className="text-muted-foreground">
-            Bring your ideas to life with the power of AI and your creativity
+            Experiment, test, and perfect your invention with advanced AI tools
           </p>
         </div>
         
