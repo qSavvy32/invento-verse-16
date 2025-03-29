@@ -62,6 +62,11 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
       
       setHistory(prev => [...prev, currentState]);
       setHistoryIndex(prev => prev + 1);
+      
+      // Important: Save the sketch when a path is created
+      if (onSketchSave) {
+        onSketchSave(currentState);
+      }
     };
     
     canvas.on("path:created", handlePathCreated);
@@ -69,7 +74,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     return () => {
       canvas.off("path:created", handlePathCreated);
     };
-  }, [canvas, history, historyIndex]);
+  }, [canvas, history, historyIndex, onSketchSave]);
   
   // Toggle between pen and eraser
   const toggleDrawingMode = (mode: "pen" | "eraser") => {
@@ -113,6 +118,11 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
         scaleX: canvas.width! / img.width!,
         scaleY: canvas.height! / img.height!,
       });
+      
+      // Important: Save the sketch when state is loaded
+      if (onSketchSave) {
+        onSketchSave(state);
+      }
     });
   };
   
@@ -127,6 +137,11 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     const clearedState = canvas.toDataURL();
     setHistory(prev => [...prev, clearedState]);
     setHistoryIndex(prev => prev + 1);
+    
+    // Important: Save the cleared state
+    if (onSketchSave) {
+      onSketchSave(clearedState);
+    }
     
     toast.success("Canvas cleared");
   };
@@ -188,6 +203,11 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
           const newState = canvas.toDataURL();
           setHistory(prev => [...prev, newState]);
           setHistoryIndex(prev => prev + 1);
+          
+          // Important: Save the state with the loaded image
+          if (onSketchSave) {
+            onSketchSave(newState);
+          }
           
           toast.success("Image loaded");
         });

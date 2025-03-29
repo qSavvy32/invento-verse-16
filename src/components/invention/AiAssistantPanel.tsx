@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2Icon } from "lucide-react";
 import { IdeaGenerator } from "@/components/IdeaGenerator";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AiAssistantPanelProps {
   onAnalysisComplete: () => void;
@@ -15,6 +16,73 @@ interface AiAssistantPanelProps {
 export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) => {
   const { state, setAnalysisResults } = useInvention();
   const [analyzing, setAnalyzing] = useState(false);
+  
+  const runAnthropicAnalysis = async () => {
+    if (!state.title && !state.description) {
+      toast({
+        title: "Missing information",
+        description: "Please provide at least a title or description for your invention.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setAnalyzing(true);
+    
+    try {
+      // Call our Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke("analyze-invention", {
+        body: {
+          title: state.title,
+          description: state.description,
+          sketchDataUrl: state.sketchDataUrl
+        }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      console.log("Analysis result:", data);
+      
+      // Process results from the AI analysis
+      const technicalResults = [
+        ...data.key_features_list || [],
+        ...data.materials_components_ideas || []
+      ];
+      
+      const marketResults = [
+        `Problem solved: ${data.problem_solved}`,
+        `Potential users: ${data.potential_target_users}`
+      ];
+      
+      const legalResults = data.unclear_aspects_questions || [];
+      
+      const businessResults = data.suggested_next_steps || [];
+      
+      // Update the context with the results
+      setAnalysisResults('technical', technicalResults);
+      setAnalysisResults('market', marketResults);
+      setAnalysisResults('legal', legalResults);
+      setAnalysisResults('business', businessResults);
+      
+      toast({
+        title: "Analysis complete",
+        description: "AI analysis completed successfully."
+      });
+      
+      onAnalysisComplete();
+    } catch (error) {
+      console.error("Error running analysis:", error);
+      toast({
+        title: "Analysis failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
   
   // Simulated AI responses for demo purposes
   const simulateAnalysis = (analysisType: string) => {
@@ -129,10 +197,20 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           </TabsContent>
         </Tabs>
         
-        <div className="mt-4 pt-4 border-t">
+        <div className="mt-4 pt-4 border-t space-y-4">
           <Button 
             className="w-full" 
             variant="default" 
+            onClick={runAnthropicAnalysis}
+            disabled={analyzing}
+          >
+            {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Analyze with Claude 3.7 Sonnet
+          </Button>
+          
+          <Button 
+            className="w-full" 
+            variant="secondary" 
             onClick={() => simulateAnalysis('all')}
             disabled={analyzing}
           >
