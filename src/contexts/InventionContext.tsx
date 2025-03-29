@@ -38,7 +38,7 @@ export interface InventionState {
 
 type InventionAction = 
   | { type: 'UPDATE_TITLE'; payload: string }
-  | { type: 'UPDATE_DESCRIPTION'; payload: string }
+  | { type: 'UPDATE_DESCRIPTION'; payload: string | ((prev: string) => string) }
   | { type: 'UPDATE_SKETCH_DATA'; payload: string | null }
   | { type: 'UPDATE_3D_VISUALIZATION'; payload: string | null }
   | { type: 'UPDATE_VISUALIZATIONS'; payload: VisualizationPrompts }
@@ -86,11 +86,12 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
   switch (action.type) {
     case 'UPDATE_TITLE':
       return { ...state, title: action.payload };
-    case 'UPDATE_DESCRIPTION':
-      return { ...state, description: typeof action.payload === 'function' 
+    case 'UPDATE_DESCRIPTION': {
+      const newDescription = typeof action.payload === 'function' 
         ? action.payload(state.description) 
-        : action.payload 
-      };
+        : action.payload;
+      return { ...state, description: newDescription };
+    }
     case 'UPDATE_SKETCH_DATA':
       return { ...state, sketchDataUrl: action.payload };
     case 'UPDATE_3D_VISUALIZATION':
