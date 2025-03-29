@@ -101,17 +101,19 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
             Upload images of your invention, sketches, or reference materials
           </p>
           <div className="flex gap-2">
-            <Button as="label" htmlFor="file-upload">
-              <Upload className="mr-2 h-4 w-4" />
-              Choose File
+            <div className="relative">
+              <Button>
+                <Upload className="mr-2 h-4 w-4" />
+                Choose File
+              </Button>
               <input
                 id="file-upload"
                 type="file"
-                className="sr-only"
+                className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={handleFileChange}
                 accept="image/*"
               />
-            </Button>
+            </div>
           </div>
           <p className="text-xs text-muted-foreground">
             Supported formats: JPG, PNG, GIF, BMP (max 10MB)
@@ -148,17 +150,19 @@ export const FileUploader = ({ onFileUpload }: FileUploaderProps) => {
           </div>
           
           <div className="flex gap-2">
-            <Button as="label" htmlFor="file-upload-replace">
-              <Upload className="mr-2 h-4 w-4" />
-              Replace File
+            <div className="relative">
+              <Button>
+                <Upload className="mr-2 h-4 w-4" />
+                Replace File
+              </Button>
               <input
                 id="file-upload-replace"
                 type="file"
-                className="sr-only"
+                className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={handleFileChange}
                 accept="image/*"
               />
-            </Button>
+            </div>
           </div>
         </div>
       )}
