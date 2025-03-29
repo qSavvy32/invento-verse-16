@@ -1,5 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { OpenAIService } from "@/services/OpenAIService";
 
 export interface VisualizationRequest {
   title?: string;
@@ -72,25 +74,58 @@ export const generate3DImage = async (request: VisualizationRequest) => {
 
   const prompt = customPrompt || `Create marketing imagery for ${title}. ${description}`;
 
-  toast.info("Generating marketing imagery using Hugging Face...");
+  toast.info("Generating marketing imagery using AI...");
 
-  const { data, error } = await supabase.functions.invoke("generate-flux-image", {
-    body: {
-      prompt,
-      style: "3d_model",
-      userId
+  try {
+    const { data, error } = await supabase.functions.invoke("generate-flux-image", {
+      body: {
+        prompt,
+        style: "3d_model",
+        userId
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message);
     }
-  });
 
-  if (error) {
-    throw new Error(error.message);
+    return {
+      dataUrl: data.image_url,
+      storageUrl: data.storage_url || null,
+      type: 'marketing'
+    };
+  } catch (error) {
+    console.error("Error generating 3D image:", error);
+    
+    // If HuggingFace fails, try using OpenAI DALL-E as fallback
+    toast.info("Primary image service unavailable, trying fallback service...");
+    
+    try {
+      const imageUrl = await OpenAIService.generateImage({ prompt });
+      
+      if (imageUrl) {
+        toast.success("Image generated successfully using fallback service");
+        return {
+          dataUrl: imageUrl,
+          storageUrl: null,
+          type: 'marketing'
+        };
+      } else {
+        throw new Error("Fallback image generation failed");
+      }
+    } catch (fallbackError) {
+      console.error("Fallback image generation failed:", fallbackError);
+      toast.error("All image generation services failed", {
+        description: "Please try again later"
+      });
+      return {
+        dataUrl: null,
+        storageUrl: null,
+        type: 'marketing',
+        error: error instanceof Error ? error.message : "Image generation failed"
+      };
+    }
   }
-
-  return {
-    dataUrl: data.image_url,
-    storageUrl: data.storage_url || null,
-    type: 'marketing'
-  };
 };
 
 export const generateRealistic3DImage = async (request: VisualizationRequest) => {
@@ -102,25 +137,58 @@ export const generateRealistic3DImage = async (request: VisualizationRequest) =>
 
   const prompt = `Create a realistic mockup of ${title}. ${description}`;
 
-  toast.info("Generating realistic mockup using Hugging Face...");
+  toast.info("Generating realistic mockup using AI...");
 
-  const { data, error } = await supabase.functions.invoke("generate-flux-image", {
-    body: {
-      prompt,
-      style: "realistic",
-      userId
+  try {
+    const { data, error } = await supabase.functions.invoke("generate-flux-image", {
+      body: {
+        prompt,
+        style: "realistic",
+        userId
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message);
     }
-  });
 
-  if (error) {
-    throw new Error(error.message);
+    return {
+      dataUrl: data.image_url,
+      storageUrl: data.storage_url || null,
+      type: 'realistic'
+    };
+  } catch (error) {
+    console.error("Error generating realistic 3D image:", error);
+    
+    // If HuggingFace fails, try using OpenAI DALL-E as fallback
+    toast.info("Primary image service unavailable, trying fallback service...");
+    
+    try {
+      const imageUrl = await OpenAIService.generateImage({ prompt });
+      
+      if (imageUrl) {
+        toast.success("Image generated successfully using fallback service");
+        return {
+          dataUrl: imageUrl,
+          storageUrl: null,
+          type: 'realistic'
+        };
+      } else {
+        throw new Error("Fallback image generation failed");
+      }
+    } catch (fallbackError) {
+      console.error("Fallback image generation failed:", fallbackError);
+      toast.error("All image generation services failed", {
+        description: "Please try again later"
+      });
+      return {
+        dataUrl: null,
+        storageUrl: null,
+        type: 'realistic',
+        error: error instanceof Error ? error.message : "Image generation failed"
+      };
+    }
   }
-
-  return {
-    dataUrl: data.image_url,
-    storageUrl: data.storage_url || null,
-    type: 'realistic'
-  };
 };
 
 export const generateBusinessStrategy = async (request: VisualizationRequest) => {
@@ -154,23 +222,56 @@ export const generateCustomMarketingImage = async (request: VisualizationRequest
     throw new Error("Please enter a prompt for your marketing image");
   }
 
-  toast.info("Generating custom marketing imagery using Hugging Face...");
+  toast.info("Generating custom marketing imagery using AI...");
 
-  const { data, error } = await supabase.functions.invoke("generate-flux-image", {
-    body: {
-      prompt: request.prompt,
-      style: "3d_model",
-      userId: request.userId
+  try {
+    const { data, error } = await supabase.functions.invoke("generate-flux-image", {
+      body: {
+        prompt: request.prompt,
+        style: "3d_model",
+        userId: request.userId
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message);
     }
-  });
 
-  if (error) {
-    throw new Error(error.message);
+    return {
+      dataUrl: data.image_url,
+      storageUrl: data.storage_url || null,
+      type: 'custom-marketing'
+    };
+  } catch (error) {
+    console.error("Error generating custom marketing image:", error);
+    
+    // If HuggingFace fails, try using OpenAI DALL-E as fallback
+    toast.info("Primary image service unavailable, trying fallback service...");
+    
+    try {
+      const imageUrl = await OpenAIService.generateImage({ prompt: request.prompt });
+      
+      if (imageUrl) {
+        toast.success("Image generated successfully using fallback service");
+        return {
+          dataUrl: imageUrl,
+          storageUrl: null,
+          type: 'custom-marketing'
+        };
+      } else {
+        throw new Error("Fallback image generation failed");
+      }
+    } catch (fallbackError) {
+      console.error("Fallback image generation failed:", fallbackError);
+      toast.error("All image generation services failed", {
+        description: "Please try again later"
+      });
+      return {
+        dataUrl: null,
+        storageUrl: null,
+        type: 'custom-marketing',
+        error: error instanceof Error ? error.message : "Image generation failed"
+      };
+    }
   }
-
-  return {
-    dataUrl: data.image_url,
-    storageUrl: data.storage_url || null,
-    type: 'custom-marketing'
-  };
 };
