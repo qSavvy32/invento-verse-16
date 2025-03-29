@@ -14,6 +14,7 @@ export function usePixelAnimation(
   const pixelsRef = useRef<Pixel[]>([]);
   const animationRef = useRef<number | null>(null);
   const timePreviousRef = useRef(performance.now());
+  const renderedSize = useRef<{width: number, height: number} | null>(null);
   const reducedMotion = useRef(
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   ).current;
@@ -24,6 +25,14 @@ export function usePixelAnimation(
     const rect = containerRef.current.getBoundingClientRect();
     const width = Math.floor(rect.width);
     const height = Math.floor(rect.height);
+    
+    // Prevent re-initializing if dimensions haven't changed
+    if (renderedSize.current?.width === width && renderedSize.current?.height === height) {
+      return;
+    }
+    
+    renderedSize.current = { width, height };
+    
     const ctx = canvasRef.current.getContext("2d");
     
     if (!ctx) return;
@@ -35,8 +44,12 @@ export function usePixelAnimation(
 
     const colorsArray = finalColors.split(",");
     const pxs: Pixel[] = [];
-    for (let x = 0; x < width; x += parseInt(finalGap.toString(), 10)) {
-      for (let y = 0; y < height; y += parseInt(finalGap.toString(), 10)) {
+    
+    // Limit the number of pixels based on dimensions to prevent performance issues
+    const gap = Math.max(parseInt(finalGap.toString(), 10), 5);
+    
+    for (let x = 0; x < width; x += gap) {
+      for (let y = 0; y < height; y += gap) {
         const color =
           colorsArray[Math.floor(Math.random() * colorsArray.length)];
 
@@ -96,13 +109,20 @@ export function usePixelAnimation(
   };
 
   useEffect(() => {
+    // Ensure we're not re-initializing unnecessarily
     initPixels();
+    
     const observer = new ResizeObserver(() => {
-      initPixels();
+      // Only re-initialize if the container exists
+      if (containerRef.current) {
+        initPixels();
+      }
     });
+    
     if (containerRef.current) {
       observer.observe(containerRef.current);
     }
+    
     return () => {
       observer.disconnect();
       if (animationRef.current !== null) {

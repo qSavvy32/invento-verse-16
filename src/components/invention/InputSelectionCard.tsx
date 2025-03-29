@@ -74,7 +74,7 @@ export const InputSelectionCard = ({
   }, [isActive]);
 
   return (
-    <div ref={containerRef} className="relative h-full">
+    <div ref={containerRef} className="relative h-full max-h-[300px]">
       {!isActive && (
         <PixelCard 
           variant={variant} 
@@ -103,9 +103,9 @@ export const InputSelectionCard = ({
             
             <motion.div
               ref={expandedCardRef}
-              className="fixed z-50 bg-background border rounded-lg shadow-xl overflow-auto"
+              className="fixed z-50 bg-background border rounded-lg shadow-xl overflow-hidden"
               style={{ 
-                maxHeight: "90vh",
+                maxHeight: "85vh",
                 width: "min(1200px, 90vw)",
                 maxWidth: "90vw"
               }}

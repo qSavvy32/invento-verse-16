@@ -8,7 +8,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { InputSelectionCard } from "./InputSelectionCard";
-import { IdeaGenerator } from "@/components/idea-generator/IdeaGenerator";
+import { IdeaGenerator } from "@/components/IdeaGenerator";
 import { 
   Save, 
   Download, 
@@ -50,10 +50,10 @@ export const InventionForm = () => {
   
   return (
     <div className="space-y-8">
-      <div className="border rounded-lg p-4 pb-8 relative min-h-[350px]" id="invention-design-container">
+      <div className="border rounded-lg p-4 pb-8 relative max-h-[800px] overflow-hidden" id="invention-design-container">
         <h2 className="text-xl font-semibold mb-6">Design Your Invention</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[700px]">
           <InputSelectionCard
             id="sketch"
             title="Visual Input"
