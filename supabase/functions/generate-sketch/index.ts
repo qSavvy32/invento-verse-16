@@ -14,9 +14,9 @@ serve(async (req) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not set');
+    const HUGGINGFACE_API_KEY = Deno.env.get('HUGGINGFACE_API_KEY');
+    if (!HUGGINGFACE_API_KEY) {
+      throw new Error('HUGGINGFACE_API_KEY is not set');
     }
 
     const { prompt } = await req.json();
@@ -31,37 +31,48 @@ serve(async (req) => {
     console.log("Generating sketch with prompt:", prompt);
 
     // Add sketch styling to the prompt
-    const enhancedPrompt = `Create a detailed hand-drawn sketch or blueprint style drawing of: ${prompt}. Make it look like it was drawn on graph paper or engineering paper with pencil or ink. Include measurements, annotations, and technical details where appropriate. The style should resemble a professional inventor's or engineer's notebook sketch.`;
+    const enhancedPrompt = `Detailed hand-drawn sketch or blueprint style drawing of: ${prompt}. Make it look like it was drawn on graph paper or engineering paper with pencil or ink. Include measurements, annotations, and technical details where appropriate. The style should resemble a professional inventor's or engineer's notebook sketch.`;
 
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "dall-e-3",
-        prompt: enhancedPrompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "standard",
-        style: "natural"
-      }),
-    });
+    // Call the Hugging Face Inference API
+    const response = await fetch(
+      "https://xl2f8bl842kkcz1b.us-east-1.aws.endpoints.huggingface.cloud",
+      {
+        headers: { 
+          "Accept": "image/png",
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${HUGGINGFACE_API_KEY}`
+        },
+        method: "POST",
+        body: JSON.stringify({
+          "inputs": enhancedPrompt,
+          "parameters": {
+            "num_inference_steps": 30,
+            "guidance_scale": 7.5
+          }
+        }),
+      }
+    );
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenAI API error:", errorData);
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("Hugging Face API error:", errorText);
+      throw new Error(`Hugging Face API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    // Get the image blob and convert to base64
+    const imageBlob = await response.blob();
+    const imageBuffer = await imageBlob.arrayBuffer();
+    const base64Image = btoa(
+      new Uint8Array(imageBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
+    
+    const imageUrl = `data:image/png;base64,${base64Image}`;
     console.log("Sketch generated successfully");
 
     return new Response(
       JSON.stringify({ 
-        sketch_url: data.data[0].url,
-        revised_prompt: data.data[0].revised_prompt
+        sketch_url: imageUrl,
+        revised_prompt: enhancedPrompt
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

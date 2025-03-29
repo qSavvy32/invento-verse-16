@@ -18,6 +18,8 @@ export const generateSketch = async (request: VisualizationRequest) => {
 
   const prompt = `Invention: ${title}. ${description}`;
   
+  toast.info("Generating sketch using Hugging Face...");
+  
   const { data, error } = await supabase.functions.invoke("generate-sketch", {
     body: { prompt }
   });
