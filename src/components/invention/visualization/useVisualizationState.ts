@@ -6,7 +6,6 @@ import {
   generateSketch,
   generate3DImage,
   generateRealistic3DImage,
-  generateThreejsVisualization,
   generateBusinessStrategy,
   VisualizationRequest
 } from "./visualizationService";
@@ -14,18 +13,16 @@ import {
 export interface LoadingState {
   sketch: boolean;
   image: boolean;
-  threejs: boolean;
   realistic3d: boolean;
   businessStrategy: boolean;
   runAll: boolean;
 }
 
 export const useVisualizationState = () => {
-  const { state, updateSketchData, update3DVisualization, setThreejsVisualization, setBusinessStrategySvg } = useInvention();
+  const { state, updateSketchData, update3DVisualization, setBusinessStrategySvg } = useInvention();
   const [isLoading, setIsLoading] = useState<LoadingState>({
     sketch: false,
     image: false,
-    threejs: false,
     realistic3d: false,
     businessStrategy: false,
     runAll: false
@@ -56,21 +53,20 @@ export const useVisualizationState = () => {
 
   const handleGenerate3DImage = async () => {
     setIsLoading(prev => ({ ...prev, image: true }));
-    toast.info("Generating 3D model...");
+    toast.info("Generating 3D mockup...");
 
     try {
       const request: VisualizationRequest = {
-        sketchDataUrl: state.sketchDataUrl,
-        description: state.description,
-        title: state.title
+        title: state.title,
+        description: state.description
       };
       
       const imageUrl = await generate3DImage(request);
       update3DVisualization(imageUrl);
-      toast.success("3D model generated successfully");
+      toast.success("3D mockup generated successfully");
     } catch (error) {
-      console.error("Error generating 3D model:", error);
-      toast.error("Failed to generate 3D model", {
+      console.error("Error generating 3D mockup:", error);
+      toast.error("Failed to generate 3D mockup", {
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
     } finally {
@@ -80,49 +76,24 @@ export const useVisualizationState = () => {
 
   const handleGenerateRealistic3DImage = async () => {
     setIsLoading(prev => ({ ...prev, realistic3d: true }));
-    toast.info("Generating realistic 3D image...");
+    toast.info("Generating realistic mockup...");
 
     try {
       const request: VisualizationRequest = {
         title: state.title,
-        description: state.description,
-        sketchDataUrl: state.sketchDataUrl
+        description: state.description
       };
       
       const imageUrl = await generateRealistic3DImage(request);
       update3DVisualization(imageUrl);
-      toast.success("Realistic 3D image generated successfully");
+      toast.success("Realistic mockup generated successfully");
     } catch (error) {
-      console.error("Error generating realistic 3D image:", error);
-      toast.error("Failed to generate realistic 3D image", {
+      console.error("Error generating realistic mockup:", error);
+      toast.error("Failed to generate realistic mockup", {
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
     } finally {
       setIsLoading(prev => ({ ...prev, realistic3d: false }));
-    }
-  };
-
-  const handleGenerateThreejsVisualization = async () => {
-    setIsLoading(prev => ({ ...prev, threejs: true }));
-    toast.info("Generating interactive 3D visualization...");
-
-    try {
-      const request: VisualizationRequest = {
-        title: state.title,
-        description: state.description,
-        sketchDataUrl: state.sketchDataUrl
-      };
-      
-      const { code, html } = await generateThreejsVisualization(request);
-      setThreejsVisualization(code, html);
-      toast.success("3D visualization generated successfully");
-    } catch (error) {
-      console.error("Error generating 3D visualization:", error);
-      toast.error("Failed to generate 3D visualization", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred"
-      });
-    } finally {
-      setIsLoading(prev => ({ ...prev, threejs: false }));
     }
   };
 
@@ -156,7 +127,6 @@ export const useVisualizationState = () => {
     handleGenerateSketch,
     handleGenerate3DImage,
     handleGenerateRealistic3DImage,
-    handleGenerateThreejsVisualization,
     handleGenerateBusinessStrategy
   };
 };

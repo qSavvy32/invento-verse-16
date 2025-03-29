@@ -3,9 +3,11 @@ import { MultimodalInputArea } from "@/components/invention/MultimodalInputArea"
 import { InventionRepository } from "@/components/invention/InventionRepository";
 import { VisualizationTools } from "@/components/invention/VisualizationTools";
 import { AnalysisTools } from "@/components/invention/AnalysisTools";
+import { DevilsAdvocate } from "@/components/devils-advocate/DevilsAdvocate";
 import { useInvention } from "@/contexts/InventionContext";
 import { AutoSave } from "./AutoSave";
 import { useAuth } from "@/contexts/AuthContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const InventionForm = () => {
   const { state } = useInvention();
@@ -34,7 +36,22 @@ export const InventionForm = () => {
         {hasContent && (
           <>
             <VisualizationTools />
-            <AnalysisTools />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <AnalysisTools />
+              </div>
+              <div>
+                <Tabs defaultValue="devils-advocate" className="w-full">
+                  <TabsList className="grid w-full grid-cols-1">
+                    <TabsTrigger value="devils-advocate">Devil's Advocate</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="devils-advocate">
+                    <DevilsAdvocate />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
           </>
         )}
       </div>

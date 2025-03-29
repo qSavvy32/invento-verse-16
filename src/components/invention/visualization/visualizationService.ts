@@ -16,7 +16,7 @@ export const generateSketch = async (request: VisualizationRequest) => {
     throw new Error("Please provide a title and description for your invention first");
   }
 
-  const prompt = `Invention: ${title}. ${description}`;
+  const prompt = `Create a pencil sketch of ${title}. ${description}`;
   
   toast.info("Generating sketch using Hugging Face...");
   
@@ -34,14 +34,16 @@ export const generateSketch = async (request: VisualizationRequest) => {
 export const generate3DImage = async (request: VisualizationRequest) => {
   const { sketchDataUrl, description, title } = request;
   
-  if (!sketchDataUrl) {
-    throw new Error("Please generate a sketch first");
+  if (!title && !description) {
+    throw new Error("Please provide a title and description first");
   }
 
-  const { data, error } = await supabase.functions.invoke("generate-3d-visualization", {
+  const prompt = `Create a 3D mockup of ${title}. ${description}`;
+
+  const { data, error } = await supabase.functions.invoke("generate-flux-image", {
     body: {
-      sketchDataUrl,
-      prompt: description || title
+      prompt,
+      style: "3d_model"
     }
   });
 
@@ -49,21 +51,22 @@ export const generate3DImage = async (request: VisualizationRequest) => {
     throw new Error(error.message);
   }
 
-  return data.output?.[0] || null;
+  return data.image_url || null;
 };
 
 export const generateRealistic3DImage = async (request: VisualizationRequest) => {
-  const { title, description, sketchDataUrl } = request;
+  const { title, description } = request;
   
   if (!title && !description) {
     throw new Error("Please provide a title and description for your invention first");
   }
 
-  const { data, error } = await supabase.functions.invoke("generate-realistic-3d-image", {
+  const prompt = `Create a realistic mockup of ${title}. ${description}`;
+
+  const { data, error } = await supabase.functions.invoke("generate-flux-image", {
     body: {
-      title,
-      description,
-      sketchDataUrl
+      prompt,
+      style: "realistic"
     }
   });
 
@@ -71,32 +74,7 @@ export const generateRealistic3DImage = async (request: VisualizationRequest) =>
     throw new Error(error.message);
   }
 
-  return data.image || null;
-};
-
-export const generateThreejsVisualization = async (request: VisualizationRequest) => {
-  const { title, description, sketchDataUrl } = request;
-  
-  if (!title && !description) {
-    throw new Error("Please provide a title and description for your invention first");
-  }
-
-  const { data, error } = await supabase.functions.invoke("generate-threejs-visualization", {
-    body: {
-      title,
-      description,
-      sketchDataUrl
-    }
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return {
-    code: data.visualization_code || null,
-    html: data.visualization_html || null
-  };
+  return data.image_url || null;
 };
 
 export const generateBusinessStrategy = async (request: VisualizationRequest) => {

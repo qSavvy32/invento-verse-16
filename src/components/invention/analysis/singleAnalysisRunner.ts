@@ -48,7 +48,8 @@ export const runAnalysis = async (
     const timestamp = new Date().toLocaleTimeString();
     
     // Handle different types of analysis and their response formats
-    processAnalysisResults(analysisType, data, state, timestamp);
+    const processedResults = processAnalysisResults(analysisType, data, state, timestamp);
+    console.log(`Processed results for ${analysisType}:`, processedResults);
     
     if (showToast) {
       toast.success(`${analysisType} analysis complete`);

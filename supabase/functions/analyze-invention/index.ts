@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Anthropic } from "https://esm.sh/@anthropic-ai/sdk@0.16.0";
 
@@ -51,6 +50,9 @@ serve(async (req) => {
     if (outputFormat === "markdown") {
       textPrompt += "\n\nFormat your response using rich Markdown with headings, bullet points, and emphasis where appropriate.";
     }
+    
+    // Request structured output in bullet points
+    textPrompt += "\n\nYour response MUST be structured as bullet points that can be easily extracted. Use the * format for each point.";
     
     // Add the text component to content items
     contentItems.push({
@@ -128,9 +130,11 @@ serve(async (req) => {
     });
 
     console.log("Received response from Anthropic API");
+    console.log("Response content:", response.content[0].text.substring(0, 200) + "...");
 
     // Process the response based on analysis type
     const processedResponse = processResponse(response.content[0].text, analysisType);
+    console.log("Processed response:", processedResponse);
 
     return new Response(JSON.stringify(processedResponse), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -217,80 +221,51 @@ function processResponse(responseText: string, analysisType: string): any {
   } else {
     // Comprehensive analysis - extract sections
     return {
-      technical: extractSectionContent(responseText, ["technical", "engineering", "technology", "implementation"]),
-      market: extractSectionContent(responseText, ["market", "users", "customers", "audience"]),
-      legal: extractSectionContent(responseText, ["legal", "ip", "intellectual property", "patent"]),
-      business: extractSectionContent(responseText, ["business", "monetization", "revenue", "financial"])
+      technical: extractBulletPoints(responseText, ["technical", "engineering", "technology", "implementation"]),
+      market: extractBulletPoints(responseText, ["market", "users", "customers", "audience"]),
+      legal: extractBulletPoints(responseText, ["legal", "ip", "intellectual property", "patent"]),
+      business: extractBulletPoints(responseText, ["business", "monetization", "revenue", "financial"])
     };
   }
 }
 
-function extractBulletPoints(text: string): string[] {
+function extractBulletPoints(text: string, filters?: string[]): string[] {
   // Extract all bullet points (lines starting with -, *, or number.)
-  const bulletPoints = text.split("\n")
+  let bulletPoints = text.split("\n")
     .filter(line => /^(\s*[-*]\s|^\s*\d+\.\s)/.test(line))
     .map(line => line.replace(/^(\s*[-*]\s|\s*\d+\.\s)/, "").trim());
   
-  // If no bullet points found, split by paragraphs
-  if (bulletPoints.length === 0) {
-    return text.split("\n\n")
-      .filter(para => para.trim().length > 0)
-      .map(para => para.trim());
+  // If filters are provided, only keep points containing any of the filter keywords
+  if (filters && filters.length > 0 && bulletPoints.length > 5) {
+    bulletPoints = bulletPoints.filter(point => 
+      filters.some(keyword => point.toLowerCase().includes(keyword.toLowerCase()))
+    );
   }
   
-  return bulletPoints;
+  // If no bullet points found, split by paragraphs
+  if (bulletPoints.length === 0) {
+    bulletPoints = text.split("\n\n")
+      .filter(para => para.trim().length > 0)
+      .map(para => para.trim());
+      
+    // Apply filters if provided
+    if (filters && filters.length > 0 && bulletPoints.length > 5) {
+      bulletPoints = bulletPoints.filter(point => 
+        filters.some(keyword => point.toLowerCase().includes(keyword.toLowerCase()))
+      );
+    }
+  }
+  
+  // Ensure we have at least some content
+  if (bulletPoints.length === 0) {
+    return ["Analysis couldn't be generated. Please try again."];
+  }
+  
+  // Limit number of points to prevent overwhelming the UI
+  return bulletPoints.slice(0, 15);
 }
 
 function extractSectionContent(text: string, keywords: string[]): string[] {
-  const lines = text.split("\n");
-  const results: string[] = [];
-  let inRelevantSection = false;
-  let currentSection = "";
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    
-    // Check if this is a heading
-    if (line.startsWith("#")) {
-      // If we were in a relevant section, save it
-      if (inRelevantSection && currentSection.trim()) {
-        results.push(currentSection.trim());
-        currentSection = "";
-      }
-      
-      // Check if this heading contains any of our keywords
-      inRelevantSection = keywords.some(keyword => 
-        line.toLowerCase().includes(keyword.toLowerCase()));
-    } 
-    
-    // If we're in a relevant section, collect the content
-    if (inRelevantSection && line) {
-      currentSection += line + "\n";
-    }
-  }
-  
-  // Add the last section if relevant
-  if (inRelevantSection && currentSection.trim()) {
-    results.push(currentSection.trim());
-  }
-  
-  // If no sections found, look for paragraphs containing keywords
-  if (results.length === 0) {
-    const paragraphs = text.split("\n\n");
-    for (const paragraph of paragraphs) {
-      if (keywords.some(keyword => paragraph.toLowerCase().includes(keyword.toLowerCase()))) {
-        results.push(paragraph.trim());
-      }
-    }
-  }
-  
-  // If still nothing found, just split the text into paragraphs
-  if (results.length === 0) {
-    return text.split("\n\n")
-      .filter(para => para.trim().length > 0)
-      .map(para => para.trim())
-      .slice(0, 4); // Limit to first 4 paragraphs
-  }
-  
-  return results;
+  // This function has been replaced by the improved extractBulletPoints function
+  return extractBulletPoints(text, keywords);
 }

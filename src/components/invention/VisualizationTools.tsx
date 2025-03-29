@@ -3,7 +3,6 @@ import { useInvention } from "@/contexts/InventionContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { useVisualizationState } from "./visualization/useVisualizationState";
 import { VisualizationButtonsGrid } from "./visualization/VisualizationButtonsGrid";
-import { ThreejsPreview } from "./visualization/ThreejsPreview";
 import { BusinessStrategyPreview } from "./visualization/BusinessStrategyPreview";
 
 export const VisualizationTools = () => {
@@ -13,7 +12,6 @@ export const VisualizationTools = () => {
     handleGenerateSketch,
     handleGenerate3DImage,
     handleGenerateRealistic3DImage,
-    handleGenerateThreejsVisualization,
     handleGenerateBusinessStrategy
   } = useVisualizationState();
 
@@ -31,13 +29,8 @@ export const VisualizationTools = () => {
             onGenerateSketch={handleGenerateSketch}
             onGenerateRealistic3D={handleGenerateRealistic3DImage}
             onGenerate3DImage={handleGenerate3DImage}
-            onGenerateThreejs={handleGenerateThreejsVisualization}
             onGenerateBusinessStrategy={handleGenerateBusinessStrategy}
           />
-          
-          {state.threejsVisualization.html && (
-            <ThreejsPreview html={state.threejsVisualization.html} />
-          )}
           
           {state.businessStrategySvg && (
             <BusinessStrategyPreview svgCode={state.businessStrategySvg} />

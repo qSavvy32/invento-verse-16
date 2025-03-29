@@ -1,8 +1,6 @@
 
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { AnalysisState } from "./types";
-import { processAnalysisResults } from "./analysisProcessor";
 import { runAnalysis } from "./singleAnalysisRunner";
 
 // Function to run all analyses
@@ -21,12 +19,21 @@ export const runAllAnalyses = async (
   });
   
   try {
-    // Run all analyses one by one
+    console.log("Starting batch analysis with state:", {
+      title: state.title, 
+      description: state.description?.substring(0, 50) + "...",
+      hasSketch: !!state.sketchDataUrl
+    });
+    
+    // Run analyses one by one with a delay between them to avoid rate limiting
     const analysisTypes = ["technical", "users", "materials", "ip", "competition", "challenges"];
     
     for (const analysisType of analysisTypes) {
       try {
+        console.log(`Running analysis for: ${analysisType}`);
         await runAnalysis(analysisType, state, setIsLoading, false);
+        // Small delay between requests to avoid overwhelming the API
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error(`Error in ${analysisType} during Run All:`, error);
       }
