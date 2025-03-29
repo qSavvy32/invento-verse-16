@@ -15,7 +15,7 @@ import {
   Construction,
   Box,
   Inspect,
-  Cube
+  Package
 } from "lucide-react";
 
 interface AiAssistantPanelProps {
@@ -335,7 +335,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           {isLoading.threejs ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Cube className="mr-2 h-4 w-4" />
+            <Package className="mr-2 h-4 w-4" />
           )}
           <span>Generate 3D Visualization</span>
         </Button>
