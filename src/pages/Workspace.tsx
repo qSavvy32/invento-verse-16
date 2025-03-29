@@ -3,10 +3,9 @@ import { AuthHeader } from "@/components/AuthHeader";
 import { Footer } from "@/components/Footer";
 import { InventionForm } from "@/components/invention/InventionForm";
 import { InventionContextProvider, useInvention } from "@/contexts/InventionContext";
-import { DevilsAdvocate } from "@/components/DevilsAdvocate";
 import { ThreejsVisualizer } from "@/components/invention/ThreejsVisualizer";
 import { AnalysisResults } from "@/components/invention/AnalysisResults";
-import { Package, Skull, FlaskConicalIcon } from "lucide-react";
+import { Package, FlaskConicalIcon } from "lucide-react";
 
 const WorkspaceContent = () => {
   const { state } = useInvention();
@@ -43,13 +42,6 @@ const WorkspaceContent = () => {
               <ThreejsVisualizer />
             </div>
           )}
-        </div>
-        
-        {/* Devil's Advocate Section - Moved to bottom and centered */}
-        <div className="py-8 flex justify-center">
-          <div className="w-full max-w-2xl">
-            <DevilsAdvocate />
-          </div>
         </div>
       </main>
       

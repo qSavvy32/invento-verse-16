@@ -32,9 +32,6 @@ export const DevilsAdvocate = () => {
   const [error, setError] = useState<string | null>(null);
   const [critiques, setCritiques] = useState<Record<string, string[]> | null>(null);
   
-  // Check if an idea is present
-  const hasIdea = Boolean(state.title || state.description);
-  
   const generateCritique = async () => {
     if (!state.title && !state.description) {
       toast.error("Please provide a title or description of your invention idea");
@@ -82,11 +79,6 @@ export const DevilsAdvocate = () => {
     }
   };
   
-  // Only show if there's an idea
-  if (!hasIdea) {
-    return null;
-  }
-  
   return (
     <div className="space-y-6 flex flex-col items-center w-full">
       {error && (
@@ -96,7 +88,7 @@ export const DevilsAdvocate = () => {
       )}
       
       <PixelCard 
-        variant="pink" 
+        variant="red" 
         className="w-full"
         onClick={generateCritique}
         active={isAnalyzing}
@@ -184,7 +176,7 @@ export const DevilsAdvocate = () => {
         </Card>
       )}
       
-      {/* Save Your Work Section - moved from InventionForm */}
+      {/* Save Your Work Section */}
       <div className="border rounded-lg p-4 w-full mt-6">
         <div className="flex justify-between mb-4">
           <h2 className="text-xl font-semibold">Save Your Work</h2>

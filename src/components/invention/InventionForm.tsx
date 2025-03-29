@@ -16,10 +16,14 @@ import { GenerateButtons } from "./GenerateButtons";
 import { Button } from "../ui/button";
 import PixelCard from "../ui/PixelCard";
 import { Visualization3DViewer } from "./Visualization3DViewer";
+import { DevilsAdvocate } from "../DevilsAdvocate";
 
 export const InventionForm = () => {
   const { state } = useInvention();
   const [showResults, setShowResults] = useState(true);
+  
+  // Check if an idea is present to determine if we should show Devil's Advocate
+  const hasIdea = Boolean(state.title || state.description);
   
   return (
     <div className="space-y-8">
@@ -76,6 +80,15 @@ export const InventionForm = () => {
         </div>
         <AiAssistantPanel onAnalysisComplete={() => setShowResults(true)} />
       </div>
+      
+      {/* Devil's Advocate section - Only show when an idea exists */}
+      {hasIdea && (
+        <div className="flex justify-center mt-12">
+          <div className="w-full max-w-3xl">
+            <DevilsAdvocate />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

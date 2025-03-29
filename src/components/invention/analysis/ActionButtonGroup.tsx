@@ -1,11 +1,11 @@
 
 import { Button } from "@/components/ui/button";
 import { 
-  ArrowRightCircle, 
-  Cpu, 
-  Package, 
-  LayoutList,
-  Zap 
+  BarChart4, 
+  Package,
+  Layers,
+  RotateCcw,
+  Loader2
 } from "lucide-react";
 import PixelCard from "@/components/ui/PixelCard";
 
@@ -26,71 +26,60 @@ export const ActionButtonGroup = ({
 }: ActionButtonGroupProps) => {
   return (
     <div className="space-y-4">
-      <h3 className="text-md font-medium mb-2">Actions</h3>
+      <h3 className="text-md font-medium">Actions</h3>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <PixelCard 
-          variant="default"
-          onClick={onRunAllAnalyses}
-          className="h-24"
-          active={isLoading.runAll}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={onGenerate3DVisualization}
+          disabled={isDisabled || isLoading.visualization}
         >
-          <div className="text-center">
-            {isLoading.runAll ? (
-              <div className="animate-pulse">
-                <Zap className="mx-auto h-6 w-6 mb-2" />
-                <p className="font-medium">Running all analyses...</p>
-              </div>
-            ) : (
-              <>
-                <Zap className="mx-auto h-6 w-6 mb-2" />
-                <p className="font-medium">Run All Analyses</p>
-                <p className="text-xs opacity-80">Complete invention assessment</p>
-              </>
-            )}
-          </div>
-        </PixelCard>
+          {isLoading.visualization ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Package className="mr-2 h-4 w-4" />
+          )}
+          Generate 3D Visualization
+        </Button>
         
-        <div className="flex flex-col space-y-2">
-          <Button
-            variant="outline"
-            onClick={onGenerate3DVisualization}
-            disabled={isDisabled || isLoading.visualization}
-            className="h-12 justify-start"
-          >
-            {isLoading.visualization ? (
-              <span className="animate-pulse flex items-center">
-                <Cpu className="mr-2 h-4 w-4 animate-spin" />
-                Generating 3D model...
-              </span>
-            ) : (
-              <>
-                <Cpu className="mr-2 h-4 w-4" />
-                Generate 3D Model
-              </>
-            )}
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={onGenerateThreejsVisualization}
-            disabled={isDisabled || isLoading.threejs}
-            className="h-12 justify-start"
-          >
-            {isLoading.threejs ? (
-              <span className="animate-pulse flex items-center">
-                <Package className="mr-2 h-4 w-4 animate-spin" />
-                Generating visualization...
-              </span>
-            ) : (
-              <>
-                <Package className="mr-2 h-4 w-4" />
-                Generate Web 3D Visualization
-              </>
-            )}
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={onGenerateThreejsVisualization}
+          disabled={isDisabled || isLoading.threejs}
+        >
+          {isLoading.threejs ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Layers className="mr-2 h-4 w-4" />
+          )}
+          Generate Interactive 3D
+        </Button>
       </div>
+      
+      <PixelCard
+        variant="rainbow"
+        className="w-full mt-4"
+        onClick={onRunAllAnalyses}
+        active={isLoading.runAll}
+        disabled={isDisabled || isLoading.runAll}
+      >
+        <div className="p-3 text-center">
+          {isLoading.runAll ? (
+            <>
+              <Loader2 className="mx-auto h-5 w-5 animate-spin mb-1" />
+              <h3 className="font-medium">Running all analyses...</h3>
+            </>
+          ) : (
+            <>
+              <BarChart4 className="mx-auto h-5 w-5 mb-1" />
+              <h3 className="font-medium">Run All Analyses</h3>
+              <p className="text-xs opacity-80">Complete invention analysis</p>
+            </>
+          )}
+        </div>
+      </PixelCard>
     </div>
   );
 };
