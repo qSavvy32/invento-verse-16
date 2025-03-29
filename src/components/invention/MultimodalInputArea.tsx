@@ -4,7 +4,7 @@ import { CameraInput } from "@/components/camera/CameraInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, Upload, Mic } from "lucide-react";
-import { FileUploader } from "@/components/FileUploader";
+import { FileUploader } from "@/components/upload/FileUploader";
 import { useStorageSetup } from "@/hooks/useStorageSetup";
 import { VoiceInput } from "@/components/VoiceInput";
 
