@@ -10,26 +10,8 @@ import { v4 as uuidv4 } from "uuid";
 
 export const UrlScraper = ({ onAddAsset }: { onAddAsset?: (asset: any) => void }) => {
   const [url, setUrl] = useState("");
-  const [apiKey, setApiKey] = useState(FirecrawlService.getApiKey() || "");
   const [isLoading, setIsLoading] = useState(false);
   const { updateDescription } = useInvention();
-  
-  const handleSaveApiKey = () => {
-    if (!apiKey.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid API key",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    FirecrawlService.saveApiKey(apiKey);
-    toast({
-      title: "Success",
-      description: "API key saved successfully"
-    });
-  };
   
   const handleScrape = async () => {
     if (!url.trim()) {
@@ -102,30 +84,6 @@ export const UrlScraper = ({ onAddAsset }: { onAddAsset?: (asset: any) => void }
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="apiKey">Firecrawl API Key</Label>
-          <div className="flex gap-2">
-            <Input
-              id="apiKey"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Firecrawl API key"
-              className="flex-1"
-            />
-            <Button 
-              onClick={handleSaveApiKey} 
-              variant="outline"
-              disabled={!apiKey.trim()}
-            >
-              Save Key
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Your API key is stored locally and never sent to our servers.
-          </p>
-        </div>
-        
-        <div className="space-y-2">
           <Label htmlFor="url">Website URL</Label>
           <div className="flex gap-2">
             <Input
@@ -135,11 +93,11 @@ export const UrlScraper = ({ onAddAsset }: { onAddAsset?: (asset: any) => void }
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com"
               className="flex-1"
-              disabled={isLoading || !FirecrawlService.getApiKey()}
+              disabled={isLoading}
             />
             <Button 
               onClick={handleScrape} 
-              disabled={isLoading || !url.trim() || !FirecrawlService.getApiKey()}
+              disabled={isLoading || !url.trim()}
             >
               {isLoading ? "Scraping..." : "Scrape"}
             </Button>
