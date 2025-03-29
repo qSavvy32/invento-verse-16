@@ -24,8 +24,23 @@ export const InputSelectionCard = ({
   const [isActive, setIsActive] = useState(false);
   const expandedCardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [cardPosition, setCardPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+  });
 
   const handleCardClick = () => {
+    if (!isActive && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setCardPosition({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      });
+    }
     setIsActive(!isActive);
   };
 
@@ -70,17 +85,37 @@ export const InputSelectionCard = ({
         ) : (
           <motion.div
             ref={expandedCardRef}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ 
+              opacity: 0, 
+              scale: 0.95, 
+              top: cardPosition.top, 
+              left: cardPosition.left,
+              width: cardPosition.width,
+              height: cardPosition.height,
+            }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              top: Math.max(window.innerHeight * 0.125, cardPosition.top - 100),
+              left: Math.max(window.innerWidth * 0.125, cardPosition.left - 150),
+              width: "75%",
+              height: "auto",
+            }}
+            exit={{ 
+              opacity: 0, 
+              scale: 0.95,
+              top: cardPosition.top,
+              left: cardPosition.left,
+              width: cardPosition.width,
+              height: cardPosition.height,
+            }}
             transition={{ 
               duration: 0.5, 
               ease: [0.19, 1, 0.22, 1],
               scale: { duration: 0.4 }
             }}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-background border rounded-lg p-6 shadow-lg"
+            className="absolute bg-background border rounded-lg p-6 shadow-lg z-50"
             style={{ 
-              width: "75%", 
               maxHeight: "75vh",
               overflow: "auto"
             }}
@@ -104,6 +139,13 @@ export const InputSelectionCard = ({
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {isActive && (
+        <div 
+          className="fixed inset-0 bg-black/30 z-40" 
+          onClick={() => setIsActive(false)}
+        />
+      )}
     </div>
   );
 };
