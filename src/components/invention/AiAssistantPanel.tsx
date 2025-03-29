@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useInvention } from "@/contexts/InventionContext";
 import { AnalysisButtonGroup } from "./analysis/AnalysisButtonGroup";
 import { ActionButtonGroup } from "./analysis/ActionButtonGroup";
-import { runAnalysis, runAllAnalyses } from "./analysis/AnalysisService";
+import { runAnalysis } from "./analysis/singleAnalysisRunner";
+import { runAllAnalyses } from "./analysis/batchAnalysisRunner";
 import { generate3DVisualization, generateThreejsVisualization } from "./analysis/VisualizationService";
 
 interface AiAssistantPanelProps {
@@ -59,9 +60,11 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         sketchDataUrl: state.sketchDataUrl,
         setAnalysisResults
       },
-      setLoadingState,
-      onAnalysisComplete
+      setLoadingState
     );
+    
+    // Call onAnalysisComplete after all analyses have been completed
+    onAnalysisComplete();
   };
   
   // Handle generating 3D visualization
