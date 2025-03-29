@@ -15,20 +15,20 @@ export const GenerateCritiqueButton = ({
   return (
     <PixelCard 
       variant="red" 
-      className="w-full"
+      className="h-[200px] w-full"
       onClick={onGenerateCritique}
       active={isAnalyzing}
       disabled={isAnalyzing}
     >
-      <div className="p-4 text-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10">
         {isAnalyzing ? (
           <>
-            <Loader2Icon className="mx-auto h-6 w-6 animate-spin mb-2" />
+            <Loader2Icon className="h-6 w-6 animate-spin mb-2" />
             <h3 className="font-bold text-lg">Generating critique...</h3>
           </>
         ) : (
           <>
-            <Skull className="mx-auto h-6 w-6 mb-2" />
+            <Skull className="h-6 w-6 mb-2" />
             <h3 className="font-bold text-lg">Devil's Advocate Critique</h3>
             <p className="text-sm opacity-80">Challenge your assumptions</p>
           </>

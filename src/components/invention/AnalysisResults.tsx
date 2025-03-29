@@ -123,7 +123,7 @@ export const AnalysisResults = () => {
   }
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-contained prevent-grow">
       <h2 className="text-xl font-semibold">Analysis Results</h2>
       <div className="h-[360px] overflow-y-auto overflow-x-hidden pr-2 space-y-4 custom-scrollbar">
         {analysisCards.map(card => {

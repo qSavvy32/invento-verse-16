@@ -58,6 +58,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
   }
 }
 
@@ -93,4 +94,20 @@
     transition: none !important;
     animation: none !important;
   }
+}
+
+/* Fix for container growth issues */
+.container {
+  overflow-x: hidden;
+}
+
+/* Additional helper for overflow containment */
+.overflow-contained {
+  contain: content;
+  overflow: hidden;
+}
+
+/* Prevent expanding content from breaking layouts */
+.prevent-grow {
+  contain: size layout;
 }

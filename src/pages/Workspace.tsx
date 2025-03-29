@@ -14,7 +14,7 @@ const WorkspaceContent = () => {
     <div className="min-h-screen flex flex-col">
       <AuthHeader />
       
-      <main className="flex-1 container max-w-7xl mx-auto px-4 py-8 overflow-x-hidden">
+      <main className="flex-1 container max-w-7xl mx-auto px-4 py-8 overflow-hidden">
         <div className="mb-8">
           <h1 className="text-3xl font-bold font-leonardo mb-2 flex items-center gap-2">
             <FlaskConicalIcon className="h-7 w-7 text-invention-accent" />
@@ -25,10 +25,10 @@ const WorkspaceContent = () => {
           </p>
         </div>
         
-        <div className="mb-16 max-w-full overflow-x-hidden">
+        <div className="mb-16 max-w-full overflow-hidden">
           <InventionForm />
             
-          <div className="mt-8 max-h-[500px] overflow-hidden">
+          <div className="mt-8 overflow-hidden max-h-[500px]">
             <AnalysisResults />
           </div>
           

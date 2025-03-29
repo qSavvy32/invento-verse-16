@@ -9,8 +9,7 @@ import {
   Image, 
   Package, 
   LightbulbIcon, 
-  Bot,
-  Zap
+  Bot
 } from "lucide-react";
 import { GenerateButtons } from "./GenerateButtons";
 import PixelCard from "../ui/PixelCard";
@@ -82,14 +81,8 @@ export const InventionForm = () => {
       
       {/* Devil's Advocate section - Only show when an idea exists */}
       {hasIdea && (
-        <div className="border rounded-lg p-4">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Devil's Advocate
-          </h2>
-          <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-            <DevilsAdvocate />
-          </div>
+        <div className="border rounded-lg overflow-hidden">
+          <DevilsAdvocate />
         </div>
       )}
     </div>
