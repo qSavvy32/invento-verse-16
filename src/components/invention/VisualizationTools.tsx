@@ -13,8 +13,10 @@ import {
   Box,
   Zap
 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
-export const GenerateButtons = () => {
+export const VisualizationTools = () => {
   const { state, updateSketchData, update3DVisualization, setThreejsVisualization } = useInvention();
   const [isLoading, setIsLoading] = useState({
     sketch: false,
@@ -57,7 +59,7 @@ export const GenerateButtons = () => {
 
   const generate3DImage = async () => {
     if (!state.sketchDataUrl) {
-      toast.error("Please provide a sketch or upload an image first");
+      toast.error("Please generate a sketch first");
       return;
     }
 
@@ -126,104 +128,66 @@ export const GenerateButtons = () => {
     }
   };
 
-  const runAllAnalyses = async () => {
-    if (!state.title && !state.description) {
-      toast.error("Please provide a title and description first");
-      return;
-    }
-    
-    setIsLoading(prev => ({ ...prev, runAll: true }));
-    
-    try {
-      // Generate sketch
-      await generateSketch();
-      
-      // Wait a bit and then generate 3D
-      setTimeout(async () => {
-        if (state.sketchDataUrl) {
-          await generate3DImage();
-        }
-        
-        // Finally generate ThreeJS visualization
-        setTimeout(async () => {
-          await generateThreejsVisualization();
-          setIsLoading(prev => ({ ...prev, runAll: false }));
-          toast.success("All visualizations generated");
-        }, 1000);
-      }, 1000);
-    } catch (error) {
-      console.error("Error running all analyses:", error);
-      setIsLoading(prev => ({ ...prev, runAll: false }));
-      toast.error("Failed to complete all processes");
-    }
-  };
-
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Button
-          variant="outline"
-          onClick={generateSketch}
-          disabled={isLoading.sketch || (!state.title && !state.description)}
-          className="h-12 flex justify-center items-center"
-        >
-          {isLoading.sketch ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Pencil className="mr-2 h-4 w-4" />
-          )}
-          Generate Sketch
-        </Button>
+    <Card className="border-invention-accent/20">
+      <CardContent className="p-6">
+        <h3 className="text-lg font-medium mb-4">Visualization Tools</h3>
         
-        <Button
-          variant="outline"
-          onClick={generate3DImage}
-          disabled={isLoading.image || !state.sketchDataUrl}
-          className="h-12 flex justify-center items-center"
-        >
-          {isLoading.image ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Image className="mr-2 h-4 w-4" />
-          )}
-          Generate Image
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={generateThreejsVisualization}
-          disabled={isLoading.threejs || (!state.title && !state.description)}
-          className="h-12 flex justify-center items-center"
-        >
-          {isLoading.threejs ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Box className="mr-2 h-4 w-4" />
-          )}
-          Generate 3D Model
-        </Button>
-      </div>
-      
-      <PixelCard 
-        variant="rainbow" 
-        onClick={runAllAnalyses}
-        className="w-full mt-4 h-16"
-        active={isLoading.runAll}
-      >
-        <div className="text-center">
-          {isLoading.runAll ? (
-            <div className="animate-pulse">
-              <Loader2 className="mx-auto h-6 w-6 mb-2 animate-spin text-white" />
-              <p className="font-medium text-white">Running all processes...</p>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Button
+              variant="outline"
+              onClick={generateSketch}
+              disabled={isLoading.sketch || (!state.title && !state.description)}
+              className="h-16 flex flex-col justify-center items-center p-2 space-y-1"
+            >
+              {isLoading.sketch ? (
+                <Loader2 className="h-5 w-5 animate-spin mb-1" />
+              ) : (
+                <Pencil className="h-5 w-5 mb-1" />
+              )}
+              <span className="text-sm">Generate Sketch</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={generate3DImage}
+              disabled={isLoading.image || !state.sketchDataUrl}
+              className="h-16 flex flex-col justify-center items-center p-2 space-y-1"
+            >
+              {isLoading.image ? (
+                <Loader2 className="h-5 w-5 animate-spin mb-1" />
+              ) : (
+                <Image className="h-5 w-5 mb-1" />
+              )}
+              <span className="text-sm">Generate 3D Image</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={generateThreejsVisualization}
+              disabled={isLoading.threejs || (!state.title && !state.description)}
+              className="h-16 flex flex-col justify-center items-center p-2 space-y-1"
+            >
+              {isLoading.threejs ? (
+                <Loader2 className="h-5 w-5 animate-spin mb-1" />
+              ) : (
+                <Box className="h-5 w-5 mb-1" />
+              )}
+              <span className="text-sm">Generate 3D Model</span>
+            </Button>
+          </div>
+          
+          {state.threejsVisualization.html && (
+            <div className="mt-4 border p-4 rounded-lg">
+              <h4 className="text-sm font-medium mb-2">3D Visualization Preview</h4>
+              <div className="bg-gray-50 p-2 rounded-lg overflow-hidden" style={{ height: "300px" }}>
+                <div dangerouslySetInnerHTML={{ __html: state.threejsVisualization.html }} />
+              </div>
             </div>
-          ) : (
-            <>
-              <Zap className="mx-auto h-6 w-6 mb-2 text-white" />
-              <p className="font-medium text-white">Run All Analysis</p>
-            </>
           )}
         </div>
-      </PixelCard>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

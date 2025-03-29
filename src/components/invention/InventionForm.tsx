@@ -1,24 +1,29 @@
 
 import { useInvention } from "@/contexts/InventionContext";
 import { MultimodalInputArea } from "./MultimodalInputArea";
-import { AiAssistantPanel } from "./AiAssistantPanel";
-import { InputSelectionCard } from "./InputSelectionCard";
 import { IdeaGenerator } from "@/components/IdeaGenerator";
 import { useState, useEffect } from "react";
 import { 
   Image, 
   Package, 
-  LightbulbIcon, 
-  Bot
+  Lightbulb, 
+  Bot,
+  FileText,
+  Beaker,
+  BarChart3,
+  Skull
 } from "lucide-react";
-import { GenerateButtons } from "./GenerateButtons";
-import PixelCard from "../ui/PixelCard";
-import { Visualization3DViewer } from "./Visualization3DViewer";
+import { InventionRepository } from "./InventionRepository";
+import { VisualizationTools } from "./VisualizationTools";
+import { AnalysisTools } from "./AnalysisTools";
 import { DevilsAdvocate } from "../devils-advocate/DevilsAdvocate";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const InventionForm = () => {
   const { state } = useInvention();
-  const [showResults, setShowResults] = useState(true);
+  const [showAnalysisTools, setShowAnalysisTools] = useState(false);
   
   // Check if an idea is present or analysis results exist to determine if we should show Devil's Advocate
   const hasIdea = Boolean(state.title || state.description);
@@ -31,65 +36,87 @@ export const InventionForm = () => {
   // Always show Devils Advocate if we have analysis results
   const showDevilsAdvocate = hasIdea || hasAnalysisResults;
   
+  // Check if we have complete information to enable experiment and analysis tools
+  const hasCompleteInfo = Boolean(state.title && state.description);
+  
+  const handleCompileData = () => {
+    if (!state.title || !state.description) {
+      toast.error("Please provide both a title and description for your invention");
+      return;
+    }
+    
+    setShowAnalysisTools(true);
+    toast.success("Data compiled successfully! You can now experiment and analyze your invention.");
+  };
+  
   return (
     <div className="space-y-8 overflow-x-hidden">
-      <div className="border border-invention-accent/20 rounded-lg p-4 pb-8 relative max-h-[800px] overflow-hidden bg-gradient-to-br from-invention-paper to-white" id="invention-design-container">
-        <h2 className="text-xl font-semibold font-leonardo mb-6 text-invention-ink">Design Your Invention</h2>
+      {/* Design Section */}
+      <div className="border border-invention-accent/20 rounded-lg p-4 pb-8 relative bg-gradient-to-br from-invention-paper to-white" id="invention-design-container">
+        <h2 className="text-xl font-semibold font-leonardo mb-2 text-invention-ink flex items-center gap-2">
+          <FileText className="h-5 w-5 text-invention-accent" />
+          Design Your Invention
+        </h2>
+        <p className="text-sm text-muted-foreground mb-4">Provide details about your invention concept</p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[650px] overflow-y-auto custom-scrollbar">
-          <InputSelectionCard
-            id="sketch"
-            title="Visual Input"
-            description="Upload or draw your invention concept"
-            icon={<Image className="h-6 w-6" />}
-            variant="green"
-          >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
             <MultimodalInputArea />
-          </InputSelectionCard>
+          </div>
           
-          <InputSelectionCard
-            id="idea"
-            title="Idea Generator"
-            description="Get inspiration for your invention"
-            icon={<LightbulbIcon className="h-6 w-6" />}
-            variant="yellow"
+          <div>
+            <InventionRepository />
+          </div>
+        </div>
+        
+        <div className="mt-6 flex justify-center">
+          <Button 
+            onClick={handleCompileData}
+            className="bg-invention-accent hover:bg-invention-accent/90 text-white font-medium w-full sm:w-auto py-6 px-8"
+            size="lg"
+            disabled={!hasCompleteInfo}
           >
-            <IdeaGenerator sketchDataUrl={state.sketchDataUrl || undefined} />
-          </InputSelectionCard>
-          
-          {state.visualization3dUrl && (
-            <InputSelectionCard
-              id="3d"
-              title="3D Visualization"
-              description="View your invention in 3D space"
-              icon={<Package className="h-6 w-6" />}
-              variant="purple"
-            >
-              <Visualization3DViewer />
-            </InputSelectionCard>
-          )}
+            Compile Invention Data
+          </Button>
         </div>
       </div>
       
-      {/* Generate buttons section */}
-      <div className="border border-invention-accent/20 rounded-lg p-4 bg-gradient-to-br from-invention-paper to-white">
-        <h2 className="text-xl font-semibold font-leonardo mb-4 text-invention-ink">Generate Visualizations</h2>
-        <GenerateButtons />
-      </div>
-      
-      <div className="border border-invention-accent/20 rounded-lg p-4 bg-gradient-to-br from-invention-paper to-white">
-        <div className="flex items-center mb-4">
-          <h2 className="text-xl font-semibold font-leonardo flex items-center gap-2 text-invention-ink">
-            <Bot className="h-5 w-5 text-invention-accent" />
-            AI Assistant
+      {/* Experiment Section - only show if we have complete info */}
+      {showAnalysisTools && (
+        <div className="border border-invention-accent/20 rounded-lg p-4 pb-8 relative bg-gradient-to-br from-invention-paper to-white">
+          <h2 className="text-xl font-semibold font-leonardo mb-2 text-invention-ink flex items-center gap-2">
+            <Beaker className="h-5 w-5 text-invention-accent" />
+            Experiment
           </h2>
+          <p className="text-sm text-muted-foreground mb-4">Generate visualizations for your invention</p>
+          
+          <VisualizationTools />
         </div>
-        <AiAssistantPanel onAnalysisComplete={() => setShowResults(true)} />
-      </div>
+      )}
+      
+      {/* Analysis Section - only show if we have complete info */}
+      {showAnalysisTools && (
+        <div className="border border-invention-accent/20 rounded-lg p-4 pb-8 relative bg-gradient-to-br from-invention-paper to-white">
+          <h2 className="text-xl font-semibold font-leonardo mb-2 text-invention-ink flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-invention-accent" />
+            Analyze
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">Run analysis tools on your invention</p>
+          
+          <AnalysisTools />
+        </div>
+      )}
       
       {/* Devil's Advocate section - Only show when an idea exists or we have analysis results */}
-      {showDevilsAdvocate && (
+      {showDevilsAdvocate && showAnalysisTools && (
         <div className="border border-invention-accent/20 rounded-lg overflow-hidden bg-gradient-to-br from-invention-paper to-white">
+          <div className="p-4">
+            <h2 className="text-xl font-semibold font-leonardo mb-2 text-invention-ink flex items-center gap-2">
+              <Skull className="h-5 w-5 text-invention-red" />
+              Devil's Advocate
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">Critical analysis of your invention</p>
+          </div>
           <DevilsAdvocate />
         </div>
       )}
