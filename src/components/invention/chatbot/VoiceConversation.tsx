@@ -39,17 +39,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
 
   // Setup the widget and event listeners
   useEffect(() => {
-    // Create a container for the widget if not already existing
-    let container = document.getElementById('elevenlabs-convai-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'elevenlabs-convai-container';
-      container.style.width = '100%';
-      container.style.marginBottom = '20px';
-      document.getElementById('elevenlabs-widget-mount-point')?.appendChild(container);
-    }
-
-    // Add the widget element if not already added
+    // Create and append the widget element directly
     if (!document.querySelector('elevenlabs-convai')) {
       const widget = document.createElement('elevenlabs-convai');
       widget.setAttribute('agent-id', agentId);
@@ -60,7 +50,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
         widget.setAttribute('system-prompt', systemPrompt);
       }
       
-      container.appendChild(widget);
+      document.getElementById('elevenlabs-widget-direct-mount')?.appendChild(widget);
       
       // Add the script if not already added
       if (!document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]')) {
@@ -94,7 +84,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
 
   return (
     <div className="flex flex-col items-center space-y-4 w-full">
-      <div id="elevenlabs-widget-mount-point" className="w-full">
+      <div id="elevenlabs-widget-direct-mount" className="w-full">
         {!widgetLoaded && (
           <div className="text-center p-4">
             <div className="animate-spin h-8 w-8 border-4 border-invention-accent rounded-full border-t-transparent mx-auto"></div>

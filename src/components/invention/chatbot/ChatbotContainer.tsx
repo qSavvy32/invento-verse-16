@@ -31,7 +31,7 @@ export const ChatbotContainer = () => {
           <ChatInterface />
         </TabsContent>
         
-        <TabsContent value="voice" className="border rounded-lg p-6">
+        <TabsContent value="voice" className="border rounded-lg p-6" id="elevenlabs-widget-direct-mount">
           <VoiceConversation 
             agentId={VINCI_AGENT_ID}
             onConversationEnd={handleVoiceConversationEnd}
