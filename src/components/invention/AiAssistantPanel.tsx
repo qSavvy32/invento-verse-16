@@ -15,7 +15,8 @@ import {
   BarChart,
   Construction,
   Box,
-  Inspect 
+  Inspect,
+  Box3D
 } from "lucide-react";
 
 interface AiAssistantPanelProps {
@@ -23,7 +24,7 @@ interface AiAssistantPanelProps {
 }
 
 export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) => {
-  const { state, updateVisualizations, update3DVisualization, setAnalysisResults } = useInvention();
+  const { state, updateVisualizations, update3DVisualization, setAnalysisResults, setThreejsVisualization } = useInvention();
   const [selectedAnalysis, setSelectedAnalysis] = useState<string>("technical");
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({
     technical: false,
@@ -34,6 +35,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
     ip: false,
     regulatory: false,
     visualization: false,
+    threejs: false,
   });
   const [customPrompt, setCustomPrompt] = useState("");
   
@@ -63,27 +65,38 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       
       console.log(`Analysis result for ${analysisType}:`, data);
       
+      // Add timestamp to the analysis results
+      const timestamp = new Date().toLocaleTimeString();
+      const results = Array.isArray(data[analysisType]) 
+        ? data[analysisType].map((item: string) => `${item}`)
+        : [];
+      
+      // Prepend timestamp and analysis type to the first result
+      if (results.length > 0) {
+        results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+      }
+      
       // Handle the response differently based on the analysis type
       if (analysisType === "technical") {
-        setAnalysisResults("technical", data.technical || []);
+        setAnalysisResults("technical", [...state.analysisResults.technical, ...results]);
       } else if (analysisType === "challenges") {
-        setAnalysisResults("technical", data.technical || []);
+        setAnalysisResults("technical", [...state.analysisResults.technical, ...results]);
       } else if (analysisType === "materials") {
-        setAnalysisResults("technical", data.technical || []);
+        setAnalysisResults("technical", [...state.analysisResults.technical, ...results]);
       } else if (analysisType === "users") {
-        setAnalysisResults("market", data.market || []);
+        setAnalysisResults("market", [...state.analysisResults.market, ...results]);
       } else if (analysisType === "competition") {
-        setAnalysisResults("market", data.market || []);
+        setAnalysisResults("market", [...state.analysisResults.market, ...results]);
       } else if (analysisType === "ip") {
-        setAnalysisResults("legal", data.legal || []);
+        setAnalysisResults("legal", [...state.analysisResults.legal, ...results]);
       } else if (analysisType === "regulatory") {
-        setAnalysisResults("legal", data.legal || []);
+        setAnalysisResults("legal", [...state.analysisResults.legal, ...results]);
       } else if (analysisType === "comprehensive") {
-        // Set all categories
-        if (data.technical) setAnalysisResults("technical", data.technical);
-        if (data.market) setAnalysisResults("market", data.market);
-        if (data.legal) setAnalysisResults("legal", data.legal);
-        if (data.business) setAnalysisResults("business", data.business);
+        // Append to all categories
+        if (data.technical) setAnalysisResults("technical", [...state.analysisResults.technical, ...data.technical]);
+        if (data.market) setAnalysisResults("market", [...state.analysisResults.market, ...data.market]);
+        if (data.legal) setAnalysisResults("legal", [...state.analysisResults.legal, ...data.legal]);
+        if (data.business) setAnalysisResults("business", [...state.analysisResults.business, ...data.business]);
       }
       
       onAnalysisComplete();
@@ -144,6 +157,52 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       });
     } finally {
       setIsLoading(prev => ({ ...prev, visualization: false }));
+    }
+  };
+  
+  const generateThreejsVisualization = async () => {
+    // Don't proceed if there's not enough data
+    if (!state.title && !state.description) {
+      toast.error("Please provide a title and description first");
+      return;
+    }
+    
+    setIsLoading(prev => ({ ...prev, threejs: true }));
+    
+    try {
+      toast.info("Generating 3D visualization with Claude...", {
+        description: "This may take a minute to complete"
+      });
+      
+      const { data, error } = await supabase.functions.invoke("generate-threejs-visualization", {
+        body: {
+          title: state.title,
+          description: state.description,
+          sketchDataUrl: state.sketchDataUrl
+        }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      console.log("ThreeJS visualization result:", data);
+      
+      if (data?.visualization_code && data?.visualization_html) {
+        setThreejsVisualization(data.visualization_code, data.visualization_html);
+        toast.success("ThreeJS visualization generated", {
+          description: "The 3D model is now available below"
+        });
+      } else {
+        throw new Error("No visualization code returned");
+      }
+    } catch (error) {
+      console.error("Error generating ThreeJS visualization:", error);
+      toast.error("ThreeJS visualization failed", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
+    } finally {
+      setIsLoading(prev => ({ ...prev, threejs: false }));
     }
   };
   
@@ -253,7 +312,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
         <Button 
           onClick={() => generate3DVisualization()} 
           disabled={isLoading.visualization}
@@ -264,6 +323,20 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Lightbulb className="mr-2 h-4 w-4" />
+          )}
+          <span>Generate AI Image</span>
+        </Button>
+        
+        <Button
+          onClick={() => generateThreejsVisualization()}
+          disabled={isLoading.threejs}
+          variant="outline"
+          className="flex items-center"
+        >
+          {isLoading.threejs ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Box3D className="mr-2 h-4 w-4" />
           )}
           <span>Generate 3D Visualization</span>
         </Button>

@@ -15,7 +15,7 @@ import {
   UsersIcon,
   LightbulbIcon,
   ShieldAlertIcon,
-  Devil,
+  Skull,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,7 +96,7 @@ export const DevilsAdvocate = () => {
           </>
         ) : (
           <>
-            <Devil className="mr-2 h-4 w-4" />
+            <Skull className="mr-2 h-4 w-4" />
             Devil's Advocate Critique
           </>
         )}
@@ -106,7 +106,7 @@ export const DevilsAdvocate = () => {
         <Card className="border-red-200 bg-red-50">
           <CardHeader className="pb-2">
             <CardTitle className="text-red-800 flex items-center gap-2">
-              <Devil className="h-5 w-5" />
+              <Skull className="h-5 w-5" />
               Devil's Advocate Critique
             </CardTitle>
             <CardDescription>Challenging your assumptions</CardDescription>

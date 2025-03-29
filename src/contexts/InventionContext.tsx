@@ -16,6 +16,10 @@ export interface InventionState {
   visualization3dUrl: string | null;
   visualizationPrompts: VisualizationPrompts;
   savedToDatabase: boolean;
+  threejsVisualization: {
+    code: string | null;
+    html: string | null;
+  };
   analysisResults: {
     technical: string[];
     market: string[];
@@ -31,6 +35,7 @@ type InventionAction =
   | { type: 'UPDATE_3D_VISUALIZATION'; payload: string | null }
   | { type: 'UPDATE_VISUALIZATIONS'; payload: VisualizationPrompts }
   | { type: 'SAVE_TO_DATABASE'; payload: boolean }
+  | { type: 'SET_THREEJS_VISUALIZATION'; payload: { code: string | null; html: string | null } }
   | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } };
 
 interface InventionContextType {
@@ -41,6 +46,7 @@ interface InventionContextType {
   update3DVisualization: (dataUrl: string | null) => void;
   updateVisualizations: (prompts: VisualizationPrompts) => void;
   saveToDatabase: (saved: boolean) => void;
+  setThreejsVisualization: (code: string | null, html: string | null) => void;
   setAnalysisResults: (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => void;
 }
 
@@ -52,6 +58,10 @@ const initialState: InventionState = {
   visualization3dUrl: null,
   visualizationPrompts: {},
   savedToDatabase: false,
+  threejsVisualization: {
+    code: null,
+    html: null
+  },
   analysisResults: {
     technical: [],
     market: [],
@@ -75,6 +85,8 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
       return { ...state, visualizationPrompts: { ...state.visualizationPrompts, ...action.payload } };
     case 'SAVE_TO_DATABASE':
       return { ...state, savedToDatabase: action.payload };
+    case 'SET_THREEJS_VISUALIZATION':
+      return { ...state, threejsVisualization: action.payload };
     case 'SET_ANALYSIS_RESULTS':
       return { 
         ...state, 
@@ -101,6 +113,8 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
   const update3DVisualization = (dataUrl: string | null) => dispatch({ type: 'UPDATE_3D_VISUALIZATION', payload: dataUrl });
   const updateVisualizations = (prompts: VisualizationPrompts) => dispatch({ type: 'UPDATE_VISUALIZATIONS', payload: prompts });
   const saveToDatabase = (saved: boolean) => dispatch({ type: 'SAVE_TO_DATABASE', payload: saved });
+  const setThreejsVisualization = (code: string | null, html: string | null) => 
+    dispatch({ type: 'SET_THREEJS_VISUALIZATION', payload: { code, html } });
   const setAnalysisResults = (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => 
     dispatch({ type: 'SET_ANALYSIS_RESULTS', payload: { category, results } });
 
@@ -114,6 +128,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         update3DVisualization,
         updateVisualizations,
         saveToDatabase,
+        setThreejsVisualization,
         setAnalysisResults
       }}
     >

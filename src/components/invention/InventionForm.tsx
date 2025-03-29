@@ -21,7 +21,7 @@ import {
   Download, 
   ListTodo, 
   Image, 
-  Cube, 
+  Box3D, 
   LightbulbIcon, 
   Bot 
 } from "lucide-react";
@@ -106,7 +106,7 @@ export const InventionForm = () => {
               {state.visualization3dUrl && (
                 <SelectItem value="3d">
                   <div className="flex items-center gap-2">
-                    <Cube className="h-4 w-4" />
+                    <Box3D className="h-4 w-4" />
                     <span>3D Visualization</span>
                   </div>
                 </SelectItem>

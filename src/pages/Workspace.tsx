@@ -2,10 +2,14 @@
 import { AuthHeader } from "@/components/AuthHeader";
 import { Footer } from "@/components/Footer";
 import { InventionForm } from "@/components/invention/InventionForm";
-import { InventionContextProvider } from "@/contexts/InventionContext";
+import { InventionContextProvider, useInvention } from "@/contexts/InventionContext";
 import { DevilsAdvocate } from "@/components/DevilsAdvocate";
+import { ThreejsVisualizer } from "@/components/invention/ThreejsVisualizer";
+import { Box3D } from "lucide-react";
 
-const Workspace = () => {
+const WorkspaceContent = () => {
+  const { state } = useInvention();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <AuthHeader />
@@ -20,22 +24,38 @@ const Workspace = () => {
           </p>
         </div>
         
-        <InventionContextProvider>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <InventionForm />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <InventionForm />
             
-            <div className="lg:col-span-1">
-              <h2 className="text-xl font-semibold mb-4">Critical Feedback</h2>
-              <DevilsAdvocate />
-            </div>
+            {state.threejsVisualization.html && (
+              <div className="mt-8">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Box3D className="h-5 w-5" />
+                  3D Visualization
+                </h2>
+                <ThreejsVisualizer />
+              </div>
+            )}
           </div>
-        </InventionContextProvider>
+          
+          <div className="lg:col-span-1">
+            <h2 className="text-xl font-semibold mb-4">Critical Feedback</h2>
+            <DevilsAdvocate />
+          </div>
+        </div>
       </main>
       
       <Footer />
     </div>
+  );
+};
+
+const Workspace = () => {
+  return (
+    <InventionContextProvider>
+      <WorkspaceContent />
+    </InventionContextProvider>
   );
 };
 
