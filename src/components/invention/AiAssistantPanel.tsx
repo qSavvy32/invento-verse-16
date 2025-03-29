@@ -15,8 +15,27 @@ interface AiAssistantPanelProps {
 
 export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) => {
   const { state, setAnalysisResults, update3DVisualization, updateVisualizations } = useInvention();
-  const [analyzing, setAnalyzing] = useState(false);
-  const [generating3D, setGenerating3D] = useState(false);
+  
+  // Track which specific analyses are loading with an object instead of a single boolean
+  const [loadingAnalyses, setLoadingAnalyses] = useState<{
+    challenges: boolean;
+    materials: boolean;
+    visualization3D: boolean;
+    users: boolean;
+    competition: boolean;
+    ip: boolean;
+    regulatory: boolean;
+    comprehensive: boolean;
+  }>({
+    challenges: false,
+    materials: false,
+    visualization3D: false,
+    users: false,
+    competition: false,
+    ip: false,
+    regulatory: false,
+    comprehensive: false,
+  });
   
   // Generic function to run analysis with different types
   const runAnalysis = async (analysisType: string) => {
@@ -27,7 +46,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       return;
     }
     
-    setAnalyzing(true);
+    // Set only the specific analysis type as loading
+    setLoadingAnalyses(prev => ({ ...prev, [analysisType]: true }));
     
     try {
       // Call our Supabase Edge Function with the specified analysis type
@@ -181,6 +201,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         description: `${analysisType.charAt(0).toUpperCase() + analysisType.slice(1)} analysis completed successfully.`
       });
       
+      // Explicitly call onAnalysisComplete to ensure results are shown
       onAnalysisComplete();
     } catch (error) {
       console.error(`Error running ${analysisType} analysis:`, error);
@@ -188,7 +209,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
     } finally {
-      setAnalyzing(false);
+      // Only reset the loading state for the specific analysis type
+      setLoadingAnalyses(prev => ({ ...prev, [analysisType]: false }));
     }
   };
   
@@ -200,7 +222,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       return;
     }
     
-    setGenerating3D(true);
+    setLoadingAnalyses(prev => ({ ...prev, visualization3D: true }));
     
     try {
       // For demonstration purposes, we'll simulate this with a timeout
@@ -230,7 +252,10 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           description: "Your sketch has been transformed into a 3D visualization."
         });
         
-        setGenerating3D(false);
+        setLoadingAnalyses(prev => ({ ...prev, visualization3D: false }));
+        
+        // Make sure the 3D visualization is shown
+        onAnalysisComplete();
       }, 3000);
       
     } catch (error) {
@@ -238,7 +263,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       toast.error("Visualization failed", {
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
-      setGenerating3D(false);
+      setLoadingAnalyses(prev => ({ ...prev, visualization3D: false }));
     }
   };
   
@@ -259,17 +284,17 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             <Button 
               className="w-full" 
               onClick={() => runAnalysis("challenges")}
-              disabled={analyzing}
+              disabled={loadingAnalyses.challenges}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
+              {loadingAnalyses.challenges ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
               Identify Challenges
             </Button>
             <Button 
               className="w-full" 
               onClick={() => runAnalysis("materials")}
-              disabled={analyzing}
+              disabled={loadingAnalyses.materials}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+              {loadingAnalyses.materials ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
               Suggest Materials
             </Button>
             
@@ -278,9 +303,9 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
                 className="w-full" 
                 variant="secondary"
                 onClick={generate3DVisualization}
-                disabled={generating3D}
+                disabled={loadingAnalyses.visualization3D}
               >
-                {generating3D ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Box className="mr-2 h-4 w-4" />}
+                {loadingAnalyses.visualization3D ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Box className="mr-2 h-4 w-4" />}
                 Generate 3D Visualization
               </Button>
             )}
@@ -290,17 +315,17 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             <Button 
               className="w-full" 
               onClick={() => runAnalysis("users")}
-              disabled={analyzing}
+              disabled={loadingAnalyses.users}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Users className="mr-2 h-4 w-4" />}
+              {loadingAnalyses.users ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Users className="mr-2 h-4 w-4" />}
               Target Users
             </Button>
             <Button 
               className="w-full" 
               onClick={() => runAnalysis("competition")}
-              disabled={analyzing}
+              disabled={loadingAnalyses.competition}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+              {loadingAnalyses.competition ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
               Competition Research
             </Button>
           </TabsContent>
@@ -309,25 +334,25 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             <Button 
               className="w-full" 
               onClick={() => runAnalysis("ip")}
-              disabled={analyzing}
+              disabled={loadingAnalyses.ip}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
+              {loadingAnalyses.ip ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
               Patent Search
             </Button>
             <Button 
               className="w-full" 
               onClick={() => runAnalysis("ip")}
-              disabled={analyzing}
+              disabled={loadingAnalyses.ip}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
+              {loadingAnalyses.ip ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
               IP Protection Tips
             </Button>
             <Button 
               className="w-full" 
               onClick={() => runAnalysis("regulatory")}
-              disabled={analyzing}
+              disabled={loadingAnalyses.regulatory}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+              {loadingAnalyses.regulatory ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
               Regulatory Checklist
             </Button>
           </TabsContent>
@@ -338,9 +363,9 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             className="w-full" 
             variant="default" 
             onClick={() => runAnalysis("comprehensive")}
-            disabled={analyzing}
+            disabled={loadingAnalyses.comprehensive}
           >
-            {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {loadingAnalyses.comprehensive ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : null}
             Analyze with Claude 3 Sonnet
           </Button>
           
@@ -348,9 +373,9 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             className="w-full" 
             variant="secondary" 
             onClick={() => runAnalysis("comprehensive")}
-            disabled={analyzing}
+            disabled={loadingAnalyses.comprehensive}
           >
-            {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <BarChart3 className="mr-2 h-4 w-4" />}
+            {loadingAnalyses.comprehensive ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <BarChart3 className="mr-2 h-4 w-4" />}
             Generate Comprehensive Analysis
           </Button>
         </div>

@@ -86,7 +86,7 @@ serve(async (req) => {
 
     console.log(`Sending request to Anthropic API for ${analysisType} analysis...`);
 
-    // Make request to Anthropic API
+    // Make request to Anthropic API - correct format with system as a top-level parameter
     const response = await anthropic.messages.create({
       model: "claude-3-sonnet-20240229",
       system: systemPrompt,
