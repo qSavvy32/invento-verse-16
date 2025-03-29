@@ -3,10 +3,11 @@ import { useInvention } from "@/contexts/InventionContext";
 import { CameraInput } from "@/components/camera/CameraInput";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, Upload, Mic } from "lucide-react";
+import { Camera, Upload, Mic, Globe } from "lucide-react";
 import { FileUploader } from "@/components/upload/FileUploader";
 import { useStorageSetup } from "@/hooks/useStorageSetup";
 import { VoiceInput } from "@/components/VoiceInput";
+import { UrlScraper } from "@/components/invention/UrlScraper";
 
 export const MultimodalInputArea = () => {
   const { updateSketchData, updateDescription, addAsset } = useInvention();
@@ -36,18 +37,18 @@ export const MultimodalInputArea = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="camera" className="space-y-4">
-          <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="camera" className="flex items-center gap-2">
-              <Camera size={16} />
+          <TabsList className="grid grid-cols-4">
+            <TabsTrigger value="camera" icon={<Camera size={16} />}>
               Camera
             </TabsTrigger>
-            <TabsTrigger value="upload" className="flex items-center gap-2">
-              <Upload size={16} />
+            <TabsTrigger value="upload" icon={<Upload size={16} />}>
               Upload Files
             </TabsTrigger>
-            <TabsTrigger value="voice" className="flex items-center gap-2">
-              <Mic size={16} />
+            <TabsTrigger value="voice" icon={<Mic size={16} />}>
               Voice
+            </TabsTrigger>
+            <TabsTrigger value="scraper" icon={<Globe size={16} />}>
+              Web Scraper
             </TabsTrigger>
           </TabsList>
           
@@ -69,6 +70,10 @@ export const MultimodalInputArea = () => {
                 <VoiceInput onTranscriptionComplete={handleVoiceTranscription} />
               </div>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="scraper">
+            <UrlScraper onAddAsset={addAsset} />
           </TabsContent>
         </Tabs>
       </CardContent>
