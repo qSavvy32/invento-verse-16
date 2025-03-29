@@ -11,7 +11,6 @@ import {
   BookOpenIcon 
 } from "lucide-react";
 import { MarkdownContent } from "./analysis/MarkdownContent";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AnalysisCardProps {
   title: string;
@@ -41,7 +40,7 @@ const AnalysisCard = ({ title, icon, results, timestamp }: AnalysisCardProps) =>
       </CardHeader>
       {isOpen && (
         <CardContent className="p-4 pt-2">
-          <div className="max-h-[200px] overflow-y-auto pr-2">
+          <div className="max-h-[180px] overflow-y-auto pr-2 custom-scrollbar">
             <ul className="list-disc pl-5 space-y-2">
               {results.map((result, index) => (
                 <li key={index} className="markdown-content">
@@ -126,7 +125,7 @@ export const AnalysisResults = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Analysis Results</h2>
-      <div className="h-[400px] overflow-y-auto pr-2 space-y-4">
+      <div className="h-[360px] overflow-y-auto overflow-x-hidden pr-2 space-y-4 custom-scrollbar">
         {analysisCards.map(card => {
           let title = "";
           let icon = null;

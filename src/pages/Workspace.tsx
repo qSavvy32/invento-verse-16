@@ -25,10 +25,10 @@ const WorkspaceContent = () => {
           </p>
         </div>
         
-        <div className="mb-16 max-w-full">
+        <div className="mb-16 max-w-full overflow-x-hidden">
           <InventionForm />
             
-          <div className="mt-8 max-h-[600px]">
+          <div className="mt-8 max-h-[500px] overflow-hidden">
             <AnalysisResults />
           </div>
           

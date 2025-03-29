@@ -1,3 +1,4 @@
+
 import { useInvention } from "@/contexts/InventionContext";
 import { MultimodalInputArea } from "./MultimodalInputArea";
 import { AiAssistantPanel } from "./AiAssistantPanel";
@@ -12,7 +13,6 @@ import {
   Zap
 } from "lucide-react";
 import { GenerateButtons } from "./GenerateButtons";
-import { Button } from "../ui/button";
 import PixelCard from "../ui/PixelCard";
 import { Visualization3DViewer } from "./Visualization3DViewer";
 import { DevilsAdvocate } from "../devils-advocate/DevilsAdvocate";
@@ -25,11 +25,11 @@ export const InventionForm = () => {
   const hasIdea = Boolean(state.title || state.description);
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 overflow-x-hidden">
       <div className="border rounded-lg p-4 pb-8 relative max-h-[800px] overflow-hidden" id="invention-design-container">
         <h2 className="text-xl font-semibold mb-6">Design Your Invention</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[700px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[650px] overflow-y-auto custom-scrollbar">
           <InputSelectionCard
             id="sketch"
             title="Visual Input"
@@ -87,7 +87,9 @@ export const InventionForm = () => {
             <Zap className="h-5 w-5" />
             Devil's Advocate
           </h2>
-          <DevilsAdvocate />
+          <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+            <DevilsAdvocate />
+          </div>
         </div>
       )}
     </div>
