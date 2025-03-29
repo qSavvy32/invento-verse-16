@@ -46,20 +46,17 @@ serve(async (req) => {
       );
     }
 
-    // Check if ElevenLabs API key is set and appears to be valid
-    if (!ELEVENLABS_API_KEY) {
+    // Validate ElevenLabs API key
+    if (!ELEVENLABS_API_KEY || ELEVENLABS_API_KEY.trim() === "") {
       console.error("ElevenLabs API key is not configured");
       throw new Error("ElevenLabs API key is not configured");
     }
-    
-    // Basic validation: ElevenLabs API keys typically start with specific patterns
-    if (!ELEVENLABS_API_KEY.match(/^[a-zA-Z0-9]{32,}$/)) {
-      console.error("ElevenLabs API key appears to be invalid (incorrect format)");
-      throw new Error("ElevenLabs API key appears to be invalid");
-    }
 
+    // Sanitize and log API key presence (only showing prefix/suffix for security)
+    const keyPrefix = ELEVENLABS_API_KEY.substring(0, 4);
+    const keySuffix = ELEVENLABS_API_KEY.substring(ELEVENLABS_API_KEY.length - 4);
     console.log(`Converting text to speech with ElevenLabs API, language: ${language || 'default'}`);
-    console.log(`Using API key: ${ELEVENLABS_API_KEY.substring(0, 4)}...${ELEVENLABS_API_KEY.substring(ELEVENLABS_API_KEY.length - 4)}`);
+    console.log(`Using API key starting with: ${keyPrefix}*** ending with: ***${keySuffix}`);
 
     // Configure request parameters
     const requestParams: any = {
@@ -96,7 +93,15 @@ serve(async (req) => {
       console.error(`ElevenLabs API error: ${response.status}`);
       const errorText = await response.text();
       console.error(`Error details: ${errorText}`);
-      throw new Error(`ElevenLabs API error: ${response.status}`);
+      
+      // Add more specific error messages based on status code
+      if (response.status === 401) {
+        throw new Error("ElevenLabs API authentication failed. Please check your API key.");
+      } else if (response.status === 429) {
+        throw new Error("ElevenLabs API rate limit exceeded. Please try again later.");
+      } else {
+        throw new Error(`ElevenLabs API error: ${response.status}`);
+      }
     }
 
     // Get audio data as array buffer
