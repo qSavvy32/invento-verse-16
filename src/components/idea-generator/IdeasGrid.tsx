@@ -4,6 +4,7 @@ import { IdeaCard } from "./IdeaCard";
 import { Button } from "@/components/ui/button";
 import { FlaskConicalIcon, ArrowRightIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useInvention } from "@/contexts/InventionContext";
 
 interface IdeasGridProps {
   generatedIdeas: Record<string, string[]>;
@@ -11,8 +12,15 @@ interface IdeasGridProps {
 
 export const IdeasGrid = ({ generatedIdeas }: IdeasGridProps) => {
   const navigate = useNavigate();
+  const { setAnalysisResults } = useInvention();
   
   const navigateToLab = () => {
+    // Save the generated ideas to the InventionContext before navigating
+    setAnalysisResults('technical', generatedIdeas.technical || []);
+    setAnalysisResults('market', generatedIdeas.market || []);
+    setAnalysisResults('legal', generatedIdeas.legal || []);
+    setAnalysisResults('business', generatedIdeas.business || []);
+    
     navigate("/create");
   };
   

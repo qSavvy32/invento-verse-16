@@ -31,22 +31,21 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
     handleCloseAuthPrompt
   } = useIdeaGeneration(sketchDataUrl);
   
+  // Try to use the InventionContext if available
+  let contextIsAvailable = false;
+  let inventionContext = { state: { title: "", description: "" }, updateTitle: (s: string) => {}, updateDescription: (s: string) => {} };
+  
+  try {
+    inventionContext = useInvention();
+    contextIsAvailable = true;
+  } catch (error) {
+    // Context not available, we'll use local state
+    contextIsAvailable = false;
+  }
+  
   // Add local state to handle the case when InventionContext is not available
   const [localTitle, setLocalTitle] = useState("");
   const [localDescription, setLocalDescription] = useState("");
-  
-  // Try to use the InventionContext if available, otherwise catch the error
-  const inventionContext = { state: { title: localTitle, description: localDescription }, updateTitle: setLocalTitle, updateDescription: setLocalDescription };
-  let contextIsAvailable = false;
-  
-  try {
-    const context = useInvention();
-    contextIsAvailable = true;
-    // If we get here, the context is available
-  } catch (error) {
-    // Context not available, we'll use the local state
-    contextIsAvailable = false;
-  }
   
   // Check if we should hide the form because results are showing
   const hasResults = Object.keys(generatedIdeas).length > 0;
@@ -97,7 +96,14 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
                       <Input
                         placeholder="Give your invention a name"
                         value={contextIsAvailable ? inventionContext.state.title : localTitle}
-                        onChange={(e) => contextIsAvailable ? inventionContext.updateTitle(e.target.value) : setLocalTitle(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (contextIsAvailable) {
+                            inventionContext.updateTitle(value);
+                          } else {
+                            setLocalTitle(value);
+                          }
+                        }}
                         className="text-base font-semibold"
                       />
                     </div>
@@ -106,7 +112,14 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
                       <Textarea
                         placeholder="Describe your invention..."
                         value={contextIsAvailable ? inventionContext.state.description : localDescription}
-                        onChange={(e) => contextIsAvailable ? inventionContext.updateDescription(e.target.value) : setLocalDescription(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (contextIsAvailable) {
+                            inventionContext.updateDescription(value);
+                          } else {
+                            setLocalDescription(value);
+                          }
+                        }}
                         className="min-h-[80px] max-h-[120px] text-sm"
                       />
                     </div>

@@ -23,10 +23,10 @@ export const DevilsAdvocate = () => {
   
   return (
     <div className="space-y-6 w-full">
-      <Card className="border-red-200 bg-red-50/10">
+      <Card className="border-invention-red/30 bg-white">
         <CardHeader className="pb-2">
-          <CardTitle className="text-red-500 flex items-center gap-2 text-xl">
-            <Skull className="h-5 w-5 text-red-500" />
+          <CardTitle className="text-invention-red flex items-center gap-2 text-xl font-leonardo">
+            <Skull className="h-5 w-5 text-invention-red" />
             Devil's Advocate
           </CardTitle>
         </CardHeader>
