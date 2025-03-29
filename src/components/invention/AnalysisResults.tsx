@@ -41,7 +41,7 @@ const AnalysisCard = ({ title, icon, results, timestamp }: AnalysisCardProps) =>
       </CardHeader>
       {isOpen && (
         <CardContent className="p-4 pt-2">
-          <ScrollArea className="max-h-[250px]" type="always">
+          <div className="max-h-[200px] overflow-y-auto pr-2">
             <ul className="list-disc pl-5 space-y-2">
               {results.map((result, index) => (
                 <li key={index} className="markdown-content">
@@ -49,7 +49,7 @@ const AnalysisCard = ({ title, icon, results, timestamp }: AnalysisCardProps) =>
                 </li>
               ))}
             </ul>
-          </ScrollArea>
+          </div>
         </CardContent>
       )}
     </Card>
@@ -124,46 +124,42 @@ export const AnalysisResults = () => {
   }
   
   return (
-    <div className="space-y-6 mb-8">
+    <div className="space-y-4">
       <h2 className="text-xl font-semibold">Analysis Results</h2>
-      <div className="space-y-4 overflow-hidden">
-        <ScrollArea className="max-h-[600px]" type="always">
-          <div className="space-y-4 pr-4">
-            {analysisCards.map(card => {
-              let title = "";
-              let icon = null;
-              
-              switch (card.type) {
-                case 'technical':
-                  title = "Technical Analysis";
-                  icon = <CodeIcon className="h-4 w-4" />;
-                  break;
-                case 'market':
-                  title = "Market Analysis";
-                  icon = <BarChart2Icon className="h-4 w-4" />;
-                  break;
-                case 'legal':
-                  title = "Legal and IP Analysis";
-                  icon = <ScaleIcon className="h-4 w-4" />;
-                  break;
-                case 'business':
-                  title = "Business Strategy";
-                  icon = <BookOpenIcon className="h-4 w-4" />;
-                  break;
-              }
-              
-              return (
-                <AnalysisCard 
-                  key={card.id}
-                  title={title}
-                  icon={icon}
-                  results={card.results}
-                  timestamp={card.timestamp}
-                />
-              );
-            })}
-          </div>
-        </ScrollArea>
+      <div className="h-[400px] overflow-y-auto pr-2 space-y-4">
+        {analysisCards.map(card => {
+          let title = "";
+          let icon = null;
+          
+          switch (card.type) {
+            case 'technical':
+              title = "Technical Analysis";
+              icon = <CodeIcon className="h-4 w-4" />;
+              break;
+            case 'market':
+              title = "Market Analysis";
+              icon = <BarChart2Icon className="h-4 w-4" />;
+              break;
+            case 'legal':
+              title = "Legal and IP Analysis";
+              icon = <ScaleIcon className="h-4 w-4" />;
+              break;
+            case 'business':
+              title = "Business Strategy";
+              icon = <BookOpenIcon className="h-4 w-4" />;
+              break;
+          }
+          
+          return (
+            <AnalysisCard 
+              key={card.id}
+              title={title}
+              icon={icon}
+              results={card.results}
+              timestamp={card.timestamp}
+            />
+          );
+        })}
       </div>
     </div>
   );
