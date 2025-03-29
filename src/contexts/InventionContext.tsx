@@ -1,0 +1,109 @@
+
+import { createContext, useContext, useReducer, ReactNode } from 'react';
+
+// Types
+export interface InventionState {
+  title: string;
+  description: string;
+  sketchDataUrl: string | null;
+  savedToDatabase: boolean;
+  analysisResults: {
+    technical: string[];
+    market: string[];
+    legal: string[];
+    business: string[];
+  };
+}
+
+type InventionAction = 
+  | { type: 'UPDATE_TITLE'; payload: string }
+  | { type: 'UPDATE_DESCRIPTION'; payload: string }
+  | { type: 'UPDATE_SKETCH_DATA'; payload: string | null }
+  | { type: 'SAVE_TO_DATABASE'; payload: boolean }
+  | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } };
+
+interface InventionContextType {
+  state: InventionState;
+  updateTitle: (title: string) => void;
+  updateDescription: (description: string) => void;
+  updateSketchData: (dataUrl: string | null) => void;
+  saveToDatabase: (saved: boolean) => void;
+  setAnalysisResults: (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => void;
+}
+
+// Initial state
+const initialState: InventionState = {
+  title: '',
+  description: '',
+  sketchDataUrl: null,
+  savedToDatabase: false,
+  analysisResults: {
+    technical: [],
+    market: [],
+    legal: [],
+    business: []
+  }
+};
+
+// Reducer
+const inventionReducer = (state: InventionState, action: InventionAction): InventionState => {
+  switch (action.type) {
+    case 'UPDATE_TITLE':
+      return { ...state, title: action.payload };
+    case 'UPDATE_DESCRIPTION':
+      return { ...state, description: action.payload };
+    case 'UPDATE_SKETCH_DATA':
+      return { ...state, sketchDataUrl: action.payload };
+    case 'SAVE_TO_DATABASE':
+      return { ...state, savedToDatabase: action.payload };
+    case 'SET_ANALYSIS_RESULTS':
+      return { 
+        ...state, 
+        analysisResults: {
+          ...state.analysisResults,
+          [action.payload.category]: action.payload.results
+        }
+      };
+    default:
+      return state;
+  }
+};
+
+// Context
+const InventionContext = createContext<InventionContextType | undefined>(undefined);
+
+// Provider component
+export const InventionContextProvider = ({ children }: { children: ReactNode }) => {
+  const [state, dispatch] = useReducer(inventionReducer, initialState);
+
+  const updateTitle = (title: string) => dispatch({ type: 'UPDATE_TITLE', payload: title });
+  const updateDescription = (description: string) => dispatch({ type: 'UPDATE_DESCRIPTION', payload: description });
+  const updateSketchData = (dataUrl: string | null) => dispatch({ type: 'UPDATE_SKETCH_DATA', payload: dataUrl });
+  const saveToDatabase = (saved: boolean) => dispatch({ type: 'SAVE_TO_DATABASE', payload: saved });
+  const setAnalysisResults = (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => 
+    dispatch({ type: 'SET_ANALYSIS_RESULTS', payload: { category, results } });
+
+  return (
+    <InventionContext.Provider 
+      value={{ 
+        state, 
+        updateTitle, 
+        updateDescription, 
+        updateSketchData, 
+        saveToDatabase,
+        setAnalysisResults
+      }}
+    >
+      {children}
+    </InventionContext.Provider>
+  );
+};
+
+// Custom hook for using the context
+export const useInvention = () => {
+  const context = useContext(InventionContext);
+  if (context === undefined) {
+    throw new Error('useInvention must be used within an InventionContextProvider');
+  }
+  return context;
+};
