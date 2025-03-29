@@ -10,6 +10,7 @@ import {
   ScaleIcon, 
   BookOpenIcon 
 } from "lucide-react";
+import { MarkdownContent } from "./analysis/MarkdownContent";
 
 interface AnalysisCardProps {
   title: string;
@@ -39,9 +40,11 @@ const AnalysisCard = ({ title, icon, results, timestamp }: AnalysisCardProps) =>
       </CardHeader>
       {isOpen && (
         <CardContent className="p-4 pt-2">
-          <ul className="list-disc pl-5 space-y-1">
+          <ul className="list-disc pl-5 space-y-2">
             {results.map((result, index) => (
-              <li key={index}>{result}</li>
+              <li key={index} className="markdown-content">
+                <MarkdownContent content={result} />
+              </li>
             ))}
           </ul>
         </CardContent>

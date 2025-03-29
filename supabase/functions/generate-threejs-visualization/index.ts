@@ -26,7 +26,7 @@ serve(async (req) => {
   }
 
   try {
-    const { title, description, sketchDataUrl } = await req.json();
+    const { title, description, sketchDataUrl, outputFormat } = await req.json();
 
     // Validate required inputs
     if (!title && !description) {
@@ -54,7 +54,8 @@ serve(async (req) => {
       4. Include animation and mouse/touch controls for rotation
       5. Handle window resizing properly
       6. Be valid, production-ready JavaScript that runs without errors
-      7. NOT include any HTML, explanations, or content other than pure JavaScript code
+      7. Include helpful comments to explain what the code is doing
+      8. NOT include any HTML, explanations, or content other than pure JavaScript code
       
       Do not include any explanations or comments in your response, ONLY return the JavaScript code.`;
 
@@ -68,7 +69,8 @@ serve(async (req) => {
       Make sure the code uses modern ES6+ JavaScript.
       Include appropriate camera controls to allow users to interact with the 3D model.
       Ensure the scene has good lighting and shadows where appropriate.
-      Use appropriate colors and materials that match the invention's purpose.`;
+      Use appropriate colors and materials that match the invention's purpose.
+      Add detailed code comments to explain what each part does.`;
 
     if (sketchDataUrl) {
       userMessage += `\n\nThe inventor has also created a sketch of the invention which you should try to incorporate into your visualization.`;

@@ -5,6 +5,7 @@ import { InventionForm } from "@/components/invention/InventionForm";
 import { InventionContextProvider, useInvention } from "@/contexts/InventionContext";
 import { DevilsAdvocate } from "@/components/DevilsAdvocate";
 import { ThreejsVisualizer } from "@/components/invention/ThreejsVisualizer";
+import { AnalysisResults } from "@/components/invention/AnalysisResults";
 import { Package } from "lucide-react";
 
 const WorkspaceContent = () => {
@@ -27,6 +28,11 @@ const WorkspaceContent = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <InventionForm />
+            
+            {/* Show analysis results */}
+            <div className="mt-8">
+              <AnalysisResults />
+            </div>
             
             {state.threejsVisualization.html && (
               <div className="mt-8">
