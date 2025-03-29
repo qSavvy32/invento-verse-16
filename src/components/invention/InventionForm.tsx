@@ -19,7 +19,6 @@ import {
   LightbulbIcon, 
   Bot 
 } from "lucide-react";
-import { motion } from "framer-motion";
 
 export const InventionForm = () => {
   const { state, saveToDatabase } = useInvention();
@@ -53,7 +52,7 @@ export const InventionForm = () => {
   
   return (
     <div className="space-y-8">
-      <div className="border rounded-lg p-4">
+      <div className="border rounded-lg p-4 relative">
         <h2 className="text-xl font-semibold mb-6">Design Your Invention</h2>
         
         <div className="card-container">
