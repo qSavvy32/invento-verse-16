@@ -27,6 +27,11 @@ serve(async (req) => {
       );
     }
 
+    // Check if ElevenLabs API key is set
+    if (!ELEVENLABS_API_KEY) {
+      throw new Error("ElevenLabs API key is not configured");
+    }
+
     console.log(`Converting speech to text with ElevenLabs API, language: ${languageCode}`);
     
     // Prepare the request to ElevenLabs
@@ -55,7 +60,7 @@ serve(async (req) => {
     const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
       method: "POST",
       headers: {
-        "xi-api-key": ELEVENLABS_API_KEY as string,
+        "xi-api-key": ELEVENLABS_API_KEY,
       },
       body: formData,
     });

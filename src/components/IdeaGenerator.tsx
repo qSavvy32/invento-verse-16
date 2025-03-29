@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -18,13 +18,17 @@ import {
   AwardIcon,
   PieChartIcon,
   SparklesIcon,
-  RocketIcon
+  RocketIcon,
+  ArrowRightIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { captureException } from "@/integrations/sentry";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { VoiceInput } from "./VoiceInput";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { AuthPrompt } from "./AuthPrompt";
 
 interface IdeaGeneratorProps {
   sketchDataUrl?: string;
@@ -35,8 +39,41 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedIdeas, setGeneratedIdeas] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
+  const [pendingVoiceInput, setPendingVoiceInput] = useState<string | null>(null);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Store pending input in sessionStorage so it persists across auth flow
+  useEffect(() => {
+    const storedInput = sessionStorage.getItem('pendingInventionInput');
+    if (storedInput) {
+      try {
+        const data = JSON.parse(storedInput);
+        setDescription(data.description || "");
+        
+        // If the user is authenticated and there's pending data, generate ideas
+        if (user && (data.description || data.sketchDataUrl)) {
+          generateIdeas(data.description, data.sketchDataUrl);
+          // Clear stored data after processing
+          sessionStorage.removeItem('pendingInventionInput');
+        }
+      } catch (e) {
+        console.error("Error parsing stored input:", e);
+        sessionStorage.removeItem('pendingInventionInput');
+      }
+    }
+  }, [user]);
   
   const handleVoiceTranscription = (text: string) => {
+    // If user is not authenticated, store the voice input for later
+    if (!user) {
+      setPendingVoiceInput(text);
+      setShowAuthPrompt(true);
+      return;
+    }
+    
     setDescription(prev => {
       // If there's already text, append the new text with a space
       if (prev.trim()) {
@@ -46,10 +83,32 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
     });
   };
   
+  // Save the current input to session storage before redirecting to auth
+  const saveInputAndRedirect = () => {
+    const inputData = {
+      description: pendingVoiceInput ? 
+        (description ? `${description} ${pendingVoiceInput}` : pendingVoiceInput) : 
+        description,
+      sketchDataUrl: sketchDataUrl
+    };
+    
+    sessionStorage.setItem('pendingInventionInput', JSON.stringify(inputData));
+    navigate("/auth");
+  };
+  
   // Generate ideas using Anthropic
-  const generateIdeas = async () => {
-    if (!description.trim() && !sketchDataUrl) {
+  const generateIdeas = async (inputDescription?: string, inputSketchUrl?: string) => {
+    const descToUse = inputDescription || description;
+    const sketchToUse = inputSketchUrl || sketchDataUrl;
+    
+    if (!descToUse.trim() && !sketchToUse) {
       toast.error("Please share your world-changing idea first");
+      return;
+    }
+    
+    // If user is not authenticated, prompt for auth
+    if (!user) {
+      setShowAuthPrompt(true);
       return;
     }
     
@@ -61,8 +120,8 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
       const { data, error } = await supabase.functions.invoke("analyze-invention", {
         body: {
           title: "Idea Generation",
-          description: description,
-          sketchDataUrl: sketchDataUrl,
+          description: descToUse,
+          sketchDataUrl: sketchToUse,
           analysisType: "comprehensive"
         }
       });
@@ -131,6 +190,12 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
     }
   };
   
+  // Close auth prompt and continue with text input only
+  const handleCloseAuthPrompt = () => {
+    setShowAuthPrompt(false);
+    setPendingVoiceInput(null);
+  };
+  
   return (
     <div className="py-16 px-6 bg-gradient-to-br from-invention-accent/10 to-invention-highlight/10 rounded-xl border border-invention-accent/20">
       <div className="max-w-3xl mx-auto space-y-8">
@@ -138,9 +203,9 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
           <div className="inline-flex items-center justify-center p-2 bg-invention-accent/20 rounded-full mb-2">
             <SparklesIcon className="h-8 w-8 text-invention-accent" />
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold font-leonardo text-invention-ink">What Will You Invent Today?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold font-leonardo text-invention-ink">Ignite Your Revolutionary Vision!</h2>
           <p className="text-lg text-invention-ink/80 max-w-2xl mx-auto">
-            Every groundbreaking invention begins with a simple question: <span className="italic">"What if?"</span> Share your vision for changing the world, and let's bring it to life together.
+            Every world-changing invention begins with a spark of imagination. What challenge will <span className="font-bold text-invention-accent">YOU</span> solve? How will your idea transform the future?
           </p>
         </div>
         
@@ -148,21 +213,21 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
           <CardHeader className="pb-2">
             <CardTitle className="text-xl text-invention-ink flex items-center">
               <RocketIcon className="h-5 w-5 mr-2 text-invention-accent" />
-              Your World-Changing Idea
+              Your Groundbreaking Concept
             </CardTitle>
             <CardDescription>
-              Describe the problem you want to solve and how your invention will make a difference
+              Share your vision, no matter how ambitious—we'll help bring it to life
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor="description" className="text-invention-ink font-medium">What's your revolutionary concept?</Label>
+                <Label htmlFor="description" className="text-invention-ink font-medium">What's your world-changing idea?</Label>
                 <VoiceInput onTranscriptionComplete={handleVoiceTranscription} />
               </div>
               <Textarea
                 id="description"
-                placeholder="I envision a world where... My invention solves... The impact would be..."
+                placeholder="I envision a solution that... My invention would revolutionize... The global impact would be..."
                 className="h-36 border-invention-accent/30 focus:border-invention-accent focus-visible:ring-invention-accent/20"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -187,20 +252,21 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
             )}
             
             <Button 
-              onClick={generateIdeas} 
+              onClick={() => generateIdeas()} 
               disabled={isGenerating}
-              className="w-full bg-invention-accent hover:bg-invention-accent/90 text-white font-medium shadow-sm"
+              className="w-full bg-invention-accent hover:bg-invention-accent/90 text-white font-medium shadow-sm group transition-all"
               size="lg"
             >
               {isGenerating ? (
                 <>
                   <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-                  Bringing your idea to life...
+                  Igniting Your Vision...
                 </>
               ) : (
                 <>
                   <LightbulbIcon className="mr-2 h-5 w-5" />
-                  Transform Your Vision Into Reality
+                  Transform Your Idea Into Reality
+                  <ArrowRightIcon className="ml-2 h-4 w-4 opacity-70 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
@@ -209,7 +275,7 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
         
         {Object.keys(generatedIdeas).length > 0 && (
           <div className="space-y-6">
-            <h3 className="text-2xl font-leonardo font-semibold text-center text-invention-ink">Your Invention Blueprint</h3>
+            <h3 className="text-2xl font-leonardo font-semibold text-center text-invention-ink">Your Innovation Blueprint</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               <Card className="da-vinci-note border-invention-accent/20 shadow-md transform transition-transform hover:scale-[1.01]">
                 <CardHeader className="pb-2 bg-invention-accent/10">
@@ -282,6 +348,14 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
           </div>
         )}
       </div>
+      
+      {/* Auth Prompt Dialog */}
+      {showAuthPrompt && (
+        <AuthPrompt 
+          onConfirm={saveInputAndRedirect}
+          onCancel={handleCloseAuthPrompt}
+        />
+      )}
     </div>
   );
 };

@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface VoiceInputProps {
   onTranscriptionComplete: (text: string) => void;
@@ -42,6 +43,7 @@ export const VoiceInput = ({ onTranscriptionComplete, className = "" }: VoiceInp
   const [language, setLanguage] = useState("eng");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const { user } = useAuth();
 
   const startRecording = async () => {
     try {
@@ -98,40 +100,44 @@ export const VoiceInput = ({ onTranscriptionComplete, className = "" }: VoiceInp
       reader.onloadend = async () => {
         const base64Audio = reader.result as string;
         
+        // Check if user is authenticated
+        if (!user) {
+          // If not authenticated, we'll still convert the audio to text
+          // but using the more reliable (and already working) voice-to-text function
+          // instead of the speech-to-text function that's failing
+          processAudioUnauthenticated(base64Audio);
+          return;
+        }
+        
         toast.loading("Transcribing your voice...", { id: "transcription" });
         
         try {
-          // Call our Supabase Edge Function for speech-to-text conversion
-          const { data, error } = await supabase.functions.invoke("speech-to-text", {
+          // First try with ElevenLabs speech-to-text
+          const { data: elevenLabsData, error: elevenLabsError } = await supabase.functions.invoke("speech-to-text", {
             body: { 
               audioData: base64Audio,
               languageCode: language
             }
           });
           
-          setIsProcessing(false);
-          
-          if (error) {
-            throw new Error(error.message);
+          if (elevenLabsError || !elevenLabsData?.text) {
+            console.log("ElevenLabs transcription failed, falling back to OpenAI:", elevenLabsError);
+            // Fall back to OpenAI voice-to-text
+            processAudioUnauthenticated(base64Audio);
+            return;
           }
           
-          if (data?.text) {
-            onTranscriptionComplete(data.text);
-            
-            toast.success("Voice transcribed", {
-              description: "Your spoken description has been added.",
-              id: "transcription"
-            });
-          } else {
-            throw new Error("No transcription returned");
-          }
-        } catch (error) {
-          console.error("Transcription error:", error);
           setIsProcessing(false);
-          toast.error("Transcription failed", { 
-            description: error instanceof Error ? error.message : "Failed to process your voice input.",
+          onTranscriptionComplete(elevenLabsData.text);
+          
+          toast.success("Voice transcribed", {
+            description: "Your spoken description has been added.",
             id: "transcription"
           });
+        } catch (error) {
+          console.error("Transcription error:", error);
+          // Fall back to OpenAI voice-to-text
+          processAudioUnauthenticated(base64Audio);
         }
       };
     } catch (error) {
@@ -139,6 +145,40 @@ export const VoiceInput = ({ onTranscriptionComplete, className = "" }: VoiceInp
       setIsProcessing(false);
       toast.error("Processing failed", {
         description: "There was an error processing your voice recording."
+      });
+    }
+  };
+  
+  const processAudioUnauthenticated = async (base64Audio: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-to-text", {
+        body: { 
+          audio: base64Audio.split(',')[1] || base64Audio
+        }
+      });
+      
+      setIsProcessing(false);
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      if (data?.text) {
+        onTranscriptionComplete(data.text);
+        
+        toast.success("Voice transcribed", {
+          description: "Your spoken description has been added.",
+          id: "transcription"
+        });
+      } else {
+        throw new Error("No transcription returned");
+      }
+    } catch (error) {
+      console.error("Fallback transcription error:", error);
+      setIsProcessing(false);
+      toast.error("Transcription failed", { 
+        description: error instanceof Error ? error.message : "Failed to process your voice input.",
+        id: "transcription"
       });
     }
   };
