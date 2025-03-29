@@ -1,104 +1,98 @@
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 
-import { createContext, useContext, useReducer, ReactNode, useCallback } from 'react';
-import { InventionService } from '@/services/InventionService';
-import { toast } from "sonner";
-
-// Types
-export interface VisualizationPrompts {
-  concept?: string;
-  materials?: string;
-  users?: string;
-  problem?: string;
-}
-
-export interface AudioTranscription {
-  audioUrl?: string;
-  language: string;
-  text: string;
-  timestamp: number;
-}
+export type AssetType =
+  | "image"
+  | "video"
+  | "audio"
+  | "document"
+  | "other";
 
 export interface InventionAsset {
-  id: string;
-  type: 'sketch' | 'image' | 'document' | '3d';
+  id?: string;
+  type: AssetType;
   url: string;
   thumbnailUrl?: string;
   name?: string;
   createdAt: number;
 }
 
-export interface GeneratedItem {
-  id: string;
-  type: 'sketch' | 'image' | 'business-strategy' | 'document' | '3d' | string;
-  url?: string | null;
-  svg?: string | null;
-  name?: string;
-  createdAt: number;
+export interface AudioTranscription {
+  text: string;
+  language: string;
+  audioUrl?: string;
+  timestamp: number;
+}
+
+export interface ThreejsVisualization {
+  code: string | null;
+  html: string | null;
+}
+
+export interface AnalysisResults {
+  technical: string[];
+  market: string[];
+  legal: string[];
+  business: string[];
+}
+
+// Add this to your type definitions
+export interface MostRecentGeneration {
+  type: 'sketch' | 'mockup' | 'marketing-image' | '3d-model' | 'business-strategy' | 'expert-feedback';
+  data: any;
+  timestamp: number;
 }
 
 export interface InventionState {
-  inventionId?: string;
+  inventionId: string | null;
   title: string;
   description: string;
-  sketchDataUrl: string | null; // Keeping for backward compatibility
-  assets: InventionAsset[]; // New array to store multiple assets
+  sketchDataUrl: string | null;
+  assets: InventionAsset[];
   visualization3dUrl: string | null;
-  visualizationPrompts: VisualizationPrompts;
+  visualizationPrompts: Record<string, string>;
   savedToDatabase: boolean;
-  threejsVisualization: {
-    code: string | null;
-    html: string | null;
-  };
+  threejsVisualization: ThreejsVisualization;
   businessStrategySvg: string | null;
-  mostRecentGeneration: GeneratedItem | null;
-  analysisResults: {
-    technical: string[];
-    market: string[];
-    legal: string[];
-    business: string[];
-  };
+  mostRecentGeneration: MostRecentGeneration | null;
+  analysisResults: AnalysisResults;
   audioTranscriptions: AudioTranscription[];
 }
 
-type InventionAction = 
-  | { type: 'UPDATE_TITLE'; payload: string }
-  | { type: 'UPDATE_DESCRIPTION'; payload: string | ((prev: string) => string) }
-  | { type: 'UPDATE_SKETCH_DATA'; payload: string | null }
-  | { type: 'ADD_ASSET'; payload: InventionAsset }
-  | { type: 'REMOVE_ASSET'; payload: string } // id of asset to remove
-  | { type: 'UPDATE_3D_VISUALIZATION'; payload: string | null }
-  | { type: 'UPDATE_VISUALIZATIONS'; payload: VisualizationPrompts }
-  | { type: 'SAVE_TO_DATABASE'; payload: boolean }
-  | { type: 'SET_THREEJS_VISUALIZATION'; payload: { code: string | null; html: string | null } }
-  | { type: 'SET_BUSINESS_STRATEGY_SVG'; payload: string | null }
-  | { type: 'SET_MOST_RECENT_GENERATION'; payload: GeneratedItem | null }
-  | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } }
-  | { type: 'ADD_AUDIO_TRANSCRIPTION'; payload: AudioTranscription }
-  | { type: 'LOAD_INVENTION'; payload: InventionState }
-  | { type: 'SET_INVENTION_ID'; payload: string };
-
-interface InventionContextType {
+export interface InventionContextType {
   state: InventionState;
+  setState: React.Dispatch<React.SetStateAction<InventionState>>;
   updateTitle: (title: string) => void;
-  updateDescription: (description: string | ((prev: string) => string)) => void;
-  updateSketchData: (dataUrl: string | null) => void;
+  updateDescription: (description: string) => void;
+  updateSketchDataUrl: (sketchDataUrl: string | null) => void;
   addAsset: (asset: InventionAsset) => void;
   removeAsset: (assetId: string) => void;
-  update3DVisualization: (dataUrl: string | null) => void;
-  updateVisualizations: (prompts: VisualizationPrompts) => void;
-  saveToDatabase: (showToast?: boolean) => Promise<void>;
-  loadInvention: (id: string) => Promise<boolean>;
-  setThreejsVisualization: (code: string | null, html: string | null) => void;
-  setBusinessStrategySvg: (svgData: string | null) => void;
-  setMostRecentGeneration: (item: GeneratedItem | null) => void;
-  setAnalysisResults: (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => void;
+  updateVisualization3dUrl: (visualization3dUrl: string | null) => void;
+  updateVisualizationPrompts: (
+    visualizationPrompts: Record<string, string>
+  ) => void;
+  saveToDatabase: (showToast?: boolean) => Promise<string | null>;
+  loadInvention: (id: string) => Promise<void>;
+  resetState: () => void;
+  updateThreejsCode: (code: string | null) => void;
+  updateThreejsHtml: (html: string | null) => void;
+  updateBusinessStrategySvg: (svg: string | null) => void;
+  addAnalysisResult: (type: keyof AnalysisResults, result: string) => void;
+  clearAnalysisResults: () => void;
   addAudioTranscription: (transcription: AudioTranscription) => void;
+  updateMostRecentGeneration: (generation: MostRecentGeneration) => void;
 }
 
-// Initial state
+// Define the initial state
 const initialState: InventionState = {
-  title: '',
-  description: '',
+  inventionId: null,
+  title: "",
+  description: "",
   sketchDataUrl: null,
   assets: [],
   visualization3dUrl: null,
@@ -106,7 +100,7 @@ const initialState: InventionState = {
   savedToDatabase: false,
   threejsVisualization: {
     code: null,
-    html: null
+    html: null,
   },
   businessStrategySvg: null,
   mostRecentGeneration: null,
@@ -114,200 +108,210 @@ const initialState: InventionState = {
     technical: [],
     market: [],
     legal: [],
-    business: []
+    business: [],
   },
-  audioTranscriptions: []
+  audioTranscriptions: [],
 };
 
-// Reducer
-const inventionReducer = (state: InventionState, action: InventionAction): InventionState => {
-  switch (action.type) {
-    case 'UPDATE_TITLE':
-      return { ...state, title: action.payload };
-    case 'UPDATE_DESCRIPTION': {
-      const newDescription = typeof action.payload === 'function' 
-        ? action.payload(state.description) 
-        : action.payload;
-      return { ...state, description: newDescription };
-    }
-    case 'UPDATE_SKETCH_DATA':
-      return { ...state, sketchDataUrl: action.payload };
-    case 'ADD_ASSET':
-      return { 
-        ...state, 
-        assets: [...state.assets, action.payload] 
-      };
-    case 'REMOVE_ASSET':
-      return {
-        ...state,
-        assets: state.assets.filter(asset => asset.id !== action.payload)
-      };
-    case 'UPDATE_3D_VISUALIZATION':
-      return { ...state, visualization3dUrl: action.payload };
-    case 'UPDATE_VISUALIZATIONS':
-      return { ...state, visualizationPrompts: { ...state.visualizationPrompts, ...action.payload } };
-    case 'SAVE_TO_DATABASE':
-      return { ...state, savedToDatabase: action.payload };
-    case 'SET_THREEJS_VISUALIZATION':
-      return { ...state, threejsVisualization: action.payload };
-    case 'SET_BUSINESS_STRATEGY_SVG':
-      return { ...state, businessStrategySvg: action.payload };
-    case 'SET_MOST_RECENT_GENERATION':
-      return { ...state, mostRecentGeneration: action.payload };
-    case 'SET_ANALYSIS_RESULTS':
-      return { 
-        ...state, 
-        analysisResults: {
-          ...state.analysisResults,
-          [action.payload.category]: action.payload.results
-        }
-      };
-    case 'ADD_AUDIO_TRANSCRIPTION':
-      return {
-        ...state,
-        audioTranscriptions: [...state.audioTranscriptions, action.payload]
-      };
-    case 'LOAD_INVENTION':
-      return action.payload;
-    case 'SET_INVENTION_ID':
-      return { ...state, inventionId: action.payload };
-    default:
-      return state;
-  }
-};
-
-// Context
 const InventionContext = createContext<InventionContextType | undefined>(undefined);
 
-// Provider component
-export const InventionContextProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(inventionReducer, initialState);
+export const InventionContextProvider = ({ children }: { children: React.ReactNode }) => {
+  const [state, setState] = useState<InventionState>(initialState);
 
-  const updateTitle = (title: string) => dispatch({ type: 'UPDATE_TITLE', payload: title });
-  
-  const updateDescription = (descriptionOrFn: string | ((prev: string) => string)) => 
-    dispatch({ type: 'UPDATE_DESCRIPTION', payload: descriptionOrFn });
-  
-  const updateSketchData = (dataUrl: string | null) => dispatch({ type: 'UPDATE_SKETCH_DATA', payload: dataUrl });
-  
-  const addAsset = (asset: InventionAsset) => dispatch({ type: 'ADD_ASSET', payload: asset });
-  
-  const removeAsset = (assetId: string) => dispatch({ type: 'REMOVE_ASSET', payload: assetId });
-  
-  const update3DVisualization = (dataUrl: string | null) => dispatch({ type: 'UPDATE_3D_VISUALIZATION', payload: dataUrl });
-  
-  const updateVisualizations = (prompts: VisualizationPrompts) => dispatch({ type: 'UPDATE_VISUALIZATIONS', payload: prompts });
-  
-  const saveToDatabase = useCallback(async (showToast: boolean = false): Promise<void> => {
-    try {
-      if (showToast) {
-        toast.loading("Saving your invention...");
-      }
-      
-      const inventionId = await InventionService.saveInvention(state);
-      
-      if (inventionId && inventionId !== state.inventionId) {
-        dispatch({ type: 'SET_INVENTION_ID', payload: inventionId });
-      }
-      
-      dispatch({ type: 'SAVE_TO_DATABASE', payload: true });
-      
-      if (showToast) {
-        toast.success("Invention saved successfully!", {
-          id: "saving-invention"
-        });
-      }
-    } catch (error) {
-      console.error("Error saving to database:", error);
-      
-      if (showToast) {
-        toast.error("Failed to save invention", {
-          id: "saving-invention",
-          description: error instanceof Error ? error.message : "An unexpected error occurred"
-        });
-      }
-      
-      throw error; // Re-throw the error to allow handling by caller
-    }
+  useEffect(() => {
+    console.log("Invention State updated:", state);
   }, [state]);
-  
-  const loadInvention = useCallback(async (id: string): Promise<boolean> => {
-    try {
-      toast.loading("Loading your invention...");
-      
-      const inventionData = await InventionService.getInventionById(id);
-      
-      if (!inventionData) {
-        toast.error("Invention not found", {
-          id: "loading-invention"
-        });
-        return false;
-      }
-      
-      dispatch({ type: 'LOAD_INVENTION', payload: inventionData });
-      
-      toast.success("Invention loaded successfully!", {
-        id: "loading-invention"
-      });
-      
-      return true;
-    } catch (error) {
-      console.error("Error loading invention:", error);
-      
-      toast.error("Failed to load invention", {
-        id: "loading-invention",
-        description: error instanceof Error ? error.message : "An unexpected error occurred"
-      });
-      
-      return false;
-    }
+
+  const updateTitle = useCallback((title: string) => {
+    setState((prevState) => ({ ...prevState, title }));
+  }, []);
+
+  const updateDescription = useCallback((description: string) => {
+    setState((prevState) => ({ ...prevState, description }));
+  }, []);
+
+  const updateSketchDataUrl = useCallback((sketchDataUrl: string | null) => {
+    setState((prevState) => ({ ...prevState, sketchDataUrl }));
+  }, []);
+
+  const addAsset = useCallback((asset: InventionAsset) => {
+    setState((prevState) => ({
+      ...prevState,
+      assets: [...prevState.assets, asset],
+    }));
+  }, []);
+
+  const removeAsset = useCallback((assetId: string) => {
+    setState((prevState) => ({
+      ...prevState,
+      assets: prevState.assets.filter((asset) => asset.id !== assetId),
+    }));
+  }, []);
+
+  const updateVisualization3dUrl = useCallback((visualization3dUrl: string | null) => {
+    setState((prevState) => ({ ...prevState, visualization3dUrl }));
+  }, []);
+
+  const updateVisualizationPrompts = useCallback(
+    (visualizationPrompts: Record<string, string>) => {
+      setState((prevState) => ({ ...prevState, visualizationPrompts }));
+    },
+    []
+  );
+
+  const updateThreejsCode = useCallback((code: string | null) => {
+    setState((prevState) => ({
+      ...prevState,
+      threejsVisualization: { ...prevState.threejsVisualization, code },
+    }));
+  }, []);
+
+  const updateThreejsHtml = useCallback((html: string | null) => {
+    setState((prevState) => ({
+      ...prevState,
+      threejsVisualization: { ...prevState.threejsVisualization, html },
+    }));
+  }, []);
+
+  const updateBusinessStrategySvg = useCallback((svg: string | null) => {
+    setState((prevState) => ({ ...prevState, businessStrategySvg: svg }));
+  }, []);
+
+  const addAnalysisResult = useCallback(
+    (type: keyof AnalysisResults, result: string) => {
+      setState((prevState) => ({
+        ...prevState,
+        analysisResults: {
+          ...prevState.analysisResults,
+          [type]: [...prevState.analysisResults[type], result],
+        },
+      }));
+    },
+    []
+  );
+
+  const clearAnalysisResults = useCallback(() => {
+    setState((prevState) => ({
+      ...prevState,
+      analysisResults: {
+        technical: [],
+        market: [],
+        legal: [],
+        business: [],
+      },
+    }));
+  }, []);
+
+  const addAudioTranscription = useCallback((transcription: AudioTranscription) => {
+    setState((prevState) => ({
+      ...prevState,
+      audioTranscriptions: [...prevState.audioTranscriptions, transcription],
+    }));
   }, []);
   
-  const setThreejsVisualization = (code: string | null, html: string | null) => 
-    dispatch({ type: 'SET_THREEJS_VISUALIZATION', payload: { code, html } });
-  
-  const setBusinessStrategySvg = (svgData: string | null) => 
-    dispatch({ type: 'SET_BUSINESS_STRATEGY_SVG', payload: svgData });
-  
-  const setMostRecentGeneration = (item: GeneratedItem | null) => 
-    dispatch({ type: 'SET_MOST_RECENT_GENERATION', payload: item });
-  
-  const setAnalysisResults = (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => 
-    dispatch({ type: 'SET_ANALYSIS_RESULTS', payload: { category, results } });
-  
-  const addAudioTranscription = (transcription: AudioTranscription) => 
-    dispatch({ type: 'ADD_AUDIO_TRANSCRIPTION', payload: transcription });
+  // Update the state with the most recent generation
+  const updateMostRecentGeneration = useCallback((generation: MostRecentGeneration) => {
+    setState(prevState => ({
+      ...prevState,
+      mostRecentGeneration: generation
+    }));
+  }, []);
+
+  const resetState = useCallback(() => {
+    setState(initialState);
+  }, []);
+
+  // Function to save the invention to the database
+  const saveToDatabase = useCallback(async (showToast: boolean = true): Promise<string | null> => {
+    try {
+      // Here you would call your InventionService to save the state
+      const save = async () => {
+        const { InventionService } = await import("@/services/InventionService");
+        return InventionService.saveInvention(state);
+      };
+
+      const inventionId = await save();
+
+      if (inventionId) {
+        setState((prevState) => ({ ...prevState, savedToDatabase: true, inventionId }));
+        if (showToast) {
+          const { toast } = await import("sonner");
+          toast.success("Invention saved successfully!");
+        }
+        return inventionId;
+      } else {
+        if (showToast) {
+          const { toast } = await import("sonner");
+          toast.error("Failed to save invention.");
+        }
+        return null;
+      }
+    } catch (error: any) {
+      console.error("Error saving invention:", error);
+      const { toast } = await import("sonner");
+      toast.error(error.message || "Failed to save invention.");
+      return null;
+    }
+  }, [state]);
+
+  // Function to load an invention from the database
+  const loadInvention = useCallback(async (id: string) => {
+    try {
+      // Here you would call your InventionService to load the state
+      const load = async () => {
+        const { InventionService } = await import("@/services/InventionService");
+        return InventionService.getInventionById(id);
+      };
+
+      const loadedState = await load();
+
+      if (loadedState) {
+        setState(loadedState);
+      } else {
+        const { toast } = await import("sonner");
+        toast.error("Failed to load invention.");
+      }
+    } catch (error) {
+      console.error("Error loading invention:", error);
+      const { toast } = await import("sonner");
+      toast.error("Failed to load invention.");
+    }
+  }, []);
+
+  // Add updateMostRecentGeneration to the context value
+  const value = {
+    state,
+    setState,
+    updateTitle,
+    updateDescription,
+    updateSketchDataUrl,
+    addAsset,
+    removeAsset,
+    updateVisualization3dUrl,
+    updateVisualizationPrompts,
+    saveToDatabase,
+    loadInvention,
+    resetState,
+    updateThreejsCode,
+    updateThreejsHtml,
+    updateBusinessStrategySvg,
+    addAnalysisResult,
+    clearAnalysisResults,
+    addAudioTranscription,
+    updateMostRecentGeneration,
+  };
 
   return (
-    <InventionContext.Provider 
-      value={{ 
-        state, 
-        updateTitle, 
-        updateDescription, 
-        updateSketchData, 
-        addAsset,
-        removeAsset,
-        update3DVisualization,
-        updateVisualizations,
-        saveToDatabase,
-        loadInvention,
-        setThreejsVisualization,
-        setBusinessStrategySvg,
-        setMostRecentGeneration,
-        setAnalysisResults,
-        addAudioTranscription
-      }}
-    >
+    <InventionContext.Provider value={value}>
       {children}
     </InventionContext.Provider>
   );
 };
 
-// Custom hook for using the context
 export const useInvention = () => {
   const context = useContext(InventionContext);
-  if (context === undefined) {
-    throw new Error('useInvention must be used within an InventionContextProvider');
+  if (!context) {
+    throw new Error("useInvention must be used within a InventionContextProvider");
   }
   return context;
 };

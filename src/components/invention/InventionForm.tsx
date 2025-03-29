@@ -3,7 +3,7 @@ import { MultimodalInputArea } from "@/components/invention/MultimodalInputArea"
 import { InventionRepository } from "@/components/invention/InventionRepository";
 import { VisualizationTools } from "@/components/invention/VisualizationTools";
 import { AnalysisTools } from "@/components/invention/AnalysisTools";
-import { DevilsAdvocate } from "@/components/devils-advocate/DevilsAdvocate";
+import { PanelOfExperts } from "@/components/panel-of-experts/PanelOfExperts";
 import { useInvention } from "@/contexts/InventionContext";
 import { AutoSave } from "./AutoSave";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,12 +42,12 @@ export const InventionForm = () => {
                 <AnalysisTools />
               </div>
               <div>
-                <Tabs defaultValue="devils-advocate" className="w-full">
+                <Tabs defaultValue="panel-of-experts" className="w-full">
                   <TabsList className="grid w-full grid-cols-1">
-                    <TabsTrigger value="devils-advocate">Devil's Advocate</TabsTrigger>
+                    <TabsTrigger value="panel-of-experts">Panel of Experts</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="devils-advocate">
-                    <DevilsAdvocate />
+                  <TabsContent value="panel-of-experts">
+                    <PanelOfExperts />
                   </TabsContent>
                 </Tabs>
               </div>

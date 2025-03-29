@@ -7,23 +7,41 @@ import { useVoiceRecorder } from "./voice/useVoiceRecorder";
 interface VoiceInputProps {
   onTranscriptionComplete: (text: string) => void;
   className?: string;
+  language?: string;
+  onLanguageChange?: (language: string) => void;
 }
 
-export const VoiceInput = ({ onTranscriptionComplete, className = "" }: VoiceInputProps) => {
+export const VoiceInput = ({ 
+  onTranscriptionComplete, 
+  className = "",
+  language,
+  onLanguageChange
+}: VoiceInputProps) => {
   const {
     isRecording,
     isProcessing,
-    language,
-    setLanguage,
+    language: recorderLanguage,
+    setLanguage: setRecorderLanguage,
     startRecording,
     stopRecording
   } = useVoiceRecorder({ onTranscriptionComplete });
 
+  // Use the passed language if provided, otherwise use the recorder's language
+  const currentLanguage = language !== undefined ? language : recorderLanguage;
+  
+  // Handle language change
+  const handleLanguageChange = (value: string) => {
+    setRecorderLanguage(value);
+    if (onLanguageChange) {
+      onLanguageChange(value);
+    }
+  };
+
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <LanguageSelector 
-        value={language} 
-        onChange={setLanguage} 
+        value={currentLanguage} 
+        onChange={handleLanguageChange} 
       />
       
       <Button
