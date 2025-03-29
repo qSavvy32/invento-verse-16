@@ -9,7 +9,11 @@ import { generateVoiceSystemPrompt } from "./voicePromptUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Define the types we need from @11labs/react instead of using module augmentation
+// Define the types we need from @11labs/react
+type Language = 
+  | "en" | "de" | "pl" | "es" | "it" | "fr" | "pt" | "hi" | "ar" | "zh" | "tr"
+  | "ja" | "ko" | "ru" | "nl" | "cs";
+
 interface UseConversationOptions {
   clientTools?: Record<string, (...args: any[]) => any>;
   overrides?: {
@@ -18,7 +22,7 @@ interface UseConversationOptions {
         prompt?: string;
       };
       firstMessage?: string;
-      language?: string;
+      language?: Language;
     };
     tts?: {
       voiceId?: string;
@@ -160,7 +164,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
                 prompt: systemPrompt,
               },
               firstMessage: "Hi, I'm Vinci, your invention assistant. Tell me about your invention idea, and I'll help you develop it.",
-              language: "en",
+              language: "en" as Language, // Type assertion to ensure this is treated as a Language
             },
             tts: {
               voiceId: "JBFqnCBsd6RMkjVDRZzb", // George voice
