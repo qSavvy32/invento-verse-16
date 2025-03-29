@@ -14,8 +14,8 @@ type Language =
   | "en" | "de" | "pl" | "es" | "it" | "fr" | "pt" | "hi" | "ar" | "zh" | "tr"
   | "ja" | "ko" | "ru" | "nl" | "cs";
 
-// Updated status type to include "connecting" state
-type Status = "connecting" | "connected" | "disconnected";
+// Updated status type to include all possible states from the library
+type Status = "connecting" | "connected" | "disconnecting" | "disconnected";
 
 interface UseConversationOptions {
   clientTools?: Record<string, (...args: any[]) => any>;
@@ -38,7 +38,7 @@ interface UseConversationOptions {
 }
 
 interface ConversationHookResult {
-  status: Status; // Updated to use the Status type that includes "connecting"
+  status: Status;
   isSpeaking: boolean;
   startSession: (options: { url?: string; agentId?: string }) => Promise<string>;
   endSession: () => Promise<void>;
