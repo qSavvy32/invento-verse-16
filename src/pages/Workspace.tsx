@@ -8,8 +8,8 @@ import { InventionContextProvider, useInvention } from "@/contexts/InventionCont
 import { ThreejsVisualizer } from "@/components/invention/ThreejsVisualizer";
 import { AnalysisResults } from "@/components/invention/AnalysisResults";
 import { BusinessStrategyViewer } from "@/components/invention/BusinessStrategyViewer";
+import { VinciAssistant } from "@/components/invention/VinciAssistant";
 import { Package, FlaskConicalIcon, BarChart4 } from "lucide-react";
-import { toast } from "sonner";
 
 const WorkspaceContent = () => {
   const { state, loadInvention } = useInvention();
@@ -48,6 +48,9 @@ const WorkspaceContent = () => {
             Experiment, test, and perfect your invention with advanced AI tools
           </p>
         </div>
+        
+        {/* Vinci Assistant at the top */}
+        <VinciAssistant />
         
         <div className="mb-16 max-w-full overflow-hidden">
           <InventionForm />
