@@ -6,6 +6,8 @@ import { AiAssistantPanel } from "./AiAssistantPanel";
 import { AnalysisResults } from "./AnalysisResults";
 import { Visualization3DViewer } from "./Visualization3DViewer";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export const InventionForm = () => {
   const { state, saveToDatabase } = useInvention();
@@ -16,8 +18,7 @@ export const InventionForm = () => {
     console.log("Saving draft:", state);
     saveToDatabase(true);
     // Show success toast
-    toast({
-      title: "Draft saved",
+    toast.success("Draft saved", {
       description: "Your invention has been saved as a draft.",
     });
   };
@@ -33,8 +34,7 @@ export const InventionForm = () => {
     downloadAnchorNode.remove();
     
     // Show success toast
-    toast({
-      title: "Export successful",
+    toast.success("Export successful", {
       description: "Your invention has been exported as JSON.",
     });
   };
@@ -65,7 +65,3 @@ export const InventionForm = () => {
     </div>
   );
 };
-
-// Import these at the top of the file
-import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";

@@ -20,9 +20,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   
   const runAnthropicAnalysis = async () => {
     if (!state.title && !state.description) {
-      toast("Missing information", {
-        description: "Please provide at least a title or description for your invention.",
-        variant: "destructive"
+      toast.error("Missing information", {
+        description: "Please provide at least a title or description for your invention."
       });
       return;
     }
@@ -72,16 +71,15 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       setAnalysisResults('legal', legalResults);
       setAnalysisResults('business', businessResults);
       
-      toast("Analysis complete", {
+      toast.success("Analysis complete", {
         description: "AI analysis completed successfully."
       });
       
       onAnalysisComplete();
     } catch (error) {
       console.error("Error running analysis:", error);
-      toast("Analysis failed", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive"
+      toast.error("Analysis failed", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
     } finally {
       setAnalyzing(false);
@@ -90,9 +88,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   
   const generate3DVisualization = async () => {
     if (!state.sketchDataUrl) {
-      toast("Missing sketch", {
-        description: "Please create a sketch first to generate a 3D visualization.",
-        variant: "destructive"
+      toast.error("Missing sketch", {
+        description: "Please create a sketch first to generate a 3D visualization."
       });
       return;
     }
@@ -123,7 +120,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         // Use the same sketch as a placeholder for the 3D visualization
         update3DVisualization(state.sketchDataUrl);
         
-        toast("3D visualization generated", {
+        toast.success("3D visualization generated", {
           description: "Your sketch has been transformed into a 3D visualization."
         });
         
@@ -132,9 +129,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       
     } catch (error) {
       console.error("Error generating 3D visualization:", error);
-      toast("Visualization failed", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive"
+      toast.error("Visualization failed", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
       setGenerating3D(false);
     }
@@ -143,9 +139,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   // Enhanced simulation functions with specific responses
   const simulateSuggestMaterials = () => {
     if (!state.title && !state.description) {
-      toast("Missing information", {
-        description: "Please provide at least a title or description for your invention.",
-        variant: "destructive"
+      toast.error("Missing information", {
+        description: "Please provide at least a title or description for your invention."
       });
       return;
     }
@@ -169,7 +164,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       updateVisualizations(visualizationPrompts);
       
       setAnalyzing(false);
-      toast("Materials suggested", {
+      toast.success("Materials suggested", {
         description: "AI has generated material recommendations for your invention."
       });
       
@@ -179,9 +174,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   
   const simulateIdentifyChallenges = () => {
     if (!state.title && !state.description) {
-      toast("Missing information", {
-        description: "Please provide at least a title or description for your invention.",
-        variant: "destructive"
+      toast.error("Missing information", {
+        description: "Please provide at least a title or description for your invention."
       });
       return;
     }
@@ -205,7 +199,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       updateVisualizations(visualizationPrompts);
       
       setAnalyzing(false);
-      toast("Challenges identified", {
+      toast.success("Challenges identified", {
         description: "AI has identified potential technical challenges for your invention."
       });
       
@@ -215,9 +209,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   
   const simulateTargetUsers = () => {
     if (!state.title && !state.description) {
-      toast("Missing information", {
-        description: "Please provide at least a title or description for your invention.",
-        variant: "destructive"
+      toast.error("Missing information", {
+        description: "Please provide at least a title or description for your invention."
       });
       return;
     }
@@ -241,7 +234,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       updateVisualizations(visualizationPrompts);
       
       setAnalyzing(false);
-      toast("Target users identified", {
+      toast.success("Target users identified", {
         description: "AI has identified potential target users for your invention."
       });
       
@@ -251,9 +244,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   
   const simulateCompetitionResearch = () => {
     if (!state.title && !state.description) {
-      toast("Missing information", {
-        description: "Please provide at least a title or description for your invention.",
-        variant: "destructive"
+      toast.error("Missing information", {
+        description: "Please provide at least a title or description for your invention."
       });
       return;
     }
@@ -277,7 +269,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       updateVisualizations(visualizationPrompts);
       
       setAnalyzing(false);
-      toast("Competition analyzed", {
+      toast.success("Competition analyzed", {
         description: "AI has analyzed market competition for your invention."
       });
       
@@ -287,9 +279,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   
   const simulateIpProtectionTips = () => {
     if (!state.title && !state.description) {
-      toast("Missing information", {
-        description: "Please provide at least a title or description for your invention.",
-        variant: "destructive"
+      toast.error("Missing information", {
+        description: "Please provide at least a title or description for your invention."
       });
       return;
     }
@@ -313,7 +304,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       updateVisualizations(visualizationPrompts);
       
       setAnalyzing(false);
-      toast("IP protection tips provided", {
+      toast.success("IP protection tips provided", {
         description: "AI has suggested intellectual property protection strategies."
       });
       
@@ -323,9 +314,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   
   const simulateRegulatoryChecklist = () => {
     if (!state.title && !state.description) {
-      toast("Missing information", {
-        description: "Please provide at least a title or description for your invention.",
-        variant: "destructive"
+      toast.error("Missing information", {
+        description: "Please provide at least a title or description for your invention."
       });
       return;
     }
@@ -349,7 +339,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       updateVisualizations(visualizationPrompts);
       
       setAnalyzing(false);
-      toast("Regulatory checklist generated", {
+      toast.success("Regulatory checklist generated", {
         description: "AI has identified potential regulatory requirements."
       });
       
@@ -360,9 +350,8 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
   // Comprehensive analysis properly implemented
   const simulateComprehensiveAnalysis = () => {
     if (!state.title && !state.description) {
-      toast("Missing information", {
-        description: "Please provide at least a title or description for your invention.",
-        variant: "destructive"
+      toast.error("Missing information", {
+        description: "Please provide at least a title or description for your invention."
       });
       return;
     }
@@ -419,7 +408,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       updateVisualizations(visualizationPrompts);
       
       setAnalyzing(false);
-      toast("Comprehensive analysis complete", {
+      toast.success("Comprehensive analysis complete", {
         description: "AI has analyzed all aspects of your invention."
       });
       
