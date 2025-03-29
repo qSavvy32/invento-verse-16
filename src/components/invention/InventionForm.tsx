@@ -1,3 +1,4 @@
+
 import { useInvention } from "@/contexts/InventionContext";
 import { InventionMetadata } from "./InventionMetadata";
 import { MultimodalInputArea } from "./MultimodalInputArea";
@@ -14,12 +15,20 @@ import {
   SelectTrigger,
   SelectValue 
 } from "@/components/ui/select";
+import { IdeaGenerator } from "@/components/IdeaGenerator";
+import { 
+  Save, 
+  Download, 
+  ListTodo, 
+  Image, 
+  Cube, 
+  LightbulbIcon, 
+  Bot 
+} from "lucide-react";
 
 export const InventionForm = () => {
   const { state, saveToDatabase } = useInvention();
   const [selectedSection, setSelectedSection] = useState("metadata");
-  
-  // Always keep all results
   const [showResults, setShowResults] = useState(true);
   
   const handleSaveDraft = () => {
@@ -48,35 +57,76 @@ export const InventionForm = () => {
     });
   };
   
+  const getInputSection = () => {
+    switch (selectedSection) {
+      case "metadata":
+        return <InventionMetadata />;
+      case "sketch":
+        return <MultimodalInputArea />;
+      case "idea":
+        return <IdeaGenerator sketchDataUrl={state.sketchDataUrl || undefined} />;
+      case "3d":
+        return state.visualization3dUrl ? <Visualization3DViewer /> : (
+          <div className="p-8 text-center border rounded-lg bg-muted/10">
+            <p>No 3D visualization available yet. Generate one in the AI Assistant panel.</p>
+          </div>
+        );
+      default:
+        return <InventionMetadata />;
+    }
+  };
+  
   return (
     <div className="space-y-8">
       <div className="border rounded-lg p-4">
-        <h2 className="text-xl font-semibold mb-4">Invention Details</h2>
+        <div className="mb-4">
+          <Select value={selectedSection} onValueChange={setSelectedSection}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select input type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="metadata" className="flex items-center">
+                <div className="flex items-center gap-2">
+                  <ListTodo className="h-4 w-4" />
+                  <span>Basic Information</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="sketch">
+                <div className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  <span>Visual Input</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="idea">
+                <div className="flex items-center gap-2">
+                  <LightbulbIcon className="h-4 w-4" />
+                  <span>Idea Generator</span>
+                </div>
+              </SelectItem>
+              {state.visualization3dUrl && (
+                <SelectItem value="3d">
+                  <div className="flex items-center gap-2">
+                    <Cube className="h-4 w-4" />
+                    <span>3D Visualization</span>
+                  </div>
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
         
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Select Input Type</label>
-            <Select value={selectedSection} onValueChange={setSelectedSection}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select input type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="metadata">Basic Information</SelectItem>
-                <SelectItem value="sketch">Visual Input</SelectItem>
-                {state.visualization3dUrl && <SelectItem value="3d">3D Visualization</SelectItem>}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="mt-4">
-            {selectedSection === "metadata" && <InventionMetadata />}
-            {selectedSection === "sketch" && <MultimodalInputArea />}
-            {selectedSection === "3d" && state.visualization3dUrl && <Visualization3DViewer />}
-          </div>
+        <div className="mt-4">
+          {getInputSection()}
         </div>
       </div>
       
       <div className="border rounded-lg p-4">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            AI Assistant
+          </h2>
+        </div>
         <AiAssistantPanel onAnalysisComplete={() => setShowResults(true)} />
       </div>
       
@@ -84,8 +134,14 @@ export const InventionForm = () => {
         <div className="flex justify-between mb-4">
           <h2 className="text-xl font-semibold">Save Your Work</h2>
           <div className="space-x-4">
-            <Button onClick={handleSaveDraft}>Save Draft</Button>
-            <Button variant="outline" onClick={handleExport}>Export</Button>
+            <Button onClick={handleSaveDraft}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Draft
+            </Button>
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
           </div>
         </div>
       </div>

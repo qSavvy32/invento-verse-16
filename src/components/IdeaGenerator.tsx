@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { captureException } from "@/integrations/sentry";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { VoiceInput } from "./VoiceInput";
 
 interface IdeaGeneratorProps {
   sketchDataUrl?: string;
@@ -32,6 +33,16 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedIdeas, setGeneratedIdeas] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
+  
+  const handleVoiceTranscription = (text: string) => {
+    setDescription(prev => {
+      // If there's already text, append the new text with a space
+      if (prev.trim()) {
+        return `${prev} ${text}`;
+      }
+      return text;
+    });
+  };
   
   // Generate ideas using Anthropic
   const generateIdeas = async () => {
@@ -121,7 +132,10 @@ export const IdeaGenerator = ({ sketchDataUrl }: IdeaGeneratorProps) => {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="description">Describe your invention idea</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="description">Describe your invention idea</Label>
+          <VoiceInput onTranscriptionComplete={handleVoiceTranscription} />
+        </div>
         <Textarea
           id="description"
           placeholder="Describe what problem your invention solves and how it works..."

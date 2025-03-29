@@ -3,6 +3,7 @@ import { AuthHeader } from "@/components/AuthHeader";
 import { Footer } from "@/components/Footer";
 import { InventionForm } from "@/components/invention/InventionForm";
 import { InventionContextProvider } from "@/contexts/InventionContext";
+import { DevilsAdvocate } from "@/components/DevilsAdvocate";
 
 const Workspace = () => {
   return (
@@ -20,7 +21,16 @@ const Workspace = () => {
         </div>
         
         <InventionContextProvider>
-          <InventionForm />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <InventionForm />
+            </div>
+            
+            <div className="lg:col-span-1">
+              <h2 className="text-xl font-semibold mb-4">Critical Feedback</h2>
+              <DevilsAdvocate />
+            </div>
+          </div>
         </InventionContextProvider>
       </main>
       
