@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useInvention } from "@/contexts/InventionContext";
@@ -15,7 +16,8 @@ import {
   Construction,
   Box,
   Inspect,
-  Package
+  Package,
+  Play
 } from "lucide-react";
 
 interface AiAssistantPanelProps {
@@ -35,6 +37,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
     regulatory: false,
     visualization: false,
     threejs: false,
+    runAll: false,
   });
   const [customPrompt, setCustomPrompt] = useState("");
   
@@ -104,6 +107,10 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             typeof challenge === 'string' ? challenge : `${challenge.challenge || 'Challenge'}: ${challenge.description || ''}`
           );
         }
+        // If we have analysis array (common format in edge function)
+        else if (data.analysis && Array.isArray(data.analysis)) {
+          technicalResults = data.analysis;
+        }
         // Raw text in analysis field
         else if (data.analysis && typeof data.analysis === 'string') {
           technicalResults = [data.analysis];
@@ -144,6 +151,9 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         else if (data.technical && Array.isArray(data.technical)) {
           results = data.technical;
         }
+        else if (data.analysis && Array.isArray(data.analysis)) {
+          results = data.analysis;
+        }
         else if (typeof data === 'object' && data !== null) {
           results = Object.entries(data)
             .filter(([key]) => key !== 'analysis_type' && key !== 'invention_title' && key !== 'invention_description')
@@ -173,6 +183,9 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         } 
         else if (data.market && Array.isArray(data.market)) {
           results = data.market;
+        }
+        else if (data.analysis && Array.isArray(data.analysis)) {
+          results = data.analysis;
         }
         else if (data.user_analysis && typeof data.user_analysis === 'object') {
           // Handle structured user analysis
@@ -226,6 +239,9 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         }
         else if (data.legal && Array.isArray(data.legal)) {
           results = data.legal;
+        }
+        else if (data.analysis && Array.isArray(data.analysis)) {
+          results = data.analysis;
         }
         else if (typeof data === 'object' && data !== null) {
           results = Object.entries(data)
@@ -332,6 +348,133 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
     }
   };
   
+  const runAllAnalyses = async () => {
+    if (!state.title && !state.description) {
+      toast.error("Please provide a title and description first");
+      return;
+    }
+    
+    setIsLoading(prev => ({ ...prev, runAll: true }));
+    toast.info("Running all analyses...", { 
+      description: "This may take a minute to complete" 
+    });
+    
+    try {
+      // Run all analyses one by one
+      const analysisTypes = ["technical", "users", "materials", "ip", "competition", "challenges"];
+      
+      for (const analysisType of analysisTypes) {
+        setIsLoading(prev => ({ ...prev, [analysisType]: true }));
+        
+        try {
+          console.log(`Starting ${analysisType} analysis in Run All`);
+          
+          const { data, error } = await supabase.functions.invoke("analyze-invention", {
+            body: {
+              title: state.title,
+              description: state.description,
+              sketchDataUrl: state.sketchDataUrl,
+              analysisType: analysisType
+            }
+          });
+          
+          if (error) {
+            console.error(`Error in ${analysisType} during Run All:`, error);
+            continue; // Skip to next analysis if this one fails
+          }
+          
+          console.log(`Analysis result for ${analysisType} in Run All:`, data);
+          
+          // Process results for this analysis type
+          const timestamp = new Date().toLocaleTimeString();
+          
+          // Handle different analysis types
+          if (analysisType === "technical" || analysisType === "challenges" || analysisType === "materials") {
+            let results: string[] = [];
+            
+            if (data.analysis && Array.isArray(data.analysis)) {
+              results = data.analysis;
+            } else if (data.engineering_challenges && Array.isArray(data.engineering_challenges)) {
+              results = data.engineering_challenges.map((c: any) => 
+                `${c.challenge || c.name || 'Challenge'}: ${c.description || c.explanation || ''}`);
+            } else if (data.technical && Array.isArray(data.technical)) {
+              results = data.technical;
+            } else if (typeof data === 'object' && data !== null) {
+              results = Object.entries(data)
+                .filter(([key]) => !['id', 'created_at', 'updated_at', 'analysis_type', 'invention_title', 'invention_description'].includes(key))
+                .map(([key, value]) => {
+                  if (typeof value === 'string') return `${key.replace(/_/g, ' ')}: ${value}`;
+                  if (Array.isArray(value)) return `${key.replace(/_/g, ' ')}: ${value.join(', ')}`;
+                  return `${key.replace(/_/g, ' ')}: ${JSON.stringify(value)}`;
+                });
+            }
+            
+            if (results.length > 0) {
+              results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+              setAnalysisResults("technical", [...state.analysisResults.technical, ...results]);
+            }
+          } else if (analysisType === "users" || analysisType === "competition") {
+            let results: string[] = [];
+            
+            if (data.analysis && Array.isArray(data.analysis)) {
+              results = data.analysis;
+            } else if (data.market && Array.isArray(data.market)) {
+              results = data.market;
+            } else if (typeof data === 'object' && data !== null) {
+              results = Object.entries(data)
+                .filter(([key]) => !['id', 'created_at', 'updated_at', 'analysis_type', 'invention_title', 'invention_description'].includes(key))
+                .map(([key, value]) => {
+                  if (typeof value === 'string') return `${key.replace(/_/g, ' ')}: ${value}`;
+                  if (Array.isArray(value)) return `${key.replace(/_/g, ' ')}: ${value.join(', ')}`;
+                  return `${key.replace(/_/g, ' ')}: ${JSON.stringify(value)}`;
+                });
+            }
+            
+            if (results.length > 0) {
+              results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+              setAnalysisResults("market", [...state.analysisResults.market, ...results]);
+            }
+          } else if (analysisType === "ip") {
+            let results: string[] = [];
+            
+            if (data.analysis && Array.isArray(data.analysis)) {
+              results = data.analysis;
+            } else if (data.legal && Array.isArray(data.legal)) {
+              results = data.legal;
+            } else if (typeof data === 'object' && data !== null) {
+              results = Object.entries(data)
+                .filter(([key]) => !['id', 'created_at', 'updated_at', 'analysis_type', 'invention_title', 'invention_description'].includes(key))
+                .map(([key, value]) => {
+                  if (typeof value === 'string') return `${key.replace(/_/g, ' ')}: ${value}`;
+                  if (Array.isArray(value)) return `${key.replace(/_/g, ' ')}: ${value.join(', ')}`;
+                  return `${key.replace(/_/g, ' ')}: ${JSON.stringify(value)}`;
+                });
+            }
+            
+            if (results.length > 0) {
+              results[0] = `[${timestamp} - ${analysisType}] ${results[0]}`;
+              setAnalysisResults("legal", [...state.analysisResults.legal, ...results]);
+            }
+          }
+        } catch (error) {
+          console.error(`Error in ${analysisType} during Run All:`, error);
+        } finally {
+          setIsLoading(prev => ({ ...prev, [analysisType]: false }));
+        }
+      }
+      
+      onAnalysisComplete();
+      toast.success("All analyses completed");
+    } catch (error) {
+      console.error("Error running all analyses:", error);
+      toast.error("Some analyses failed to complete", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
+    } finally {
+      setIsLoading(prev => ({ ...prev, runAll: false }));
+    }
+  };
+  
   const generate3DVisualization = async () => {
     // Don't proceed if there's not enough data
     if (!state.title && !state.description) {
@@ -432,7 +575,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         <Button 
           onClick={() => runAnalysis("technical")} 
-          disabled={isLoading.technical}
+          disabled={isLoading.technical || isLoading.runAll}
           variant="outline"
           className="flex items-center gap-2 h-auto py-2"
         >
@@ -449,7 +592,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         
         <Button 
           onClick={() => runAnalysis("users")} 
-          disabled={isLoading.users}
+          disabled={isLoading.users || isLoading.runAll}
           variant="outline"
           className="flex items-center gap-2 h-auto py-2"
         >
@@ -466,7 +609,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         
         <Button 
           onClick={() => runAnalysis("materials")} 
-          disabled={isLoading.materials}
+          disabled={isLoading.materials || isLoading.runAll}
           variant="outline"
           className="flex items-center gap-2 h-auto py-2"
         >
@@ -483,7 +626,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         
         <Button 
           onClick={() => runAnalysis("ip")} 
-          disabled={isLoading.ip}
+          disabled={isLoading.ip || isLoading.runAll}
           variant="outline"
           className="flex items-center gap-2 h-auto py-2"
         >
@@ -500,7 +643,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         
         <Button 
           onClick={() => runAnalysis("competition")} 
-          disabled={isLoading.competition}
+          disabled={isLoading.competition || isLoading.runAll}
           variant="outline"
           className="flex items-center gap-2 h-auto py-2"
         >
@@ -517,7 +660,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         
         <Button 
           onClick={() => runAnalysis("challenges")} 
-          disabled={isLoading.challenges}
+          disabled={isLoading.challenges || isLoading.runAll}
           variant="outline"
           className="flex items-center gap-2 h-auto py-2"
         >
@@ -536,7 +679,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
         <Button 
           onClick={() => generate3DVisualization()} 
-          disabled={isLoading.visualization}
+          disabled={isLoading.visualization || isLoading.runAll}
           variant="outline"
           className="flex items-center"
         >
@@ -550,7 +693,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         
         <Button
           onClick={() => generateThreejsVisualization()}
-          disabled={isLoading.threejs}
+          disabled={isLoading.threejs || isLoading.runAll}
           variant="outline"
           className="flex items-center"
         >
@@ -563,17 +706,17 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         </Button>
         
         <Button
-          onClick={() => runAnalysis("comprehensive")}
+          onClick={runAllAnalyses}
           disabled={Object.values(isLoading).some(v => v)}
           variant="outline"
           className="flex items-center"
         >
-          {Object.values(isLoading).some(v => v) ? (
+          {isLoading.runAll ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Lightbulb className="mr-2 h-4 w-4" />
+            <Play className="mr-2 h-4 w-4" />
           )}
-          <span>Comprehensive Analysis</span>
+          <span>Run All Analyses</span>
         </Button>
       </div>
     </div>
