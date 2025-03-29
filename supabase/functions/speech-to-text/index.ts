@@ -27,10 +27,16 @@ serve(async (req) => {
       );
     }
 
-    // Check if ElevenLabs API key is set
+    // Check if ElevenLabs API key is set and appears to be valid
     if (!ELEVENLABS_API_KEY) {
       console.error("ElevenLabs API key is not configured");
       throw new Error("ElevenLabs API key is not configured");
+    }
+    
+    // Basic validation: ElevenLabs API keys typically start with specific patterns
+    if (!ELEVENLABS_API_KEY.match(/^[a-zA-Z0-9]{32,}$/)) {
+      console.error("ElevenLabs API key appears to be invalid (incorrect format)");
+      throw new Error("ElevenLabs API key appears to be invalid");
     }
 
     console.log(`Converting speech to text with ElevenLabs API, language: ${languageCode}`);
@@ -59,6 +65,8 @@ serve(async (req) => {
 
     // Call ElevenLabs API with proper debugging
     console.log("Sending request to ElevenLabs API...");
+    console.log(`Using API key: ${ELEVENLABS_API_KEY.substring(0, 4)}...${ELEVENLABS_API_KEY.substring(ELEVENLABS_API_KEY.length - 4)}`);
+    
     const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
       method: "POST",
       headers: {
