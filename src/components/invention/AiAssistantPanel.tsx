@@ -1,10 +1,11 @@
+
 import { useInvention } from "@/contexts/InventionContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Box, Loader2Icon } from "lucide-react";
+import { Box, Loader2Icon, BarChart3, Database, Lightbulb, Target, Users, Search, Award, FileText } from "lucide-react";
 import { IdeaGenerator } from "@/components/IdeaGenerator";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -139,8 +140,195 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
     }
   };
   
-  // Simulated AI responses for demo purposes
-  const simulateAnalysis = (analysisType: string) => {
+  // Enhanced simulation functions with specific responses
+  const simulateSuggestMaterials = () => {
+    if (!state.title && !state.description) {
+      toast({
+        title: "Missing information",
+        description: "Please provide at least a title or description for your invention.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setAnalyzing(true);
+    
+    setTimeout(() => {
+      const materialSuggestions = [
+        "Medical-grade silicone would provide flexibility and biocompatibility.",
+        "Reinforced thermoplastic polymers for durability and lightweight structure.",
+        "Recycled aluminum components would reduce environmental impact.",
+        "Conductive fabric for integrated sensor connectivity."
+      ];
+      
+      setAnalysisResults('technical', materialSuggestions);
+      setAnalyzing(false);
+      toast({
+        title: "Materials suggested",
+        description: "AI has generated material recommendations for your invention."
+      });
+      
+      onAnalysisComplete();
+    }, 2000);
+  };
+  
+  const simulateIdentifyChallenges = () => {
+    if (!state.title && !state.description) {
+      toast({
+        title: "Missing information",
+        description: "Please provide at least a title or description for your invention.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setAnalyzing(true);
+    
+    setTimeout(() => {
+      const challenges = [
+        "Power efficiency might be a challenge for portable operation.",
+        "Miniaturization could impact durability and performance.",
+        "User interface simplicity vs comprehensive control balance.",
+        "Environmental resistance for outdoor usability."
+      ];
+      
+      setAnalysisResults('technical', challenges);
+      setAnalyzing(false);
+      toast({
+        title: "Challenges identified",
+        description: "AI has identified potential technical challenges for your invention."
+      });
+      
+      onAnalysisComplete();
+    }, 2000);
+  };
+  
+  const simulateTargetUsers = () => {
+    if (!state.title && !state.description) {
+      toast({
+        title: "Missing information",
+        description: "Please provide at least a title or description for your invention.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setAnalyzing(true);
+    
+    setTimeout(() => {
+      const targetUsers = [
+        "Primary demographic: Urban professionals aged 25-45.",
+        "Secondary market: Health-conscious individuals tracking wellness metrics.",
+        "Tertiary potential: Medical professionals requiring remote monitoring solutions.",
+        "Early adopters: Tech enthusiasts and DIY makers."
+      ];
+      
+      setAnalysisResults('market', targetUsers);
+      setAnalyzing(false);
+      toast({
+        title: "Target users identified",
+        description: "AI has identified potential target users for your invention."
+      });
+      
+      onAnalysisComplete();
+    }, 2000);
+  };
+  
+  const simulateCompetitionResearch = () => {
+    if (!state.title && !state.description) {
+      toast({
+        title: "Missing information",
+        description: "Please provide at least a title or description for your invention.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setAnalyzing(true);
+    
+    setTimeout(() => {
+      const competitionInsights = [
+        "Direct competitor: TechInnov's Model X3 ($149 retail) with 15% market share.",
+        "Indirect alternatives: Custom DIY kits (lower cost, higher complexity).",
+        "Market gap: No solution currently combines affordability with ease of use.",
+        "Emerging threats: Two startups with seed funding developing similar concepts."
+      ];
+      
+      setAnalysisResults('market', competitionInsights);
+      setAnalyzing(false);
+      toast({
+        title: "Competition analyzed",
+        description: "AI has analyzed market competition for your invention."
+      });
+      
+      onAnalysisComplete();
+    }, 2000);
+  };
+  
+  const simulateIpProtectionTips = () => {
+    if (!state.title && !state.description) {
+      toast({
+        title: "Missing information",
+        description: "Please provide at least a title or description for your invention.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setAnalyzing(true);
+    
+    setTimeout(() => {
+      const ipTips = [
+        "File a provisional patent application to secure an early priority date.",
+        "Consider design patent protection for the unique visual elements.",
+        "Document all development stages with dated and witnessed laboratory notebooks.",
+        "Execute confidentiality agreements before sharing with potential partners."
+      ];
+      
+      setAnalysisResults('legal', ipTips);
+      setAnalyzing(false);
+      toast({
+        title: "IP protection tips provided",
+        description: "AI has suggested intellectual property protection strategies."
+      });
+      
+      onAnalysisComplete();
+    }, 2000);
+  };
+  
+  const simulateRegulatoryChecklist = () => {
+    if (!state.title && !state.description) {
+      toast({
+        title: "Missing information",
+        description: "Please provide at least a title or description for your invention.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setAnalyzing(true);
+    
+    setTimeout(() => {
+      const regulatoryItems = [
+        "FCC certification will be required for wireless communication features.",
+        "UL safety certification recommended for electrical components.",
+        "Consider FDA classification if marketing includes health-related claims.",
+        "Review GDPR compliance requirements for data collection features."
+      ];
+      
+      setAnalysisResults('legal', regulatoryItems);
+      setAnalyzing(false);
+      toast({
+        title: "Regulatory checklist generated",
+        description: "AI has identified potential regulatory requirements."
+      });
+      
+      onAnalysisComplete();
+    }, 2000);
+  };
+  
+  // Comprehensive analysis properly implemented
+  const simulateComprehensiveAnalysis = () => {
     if (!state.title && !state.description) {
       toast({
         title: "Missing information",
@@ -154,49 +342,52 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
     
     // Simulate API delay
     setTimeout(() => {
-      // These would normally come from an API call
-      const responses = {
-        'technical': [
-          "The design could incorporate modular components for easy replacement.",
-          "Consider using lightweight materials for the outer structure.",
-          "Adding IoT connectivity would enhance monitoring capabilities.",
-          "A regenerative energy system could improve power efficiency."
-        ],
-        'market': [
-          "There's growing demand for sustainable, repairable products in this sector.",
-          "Target demographic: tech-savvy millennials with environmental concerns.",
-          "Consider crowdfunding for market entry and validation.",
-          "Competitive products are priced between $79-$149."
-        ],
-        'legal': [
-          "The connection mechanism appears novel and potentially patentable.",
-          "Consider filing a provisional patent while continuing development.",
-          "Document all development stages carefully for patent evidence.",
-          "Prior art search shows similar concepts, but your implementation is unique."
-        ]
-      };
+      // Technical analysis
+      const technicalInsights = [
+        "The modular design offers flexibility for user customization.",
+        "Energy efficiency could be improved with solar backup options.",
+        "Bluetooth LE connectivity provides optimal battery conservation.",
+        "Physical dimensions could be reduced by 15% with component reorganization."
+      ];
       
-      // Update the context with the "AI-generated" analysis
-      if (analysisType === 'all') {
-        setAnalysisResults('technical', responses.technical);
-        setAnalysisResults('market', responses.market);
-        setAnalysisResults('legal', responses.legal);
-      } else if (analysisType === 'technical') {
-        setAnalysisResults('technical', responses.technical);
-      } else if (analysisType === 'market') {
-        setAnalysisResults('market', responses.market);
-      } else if (analysisType === 'legal') {
-        setAnalysisResults('legal', responses.legal);
-      }
+      // Market analysis
+      const marketInsights = [
+        "Estimated market size: $2.3B globally with 12% annual growth.",
+        "Price point sweet spot: $79-99 based on comparable products.",
+        "Distribution channels: Direct to consumer with specialty retail partnerships.",
+        "Marketing focus: Emphasize ease of use and customization options."
+      ];
+      
+      // Legal analysis
+      const legalInsights = [
+        "Three competing patents exist but your approach has novel elements.",
+        "Trademark search shows no conflicts with proposed product name.",
+        "Consider international PCT application for global market potential.",
+        "Data privacy policy will be required for app component."
+      ];
+      
+      // Business analysis
+      const businessInsights = [
+        "Pilot with small production run before scaling manufacturing.",
+        "Explore crowdfunding to validate market interest and pricing.",
+        "Consider subscription model for premium features and analytics.",
+        "Partner with complementary product makers for bundled offerings."
+      ];
+      
+      // Update all analysis categories
+      setAnalysisResults('technical', technicalInsights);
+      setAnalysisResults('market', marketInsights);
+      setAnalysisResults('legal', legalInsights);
+      setAnalysisResults('business', businessInsights);
       
       setAnalyzing(false);
       toast({
-        title: "Analysis complete",
-        description: `${analysisType === 'all' ? 'Full' : analysisType} analysis completed successfully.`
+        title: "Comprehensive analysis complete",
+        description: "AI has analyzed all aspects of your invention."
       });
       
       onAnalysisComplete();
-    }, 2000);
+    }, 3000);
   };
   
   return (
@@ -215,14 +406,20 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           <TabsContent value="technical" className="space-y-4">
             <Button 
               className="w-full" 
-              onClick={() => simulateAnalysis('technical')}
+              onClick={() => simulateIdentifyChallenges()}
               disabled={analyzing}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Analyze Feasibility
+              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
+              Identify Challenges
             </Button>
-            <Button className="w-full" disabled={analyzing}>Suggest Materials</Button>
-            <Button className="w-full" disabled={analyzing}>Identify Challenges</Button>
+            <Button 
+              className="w-full" 
+              onClick={() => simulateSuggestMaterials()}
+              disabled={analyzing}
+            >
+              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+              Suggest Materials
+            </Button>
             
             {state.sketchDataUrl && (
               <Button 
@@ -240,27 +437,47 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           <TabsContent value="market" className="space-y-4">
             <Button 
               className="w-full" 
-              onClick={() => simulateAnalysis('market')}
+              onClick={() => simulateTargetUsers()}
               disabled={analyzing}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Market Analysis
+              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Users className="mr-2 h-4 w-4" />}
+              Target Users
             </Button>
-            <Button className="w-full" disabled={analyzing}>Target Users</Button>
-            <Button className="w-full" disabled={analyzing}>Competition Research</Button>
+            <Button 
+              className="w-full" 
+              onClick={() => simulateCompetitionResearch()}
+              disabled={analyzing}
+            >
+              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+              Competition Research
+            </Button>
           </TabsContent>
           
           <TabsContent value="legal" className="space-y-4">
             <Button 
               className="w-full" 
-              onClick={() => simulateAnalysis('legal')}
+              onClick={runAnthropicAnalysis}
               disabled={analyzing}
             >
-              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
               Patent Search
             </Button>
-            <Button className="w-full" disabled={analyzing}>IP Protection Tips</Button>
-            <Button className="w-full" disabled={analyzing}>Regulatory Checklist</Button>
+            <Button 
+              className="w-full" 
+              onClick={() => simulateIpProtectionTips()}
+              disabled={analyzing}
+            >
+              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Award className="mr-2 h-4 w-4" />}
+              IP Protection Tips
+            </Button>
+            <Button 
+              className="w-full" 
+              onClick={() => simulateRegulatoryChecklist()}
+              disabled={analyzing}
+            >
+              {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+              Regulatory Checklist
+            </Button>
           </TabsContent>
         </Tabs>
         
@@ -278,10 +495,10 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
           <Button 
             className="w-full" 
             variant="secondary" 
-            onClick={() => simulateAnalysis('all')}
+            onClick={() => simulateComprehensiveAnalysis()}
             disabled={analyzing}
           >
-            {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <BarChart3 className="mr-2 h-4 w-4" />}
             Generate Comprehensive Analysis
           </Button>
         </div>
