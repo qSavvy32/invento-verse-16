@@ -1,9 +1,7 @@
-
 import { useRef } from "react";
 import './PixelCard.css';
 import { VARIANTS } from './pixel-card/utils';
 import { usePixelAnimation } from './pixel-card/usePixelAnimation';
-
 interface PixelCardProps {
   variant?: keyof typeof VARIANTS;
   gap?: number;
@@ -16,7 +14,6 @@ interface PixelCardProps {
   active?: boolean;
   disabled?: boolean;
 }
-
 export default function PixelCard({
   variant = "default",
   gap,
@@ -31,22 +28,14 @@ export default function PixelCard({
 }: PixelCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const variantCfg = VARIANTS[variant] || VARIANTS.default;
   const finalGap = gap ?? variantCfg.gap;
   const finalSpeed = speed ?? variantCfg.speed;
   const finalColors = colors ?? variantCfg.colors;
   const finalNoFocus = noFocus ?? variantCfg.noFocus;
-
-  const { handleAnimation } = usePixelAnimation(
-    containerRef,
-    canvasRef,
-    finalGap,
-    finalSpeed,
-    finalColors,
-    finalNoFocus
-  );
-
+  const {
+    handleAnimation
+  } = usePixelAnimation(containerRef, canvasRef, finalGap, finalSpeed, finalColors, finalNoFocus);
   const onMouseEnter = () => !disabled && handleAnimation("appear");
   const onMouseLeave = () => !disabled && handleAnimation("disappear");
   const onFocus = (e: React.FocusEvent<HTMLDivElement>) => {
@@ -57,25 +46,8 @@ export default function PixelCard({
     if (disabled || e.currentTarget.contains(e.relatedTarget as Node)) return;
     handleAnimation("disappear");
   };
-
-  return (
-    <div
-      ref={containerRef}
-      className={`pixel-card ${active ? 'active' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onFocus={finalNoFocus ? undefined : onFocus}
-      onBlur={finalNoFocus ? undefined : onBlur}
-      tabIndex={finalNoFocus || disabled ? -1 : 0}
-      onClick={disabled ? undefined : onClick}
-    >
-      <canvas
-        className="pixel-card-canvas"
-        ref={canvasRef}
-      />
-      <div className="pixel-card-content">
-        {children}
-      </div>
-    </div>
-  );
+  return <div ref={containerRef} className={`pixel-card ${active ? 'active' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onFocus={finalNoFocus ? undefined : onFocus} onBlur={finalNoFocus ? undefined : onBlur} tabIndex={finalNoFocus || disabled ? -1 : 0} onClick={disabled ? undefined : onClick}>
+      <canvas className="pixel-card-canvas" ref={canvasRef} />
+      
+    </div>;
 }
