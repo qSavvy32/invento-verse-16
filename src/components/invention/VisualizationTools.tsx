@@ -5,8 +5,12 @@ import { useVisualizationState } from "./visualization/useVisualizationState";
 import { VisualizationButtonsGrid } from "./visualization/VisualizationButtonsGrid";
 import { BusinessStrategyPreview } from "./visualization/BusinessStrategyPreview";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const VisualizationTools = () => {
+  const navigate = useNavigate();
   const { state } = useInvention();
   const {
     isLoading,
@@ -38,6 +42,17 @@ export const VisualizationTools = () => {
             onGenerateBusinessStrategy={handleGenerateBusinessStrategy}
             onGenerateCustomMarketingImage={handleGenerateCustomMarketingImage}
           />
+          
+          <div className="flex justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/create/sketch")}
+              className="w-full flex items-center gap-2"
+            >
+              <Pencil size={16} />
+              Draw Sketch Manually
+            </Button>
+          </div>
           
           {/* Most Recent Generation Display */}
           {state.mostRecentGeneration && (
