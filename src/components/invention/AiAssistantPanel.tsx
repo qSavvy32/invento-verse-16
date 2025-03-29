@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Cube, Loader2Icon } from "lucide-react";
+import { Box, Loader2Icon } from "lucide-react";
 import { IdeaGenerator } from "@/components/IdeaGenerator";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -231,7 +231,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
                 onClick={generate3DVisualization}
                 disabled={generating3D}
               >
-                {generating3D ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Cube className="mr-2 h-4 w-4" />}
+                {generating3D ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Box className="mr-2 h-4 w-4" />}
                 Generate 3D Visualization
               </Button>
             )}
