@@ -9,34 +9,37 @@ import { generateVoiceSystemPrompt } from "./voicePromptUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// This will be installed separately
-declare module '@11labs/react' {
-  export function useConversation(options?: {
-    clientTools?: Record<string, (...args: any[]) => any>;
-    overrides?: {
-      agent?: {
-        prompt?: {
-          prompt?: string;
-        };
-        firstMessage?: string;
-        language?: string;
+// Define the types we need from @11labs/react instead of using module augmentation
+interface UseConversationOptions {
+  clientTools?: Record<string, (...args: any[]) => any>;
+  overrides?: {
+    agent?: {
+      prompt?: {
+        prompt?: string;
       };
-      tts?: {
-        voiceId?: string;
-      };
+      firstMessage?: string;
+      language?: string;
     };
-    onConnect?: () => void;
-    onDisconnect?: () => void;
-    onMessage?: (message: any) => void;
-    onError?: (error: any) => void;
-  }): {
-    status: 'connected' | 'disconnected';
-    isSpeaking: boolean;
-    startSession: (options: { url?: string; agentId?: string }) => Promise<string>;
-    endSession: () => Promise<void>;
-    setVolume: (options: { volume: number }) => void;
+    tts?: {
+      voiceId?: string;
+    };
   };
+  onConnect?: () => void;
+  onDisconnect?: () => void;
+  onMessage?: (message: any) => void;
+  onError?: (error: any) => void;
 }
+
+interface ConversationHookResult {
+  status: 'connected' | 'disconnected';
+  isSpeaking: boolean;
+  startSession: (options: { url?: string; agentId?: string }) => Promise<string>;
+  endSession: () => Promise<void>;
+  setVolume: (options: { volume: number }) => void;
+}
+
+// Import dynamically when the component mounts
+let useConversation: (options?: UseConversationOptions) => ConversationHookResult;
 
 interface VoiceConversationProps {
   agentId: string;
@@ -50,22 +53,39 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
   const [isMuted, setIsMuted] = useState(false);
   const [transcript, setTranscript] = useState<string[]>([]);
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [conversationInstance, setConversationInstance] = useState<ConversationHookResult | null>(null);
 
-  // We'll need to dynamically import useConversation once the package is installed
-  const [conversation, setConversation] = useState<any>(null);
-
+  // Dynamically import the @11labs/react module
   useEffect(() => {
     let isActive = true;
 
-    // Dynamic import of @11labs/react once we've installed it
     const loadConversationHook = async () => {
       try {
-        // This is a placeholder - in reality we'd need to install the package first
-        // const { useConversation } = await import('@11labs/react');
-        // We're simulating this for now
-        console.log("Would load @11labs/react here");
-        if (isActive) {
-          // setConversation would be set here with the actual hook
+        const elevenLabsModule = await import('@11labs/react');
+        if (isActive && elevenLabsModule.useConversation) {
+          // Save the hook reference to be used elsewhere in the component
+          useConversation = elevenLabsModule.useConversation;
+          
+          // Initialize conversation with callbacks
+          const conversation = useConversation({
+            onConnect: () => {
+              console.log("Connected to ElevenLabs voice agent");
+              toast.success("Connected to voice assistant");
+            },
+            onDisconnect: () => {
+              console.log("Disconnected from ElevenLabs voice agent");
+              toast.info("Voice conversation ended");
+            },
+            onMessage: handleMessage,
+            onError: (error) => {
+              console.error("Voice agent error:", error);
+              toast.error("Voice chat error", { 
+                description: typeof error === 'string' ? error : 'An error occurred with the voice agent'
+              });
+            }
+          });
+          
+          setConversationInstance(conversation);
         }
       } catch (error) {
         console.error("Error loading conversation hook:", error);
@@ -116,6 +136,11 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
 
   // Start the conversation with the ElevenLabs agent
   const startConversation = async () => {
+    if (!conversationInstance) {
+      toast.error("Voice chat system not ready");
+      return;
+    }
+    
     try {
       setIsInitializing(true);
 
@@ -152,14 +177,10 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
         throw new Error("Failed to get a valid agent URL");
       }
 
-      // In real implementation, we would start the conversation here
-      // await conversation.startSession({ url: data.signedUrl });
+      // Start the conversation with the signed URL
+      await conversationInstance.startSession({ url: data.signedUrl });
       
       toast.success("Voice conversation started");
-      
-      // For now, we're simulating this
-      console.log("Would start conversation with URL:", data.signedUrl);
-      console.log("Using system prompt:", systemPrompt);
       
     } catch (error) {
       console.error("Failed to start conversation:", error);
@@ -171,12 +192,13 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
 
   // End the conversation
   const stopConversation = async () => {
+    if (!conversationInstance) {
+      return;
+    }
+    
     try {
-      // In real implementation, we would end the session here
-      // await conversation.endSession();
-      
-      // For now, we're simulating this
-      console.log("Would end conversation here");
+      // End the conversation session
+      await conversationInstance.endSession();
       
       // Save transcript
       if (onConversationEnd && transcript.length > 0) {
@@ -193,9 +215,10 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
 
   // Toggle mute
   const toggleMute = () => {
+    if (!conversationInstance) return;
+    
     setIsMuted(!isMuted);
-    // In real implementation, we would set the volume here
-    // conversation.setVolume({ volume: isMuted ? 1 : 0 });
+    conversationInstance.setVolume({ volume: isMuted ? 1 : 0 });
   };
 
   return (
@@ -205,23 +228,23 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={conversation?.status === "connected" ? stopConversation : startConversation}
-                disabled={isInitializing}
-                className={conversation?.status === "connected" ? "bg-red-500 hover:bg-red-600" : ""}
+                onClick={conversationInstance?.status === "connected" ? stopConversation : startConversation}
+                disabled={isInitializing || !conversationInstance}
+                className={conversationInstance?.status === "connected" ? "bg-red-500 hover:bg-red-600" : ""}
                 size="lg"
               >
                 {isInitializing ? (
                   <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                ) : conversation?.status === "connected" ? (
+                ) : conversationInstance?.status === "connected" ? (
                   <MicOff className="h-5 w-5 mr-2" />
                 ) : (
                   <Mic className="h-5 w-5 mr-2" />
                 )}
-                {conversation?.status === "connected" ? "End Voice Chat" : "Start Voice Chat"}
+                {conversationInstance?.status === "connected" ? "End Voice Chat" : "Start Voice Chat"}
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {conversation?.status === "connected" 
+              {conversationInstance?.status === "connected" 
                 ? "End the voice conversation with Vinci" 
                 : "Start a voice conversation with Vinci"
               }
@@ -229,7 +252,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
           </Tooltip>
         </TooltipProvider>
 
-        {conversation?.status === "connected" && (
+        {conversationInstance?.status === "connected" && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -254,10 +277,10 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
         )}
       </div>
 
-      {conversation?.status === "connected" && (
+      {conversationInstance?.status === "connected" && (
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <CircleIcon className={`h-3 w-3 ${conversation.isSpeaking ? "text-red-500" : "text-green-500"}`} />
-          <span>Vinci is {conversation.isSpeaking ? "speaking" : "listening"}</span>
+          <CircleIcon className={`h-3 w-3 ${conversationInstance.isSpeaking ? "text-red-500" : "text-green-500"}`} />
+          <span>Vinci is {conversationInstance.isSpeaking ? "speaking" : "listening"}</span>
         </div>
       )}
 
