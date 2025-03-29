@@ -83,10 +83,12 @@ export const InventionForm = () => {
       
       {/* Devil's Advocate section - Only show when an idea exists */}
       {hasIdea && (
-        <div className="flex justify-center mt-12">
-          <div className="w-full max-w-3xl">
-            <DevilsAdvocate />
-          </div>
+        <div className="border rounded-lg p-4">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Devil's Advocate
+          </h2>
+          <DevilsAdvocate />
         </div>
       )}
     </div>

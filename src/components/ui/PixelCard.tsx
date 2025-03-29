@@ -14,6 +14,7 @@ interface PixelCardProps {
   children?: React.ReactNode;
   onClick?: () => void;
   active?: boolean;
+  disabled?: boolean;  // Added the disabled property
 }
 
 export default function PixelCard({
@@ -25,7 +26,8 @@ export default function PixelCard({
   className = "",
   children,
   onClick,
-  active = false
+  active = false,
+  disabled = false  // Added with default value
 }: PixelCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,16 +61,16 @@ export default function PixelCard({
   return (
     <div
       ref={containerRef}
-      className={`pixel-card ${active ? 'active' : ''} ${className}`}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onFocus={finalNoFocus ? undefined : onFocus}
-      onBlur={finalNoFocus ? undefined : onBlur}
-      tabIndex={finalNoFocus ? -1 : 0}
-      onClick={onClick}
+      className={`pixel-card ${active ? 'active' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
+      onMouseEnter={disabled ? undefined : onMouseEnter}
+      onMouseLeave={disabled ? undefined : onMouseLeave}
+      onFocus={finalNoFocus || disabled ? undefined : onFocus}
+      onBlur={finalNoFocus || disabled ? undefined : onBlur}
+      tabIndex={finalNoFocus || disabled ? -1 : 0}
+      onClick={disabled ? undefined : onClick}
     >
       <canvas
-        className="pixel-canvas"
+        className="pixel-card-canvas"
         ref={canvasRef}
       />
       <div className="pixel-card-content">
