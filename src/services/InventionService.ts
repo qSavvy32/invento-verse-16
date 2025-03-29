@@ -268,6 +268,7 @@ export const InventionService = {
           html: invention.threejs_html
         },
         businessStrategySvg: invention.business_strategy_svg,
+        mostRecentGeneration: null, // Add the missing property
         analysisResults: {
           technical,
           market,
