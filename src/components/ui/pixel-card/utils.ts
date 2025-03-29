@@ -50,7 +50,10 @@ export const VARIANTS = {
   }
 };
 
-// Add the missing getEffectiveSpeed function
+// Function to calculate effective speed based on reduced motion preference
 export const getEffectiveSpeed = (speed: number, reducedMotion: boolean): number => {
-  return reducedMotion ? Math.min(speed * 0.5, 10) : speed;
+  if (reducedMotion) {
+    return Math.min(speed * 0.5, 10);
+  }
+  return speed;
 };

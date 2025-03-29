@@ -32,7 +32,7 @@ export const DevilsAdvocate = () => {
       {/* Save Your Work Section */}
       <SaveExportSection 
         state={state} 
-        saveToDatabase={saveToDatabase} 
+        saveToDatabase={(showToast?: boolean) => saveToDatabase(showToast)} 
       />
     </div>
   );

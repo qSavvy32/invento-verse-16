@@ -14,7 +14,7 @@ interface PixelCardProps {
   children?: React.ReactNode;
   onClick?: () => void;
   active?: boolean;
-  disabled?: boolean;  // Added the disabled property
+  disabled?: boolean;
 }
 
 export default function PixelCard({
@@ -27,7 +27,7 @@ export default function PixelCard({
   children,
   onClick,
   active = false,
-  disabled = false  // Added with default value
+  disabled = false
 }: PixelCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -47,14 +47,14 @@ export default function PixelCard({
     finalNoFocus
   );
 
-  const onMouseEnter = () => handleAnimation("appear");
-  const onMouseLeave = () => handleAnimation("disappear");
+  const onMouseEnter = () => !disabled && handleAnimation("appear");
+  const onMouseLeave = () => !disabled && handleAnimation("disappear");
   const onFocus = (e: React.FocusEvent<HTMLDivElement>) => {
-    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    if (disabled || e.currentTarget.contains(e.relatedTarget as Node)) return;
     handleAnimation("appear");
   };
   const onBlur = (e: React.FocusEvent<HTMLDivElement>) => {
-    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    if (disabled || e.currentTarget.contains(e.relatedTarget as Node)) return;
     handleAnimation("disappear");
   };
 
@@ -62,10 +62,10 @@ export default function PixelCard({
     <div
       ref={containerRef}
       className={`pixel-card ${active ? 'active' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
-      onMouseEnter={disabled ? undefined : onMouseEnter}
-      onMouseLeave={disabled ? undefined : onMouseLeave}
-      onFocus={finalNoFocus || disabled ? undefined : onFocus}
-      onBlur={finalNoFocus || disabled ? undefined : onBlur}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onFocus={finalNoFocus ? undefined : onFocus}
+      onBlur={finalNoFocus ? undefined : onBlur}
       tabIndex={finalNoFocus || disabled ? -1 : 0}
       onClick={disabled ? undefined : onClick}
     >
