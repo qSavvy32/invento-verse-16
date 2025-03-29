@@ -1,9 +1,8 @@
 
+import { useEffect, useState } from "react";
 import { useInvention } from "@/contexts/InventionContext";
-import { useElevenLabsConversation } from "./hooks/useElevenLabsConversation";
-import { VoiceControls } from "./VoiceControls";
-import { ChatModeIndicator } from "./ChatModeIndicator";
 import { TranscriptViewer } from "./TranscriptViewer";
+import { toast } from "sonner";
 
 interface VoiceConversationProps {
   agentId: string;
@@ -12,45 +11,98 @@ interface VoiceConversationProps {
 
 export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversationProps) => {
   const { state } = useInvention();
+  const [transcript, setTranscript] = useState<string[]>([]);
+  const [widgetLoaded, setWidgetLoaded] = useState(false);
+
+  // Function to track conversation content from widget
+  const handleConversationMessage = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    if (customEvent.detail && customEvent.detail.content) {
+      setTranscript(prev => [...prev, customEvent.detail.content]);
+    }
+  };
   
-  const {
-    isInitializing,
-    isLibraryLoaded,
-    isMuted,
-    chatMode,
-    transcript,
-    conversationInstance,
-    startConversation,
-    stopConversation,
-    toggleMute
-  } = useElevenLabsConversation({ 
-    agentId,
-    onTranscriptUpdate: (updatedTranscript) => {
-      if (onConversationEnd && conversationInstance?.status !== "connected") {
-        onConversationEnd(updatedTranscript);
+  // Function to track conversation status changes from widget
+  const handleStatusChange = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    if (customEvent.detail) {
+      if (customEvent.detail.status === 'connected') {
+        toast.success("Connected to voice assistant");
+      } else if (customEvent.detail.status === 'disconnected') {
+        toast.info("Voice conversation ended");
+        if (onConversationEnd && transcript.length > 0) {
+          onConversationEnd(transcript);
+        }
       }
     }
-  });
-
-  const handleStartConversation = () => {
-    startConversation(state.title, state.description);
   };
+
+  // Setup the widget and event listeners
+  useEffect(() => {
+    // Create a container for the widget if not already existing
+    let container = document.getElementById('elevenlabs-convai-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'elevenlabs-convai-container';
+      container.style.width = '100%';
+      container.style.marginBottom = '20px';
+      document.getElementById('elevenlabs-widget-mount-point')?.appendChild(container);
+    }
+
+    // Add the widget element if not already added
+    if (!document.querySelector('elevenlabs-convai')) {
+      const widget = document.createElement('elevenlabs-convai');
+      widget.setAttribute('agent-id', agentId);
+      
+      // Set system prompt with invention context if available
+      if (state.title || state.description) {
+        const systemPrompt = `You are Vinci, an AI assistant specializing in invention development and analysis. You're currently helping with an invention called "${state.title || 'Unnamed invention'}" that is described as: "${state.description || 'No description provided yet'}". Be supportive, encouraging, and help the user develop their idea fully.`;
+        widget.setAttribute('system-prompt', systemPrompt);
+      }
+      
+      container.appendChild(widget);
+      
+      // Add the script if not already added
+      if (!document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://elevenlabs.io/convai-widget/index.js';
+        script.async = true;
+        script.type = 'text/javascript';
+        script.onload = () => {
+          setWidgetLoaded(true);
+          toast.success("ElevenLabs voice widget loaded successfully");
+        };
+        script.onerror = () => {
+          toast.error("Failed to load ElevenLabs voice widget");
+        };
+        document.body.appendChild(script);
+      } else {
+        setWidgetLoaded(true);
+      }
+    }
+
+    // Add event listeners for widget events
+    window.addEventListener('convai-message', handleConversationMessage);
+    window.addEventListener('convai-status-change', handleStatusChange);
+
+    // Clean up function
+    return () => {
+      window.removeEventListener('convai-message', handleConversationMessage);
+      window.removeEventListener('convai-status-change', handleStatusChange);
+    };
+  }, [agentId, state.title, state.description, onConversationEnd]);
 
   return (
     <div className="flex flex-col items-center space-y-4 w-full">
-      <VoiceControls 
-        status={conversationInstance?.status}
-        isInitializing={isInitializing}
-        isSpeaking={conversationInstance?.isSpeaking}
-        isMuted={isMuted}
-        onStartConversation={handleStartConversation}
-        onStopConversation={stopConversation}
-        onToggleMute={toggleMute}
-        disabled={!isLibraryLoaded}
-      />
-
-      <ChatModeIndicator mode={chatMode} />
-
+      <div id="elevenlabs-widget-mount-point" className="w-full">
+        {!widgetLoaded && (
+          <div className="text-center p-4">
+            <div className="animate-spin h-8 w-8 border-4 border-invention-accent rounded-full border-t-transparent mx-auto"></div>
+            <p className="mt-2 text-sm text-muted-foreground">Loading voice assistant...</p>
+          </div>
+        )}
+      </div>
+      
       <TranscriptViewer transcript={transcript} />
     </div>
   );
