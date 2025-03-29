@@ -64,17 +64,17 @@ export const ActionButtonGroup = ({
         active={isLoading.runAll}
         disabled={isDisabled || isLoading.runAll}
       >
-        <div className="p-3 text-center">
+        <div className="p-3 text-center relative z-10 text-white">
           {isLoading.runAll ? (
             <>
-              <Loader2 className="mx-auto h-5 w-5 animate-spin mb-1" />
-              <h3 className="font-medium">Running all analyses...</h3>
+              <Loader2 className="mx-auto h-5 w-5 animate-spin mb-1 text-white" />
+              <h3 className="font-medium text-white">Running all analyses...</h3>
             </>
           ) : (
             <>
-              <BarChart4 className="mx-auto h-5 w-5 mb-1" />
-              <h3 className="font-medium">Run All Analyses</h3>
-              <p className="text-xs opacity-80">Complete invention analysis</p>
+              <BarChart4 className="mx-auto h-5 w-5 mb-1 text-white" />
+              <h3 className="font-medium text-white">Run All Analyses</h3>
+              <p className="text-xs opacity-90 text-white">Complete invention analysis</p>
             </>
           )}
         </div>

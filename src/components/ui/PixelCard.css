@@ -23,6 +23,7 @@
   background-color: #09090b;
   cursor: pointer;
   min-height: 150px;
+  color: white; /* Ensure text is white by default */
 }
 
 .pixel-card::before {
@@ -68,6 +69,15 @@
 .pixel-card.active {
   border-color: #8B5CF6;
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+/* Text and icon colors, ensuring visibility */
+.pixel-card svg,
+.pixel-card h3,
+.pixel-card p {
+  color: white;
+  position: relative;
+  z-index: 10;
 }
 
 /* Disable animations if user prefers reduced motion */

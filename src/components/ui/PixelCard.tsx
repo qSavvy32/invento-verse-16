@@ -62,9 +62,12 @@ export default function PixelCard({
       onBlur={finalNoFocus ? undefined : onBlur}
       tabIndex={finalNoFocus || disabled ? -1 : 0}
       onClick={disabled ? undefined : onClick}
+      style={{ color: "white" }}
     >
       <canvas className="pixel-canvas" ref={canvasRef} />
-      {children}
+      <div className="relative z-10 text-white">
+        {children}
+      </div>
     </div>
   );
 }

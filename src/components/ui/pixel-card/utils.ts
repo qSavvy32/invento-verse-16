@@ -3,7 +3,7 @@ export const VARIANTS = {
   default: {
     gap: 12,
     speed: 30,
-    colors: "black,#121212,#292929",
+    colors: "#121212,#292929,#3a3a3a",
     noFocus: false,
   },
   blue: {
