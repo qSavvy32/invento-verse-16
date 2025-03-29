@@ -3,32 +3,13 @@ import { useState } from "react";
 import { useInvention } from "@/contexts/InventionContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AnalysisButtonGroup } from "./analysis/AnalysisButtonGroup";
-import { generate3DVisualization, generateThreejsVisualization } from "./analysis/VisualizationService";
-import { MarkdownContent } from "./analysis/MarkdownContent";
-import { PanelOfExperts } from "../panel-of-experts/PanelOfExperts";
-
-interface AnalysisState {
-  isLoading: {
-    technical: boolean;
-    market: boolean;
-    legal: boolean;
-    business: boolean;
-    comprehensive: boolean;
-    visualization: boolean;
-    threejs: boolean;
-    users: boolean;
-    materials: boolean;
-    ip: boolean;
-    competition: boolean;
-    challenges: boolean;
-  };
-  activeTab: string;
-  analyzedContent: string | null;
-}
+import { AnalysisTab } from "./assistant-panel/AnalysisTab";
+import { VisualizationTab } from "./assistant-panel/VisualizationTab";
+import { ExpertsTab } from "./assistant-panel/ExpertsTab";
+import { AnalysisState } from "./assistant-panel/types";
 
 export const AiAssistantPanel = () => {
-  const { state, update3DVisualization, updateThreejsCode, updateThreejsHtml, setAnalysisResults } = useInvention();
+  const { state } = useInvention();
   const [analysisState, setAnalysisState] = useState<AnalysisState>({
     isLoading: {
       technical: false,
@@ -42,7 +23,9 @@ export const AiAssistantPanel = () => {
       materials: false,
       ip: false,
       competition: false,
-      challenges: false
+      challenges: false,
+      runAll: false,
+      customMarketing: false
     },
     activeTab: "experts",
     analyzedContent: null,
@@ -59,56 +42,6 @@ export const AiAssistantPanel = () => {
     }));
   };
   
-  // Handle setting analysis results (wrapper around the original function)
-  const handleSetAnalysisResults = (results: Record<string, string[]>) => {
-    // Convert from record to AnalysisResults
-    const analysisResults = {
-      technical: results.technical || [],
-      market: results.market || [],
-      legal: results.legal || [],
-      business: results.business || []
-    };
-    
-    setAnalysisResults(analysisResults);
-  };
-
-  const handleRunAnalysis = (analysisType: string) => {
-    console.log(`Running analysis for ${analysisType}`);
-    // Implement analysis running logic here
-  };
-  
-  // Create a wrapper for visualization state
-  const visualizationStateWrapper = {
-    title: state.title,
-    description: state.description,
-    sketchDataUrl: state.sketchDataUrl,
-    updateVisualizations: (data: any) => {
-      // Handle visualization prompt updates
-      console.log("Updating visualizations with data:", data);
-    },
-    update3DVisualization,
-    setThreejsVisualization: (code: string, html: string) => {
-      updateThreejsCode(code);
-      updateThreejsHtml(html);
-    }
-  };
-  
-  // Handle 3D visualization generation
-  const handle3DVisualization = () => {
-    generate3DVisualization(
-      visualizationStateWrapper,
-      updateLoadingState
-    );
-  };
-  
-  // Handle ThreeJS visualization generation
-  const handleThreejsVisualization = () => {
-    generateThreejsVisualization(
-      visualizationStateWrapper,
-      updateLoadingState
-    );
-  };
-  
   return (
     <Card className="mt-6">
       <CardContent className="pt-6">
@@ -120,49 +53,24 @@ export const AiAssistantPanel = () => {
           </TabsList>
           
           <TabsContent value="experts" className="pt-4 min-h-[400px]">
-            <PanelOfExperts />
+            <ExpertsTab />
           </TabsContent>
           
           <TabsContent value="analysis" className="pt-4 min-h-[400px]">
-            <AnalysisButtonGroup 
-              isLoading={analysisState.isLoading}
-              isDisabled={false}
-              onRunAnalysis={handleRunAnalysis}
-              onAnalysisComplete={handleSetAnalysisResults}
-              setIsLoading={updateLoadingState}
+            <AnalysisTab 
+              isLoading={analysisState.isLoading} 
+              updateLoadingState={updateLoadingState} 
             />
-            
-            {analysisState.analyzedContent && (
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <MarkdownContent content={analysisState.analyzedContent} />
-              </div>
-            )}
           </TabsContent>
           
           <TabsContent value="visualization" className="pt-4 min-h-[400px]">
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                className="p-6 border rounded-lg hover:bg-muted/30 transition-colors flex flex-col items-center gap-2"
-                onClick={handle3DVisualization}
-                disabled={analysisState.isLoading.visualization}
-              >
-                <span className="text-lg font-semibold">3D Visualization</span>
-                <p className="text-sm text-muted-foreground text-center">
-                  Generate a 3D visualization of your invention concept
-                </p>
-              </button>
-              
-              <button
-                className="p-6 border rounded-lg hover:bg-muted/30 transition-colors flex flex-col items-center gap-2"
-                onClick={handleThreejsVisualization}
-                disabled={analysisState.isLoading.threejs}
-              >
-                <span className="text-lg font-semibold">Interactive 3D Model</span>
-                <p className="text-sm text-muted-foreground text-center">
-                  Generate an interactive Three.js 3D model of your invention
-                </p>
-              </button>
-            </div>
+            <VisualizationTab 
+              isLoading={{
+                visualization: analysisState.isLoading.visualization,
+                threejs: analysisState.isLoading.threejs
+              }} 
+              updateLoadingState={updateLoadingState} 
+            />
           </TabsContent>
         </Tabs>
       </CardContent>
