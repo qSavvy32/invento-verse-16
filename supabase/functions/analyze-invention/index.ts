@@ -1,28 +1,23 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import * as Sentry from "https://cdn.jsdelivr.net/npm/@sentry/browser@7.94.1/+esm";
-
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-const SENTRY_API_KEY = Deno.env.get("SENTRY_API_KEY");
+import { Anthropic } from "https://esm.sh/@anthropic-ai/sdk@0.16.0";
+import * as Sentry from "https://esm.sh/@sentry/deno@7.94.1";
 
 // Initialize Sentry
-Sentry.init({
-  dsn: SENTRY_API_KEY,
-  environment: "production",
-  release: "analyze-invention@1.0.0",
-});
+try {
+  Sentry.init({
+    dsn: Deno.env.get("SENTRY_DSN"),
+    environment: 'production',
+    tracesSampleRate: 1.0,
+  });
+} catch (e) {
+  console.error("Invalid Sentry Dsn:", Deno.env.get("SENTRY_DSN"));
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-interface InventionAnalysisRequest {
-  title?: string;
-  description?: string;
-  sketchDataUrl?: string;
-  analysisType: string;
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -31,178 +26,111 @@ serve(async (req) => {
   }
 
   try {
-    const requestData: InventionAnalysisRequest = await req.json();
-    const { title, description, sketchDataUrl, analysisType } = requestData;
+    const { title, description, sketchDataUrl, analysisType } = await req.json();
+
+    // Validate required inputs
+    if (!title && !description) {
+      throw new Error("At least title or description must be provided");
+    }
 
     console.log(`Received request for ${analysisType} analysis`);
 
-    if (!title && !description && !sketchDataUrl) {
-      return new Response(
-        JSON.stringify({ error: "Missing required data. Please provide a title, description, or sketch." }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
+    const anthropic = new Anthropic({
+      apiKey: Deno.env.get("ANTHROPIC_API_KEY"),
+    });
 
-    let systemPrompt = "You are an invention analysis assistant specialized in helping inventors understand and improve their ideas.";
-    let userPrompt = "";
+    // Prepare base prompt
+    let systemPrompt = `You are an expert invention analyst with deep knowledge across technical, market, and legal domains.
+      Analyze the provided invention description and sketch (if available) and provide detailed, actionable insights.`;
 
-    // Configure prompts based on analysis type
+    // Customize the prompt based on analysis type
     switch (analysisType) {
       case "technical":
-        systemPrompt += " Focus on technical aspects, engineering principles, and practical implementation details.";
-        userPrompt = `Analyze the technical aspects of this invention idea: ${title || ''}\n${description || ''}\n`;
-        if (sketchDataUrl) userPrompt += "[A sketch image was provided]";
+        systemPrompt += `Focus on technical feasibility, engineering challenges, and design considerations.`;
         break;
       case "challenges":
-        systemPrompt += " Focus on identifying technical challenges and suggesting potential solutions.";
-        userPrompt = `Identify the technical challenges for this invention idea: ${title || ''}\n${description || ''}\n`;
-        if (sketchDataUrl) userPrompt += "[A sketch image was provided]";
+        systemPrompt += `Focus on identifying key technical challenges and potential solutions.`;
         break;
       case "materials":
-        systemPrompt += " Focus on suggesting appropriate materials, components, and manufacturing considerations.";
-        userPrompt = `Suggest materials and components for this invention idea: ${title || ''}\n${description || ''}\n`;
-        if (sketchDataUrl) userPrompt += "[A sketch image was provided]";
+        systemPrompt += `Focus on suggesting appropriate materials and components for this invention.`;
         break;
       case "users":
-        systemPrompt += " Focus on identifying potential users, user needs, and use cases.";
-        userPrompt = `Identify potential users for this invention idea: ${title || ''}\n${description || ''}\n`;
-        if (sketchDataUrl) userPrompt += "[A sketch image was provided]";
+        systemPrompt += `Focus on target user analysis, primary and secondary user groups, and how the invention addresses their needs.`;
         break;
       case "competition":
-        systemPrompt += " Focus on market analysis, competitive landscape, and competitive advantages.";
-        userPrompt = `Analyze the competitive landscape for this invention idea: ${title || ''}\n${description || ''}\n`;
-        if (sketchDataUrl) userPrompt += "[A sketch image was provided]";
+        systemPrompt += `Focus on competitive analysis, market positioning, and differentiators.`;
         break;
       case "ip":
-        systemPrompt += " Focus on patent strategy, intellectual property protection, and legal considerations.";
-        userPrompt = `Provide intellectual property advice for this invention idea: ${title || ''}\n${description || ''}\n`;
-        if (sketchDataUrl) userPrompt += "[A sketch image was provided]";
+        systemPrompt += `Focus on intellectual property considerations, patentability assessment, and protection strategies.`;
         break;
       case "regulatory":
-        systemPrompt += " Focus on regulatory requirements, certification needs, and compliance considerations.";
-        userPrompt = `Analyze regulatory requirements for this invention idea: ${title || ''}\n${description || ''}\n`;
-        if (sketchDataUrl) userPrompt += "[A sketch image was provided]";
+        systemPrompt += `Focus on regulatory compliance requirements and certification needs.`;
         break;
       case "comprehensive":
       default:
-        systemPrompt += " Provide a comprehensive analysis covering technical, market, legal, and business aspects.";
-        userPrompt = `Analyze this invention idea: ${title || ''}\n${description || ''}\n`;
-        if (sketchDataUrl) userPrompt += "[A sketch image was provided]";
+        systemPrompt += `Provide a comprehensive analysis covering technical feasibility, market potential, intellectual property considerations, and next steps.`;
         break;
     }
 
-    // Add output structure instructions to the system prompt
-    systemPrompt += " Structure your output as JSON. Include the following fields as relevant to the analysis:";
-    systemPrompt += " key_features_list (array of strings), materials_components_ideas (array of strings),";
-    systemPrompt += " technical_challenges (array of objects with challenge and potential_solution),";
-    systemPrompt += " problem_solved (string), potential_target_users (string), market_insights (array of strings),";
-    systemPrompt += " unclear_aspects_questions (array of strings), suggested_next_steps (array of strings),";
-    systemPrompt += " suggested_improvements (array of strings).";
-    
-    // Add visualization prompts request
-    systemPrompt += " Also include a visualization_prompts field with 3 detailed prompts that could be used to generate visualizations of this invention.";
+    // Add instructions for output format
+    systemPrompt += `\n\nOutput your analysis in a structured JSON format appropriate for the analysis type.`;
+
+    // Prepare user message with invention details
+    let userMessage = `Here's my invention idea:\n\nTitle: ${title || "Untitled"}\nDescription: ${description || "No description provided"}`;
+
+    if (sketchDataUrl) {
+      userMessage += `\n\nI've also created a sketch of the invention which you can analyze.`;
+    }
+
+    userMessage += `\n\nPlease provide a detailed ${analysisType} analysis of this invention idea.`;
 
     console.log(`Sending request to Anthropic API for ${analysisType} analysis...`);
 
-    // Use the correct anthropic API endpoint and parameters
-    // Note: When using thinking budget, temperature must be set to 0
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: "claude-3-7-sonnet-20250219",
-        max_tokens: 4000,
-        temperature: 0,  // When using thinking, temperature must be 0
-        thinking: {
-          type: "enabled",
-          budget_tokens: 16000
-        },
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt
-          },
-          {
-            role: "user", 
-            content: userPrompt
-          }
-        ]
-      })
+    // Make request to Anthropic API
+    const response = await anthropic.messages.create({
+      model: "claude-3-sonnet-20240229",
+      system: systemPrompt,
+      max_tokens: 2000,
+      messages: [
+        { role: "user", content: userMessage }
+      ],
+      temperature: 0.7, // Balanced between creativity and consistency
     });
 
     console.log("Received response from Anthropic API");
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error from Anthropic API:", JSON.stringify(errorData));
-      throw new Error(`Anthropic API error: ${errorData.error?.message || JSON.stringify(errorData)}`);
+    // Parse the response to extract JSON if possible
+    let analysisResults;
+    try {
+      // Try to find and parse JSON in the response
+      const jsonMatch = response.content[0].text.match(/```json\n([\s\S]*?)\n```/) || 
+                        response.content[0].text.match(/\{[\s\S]*\}/);
+                        
+      if (jsonMatch) {
+        analysisResults = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+      } else {
+        // If no JSON found, use the full text response
+        analysisResults = { analysis: response.content[0].text };
+      }
+    } catch (error) {
+      console.error("Error parsing JSON from Anthropic response:", error);
+      analysisResults = { analysis: response.content[0].text };
     }
 
-    const result = await response.json();
-    
-    try {
-      // Extract the content from the Anthropic response
-      const content = result.content[0].text;
-      
-      // Try to parse the JSON from the content
-      // First, check if the content contains a JSON block
-      let jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
-      let parsedResult;
-      
-      if (jsonMatch && jsonMatch[1]) {
-        // Extract JSON from code block
-        parsedResult = JSON.parse(jsonMatch[1]);
-      } else {
-        // Try to parse the entire content as JSON
-        try {
-          parsedResult = JSON.parse(content);
-        } catch (e) {
-          // If not valid JSON, return the raw content with a warning
-          console.warn("Could not parse response as JSON, returning raw content");
-          parsedResult = { 
-            raw_content: content,
-            warning: "Could not parse as structured data" 
-          };
-        }
-      }
-      
-      return new Response(
-        JSON.stringify(parsedResult),
-        { 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    } catch (error) {
-      console.error("Error parsing Anthropic response:", error);
-      Sentry.captureException(error);
-      
-      // Return the raw response if JSON parsing fails
-      return new Response(
-        JSON.stringify({ 
-          raw_content: result.content[0].text,
-          error: "Failed to parse structured data"
-        }),
-        { 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
+    return new Response(JSON.stringify(analysisResults), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error in analyze-invention function:", error);
+    
+    // Capture exception in Sentry
     Sentry.captureException(error);
     
     return new Response(
-      JSON.stringify({ error: error.message || "An unexpected error occurred" }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      JSON.stringify({ error: `Anthropic API error: ${error.message}` }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }
