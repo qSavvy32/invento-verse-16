@@ -15,6 +15,7 @@ import {
 import { GenerateButtons } from "./GenerateButtons";
 import { Button } from "../ui/button";
 import PixelCard from "../ui/PixelCard";
+import { Visualization3DViewer } from "./Visualization3DViewer";
 
 export const InventionForm = () => {
   const { state } = useInvention();

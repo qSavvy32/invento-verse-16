@@ -1,3 +1,4 @@
+
 export const VARIANTS = {
   default: {
     gap: 12,
@@ -40,5 +41,16 @@ export const VARIANTS = {
     speed: 35,
     colors: "#f72585,#3a0ca3,#4cc9f0,#52b788,#ff7b00",
     noFocus: false,
+  },
+  red: {
+    gap: 14,
+    speed: 30,
+    colors: "#e63946,#d00000,#9d0208",
+    noFocus: false,
   }
+};
+
+// Add the missing getEffectiveSpeed function
+export const getEffectiveSpeed = (speed: number, reducedMotion: boolean): number => {
+  return reducedMotion ? Math.min(speed * 0.5, 10) : speed;
 };

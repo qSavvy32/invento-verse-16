@@ -1,4 +1,3 @@
-
 import { useInvention } from "@/contexts/InventionContext";
 import { Button } from "../ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +9,7 @@ import {
   Loader2,
   PackageOpen,
   Pencil,
-  Cube,
+  Box,
   Zap
 } from "lucide-react";
 
@@ -198,7 +197,7 @@ export const GenerateButtons = () => {
           {isLoading.threejs ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Cube className="mr-2 h-4 w-4" />
+            <Box className="mr-2 h-4 w-4" />
           )}
           Generate 3D Model
         </Button>
