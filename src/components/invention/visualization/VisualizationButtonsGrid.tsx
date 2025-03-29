@@ -5,10 +5,10 @@ import {
   PencilLine, 
   Image, 
   MessageSquarePlus, 
-  Layers,
   BarChart4,
   Loader2,
-  Send
+  Send,
+  Zap
 } from "lucide-react";
 import { useState } from "react";
 
@@ -20,6 +20,7 @@ interface VisualizationButtonsGridProps {
     realistic3d: boolean;
     businessStrategy: boolean;
     customMarketing: boolean;
+    runAll: boolean;
   };
   hasTitle: boolean;
   hasDescription: boolean;
@@ -31,6 +32,7 @@ interface VisualizationButtonsGridProps {
   onGenerateRealistic3D: () => void;
   onGenerateBusinessStrategy: () => void;
   onGenerateCustomMarketingImage: (prompt: string) => void;
+  onRunAllVisualizations?: () => void;
 }
 
 export const VisualizationButtonsGrid = ({
@@ -44,7 +46,8 @@ export const VisualizationButtonsGrid = ({
   onGenerate3DImage,
   onGenerateRealistic3D,
   onGenerateBusinessStrategy,
-  onGenerateCustomMarketingImage
+  onGenerateCustomMarketingImage,
+  onRunAllVisualizations
 }: VisualizationButtonsGridProps) => {
   const isDisabled = !hasTitle && !hasDescription;
   const [showCustomPrompt, setShowCustomPrompt] = useState(false);
@@ -108,6 +111,22 @@ export const VisualizationButtonsGrid = ({
           <span className="text-xs font-medium">Business Strategy</span>
         </Button>
       </div>
+      
+      {onRunAllVisualizations && (
+        <Button 
+          variant="default" 
+          className="w-full mt-2 flex items-center justify-center gap-2"
+          disabled={isDisabled || isLoading.runAll || isLoading.sketch || isLoading.realistic3d || isLoading.businessStrategy}
+          onClick={onRunAllVisualizations}
+        >
+          {isLoading.runAll ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Zap className="h-4 w-4" />
+          )}
+          <span>Generate All Visualizations</span>
+        </Button>
+      )}
       
       {showCustomPrompt && (
         <div className="flex gap-2 items-center mt-4">

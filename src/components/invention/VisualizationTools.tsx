@@ -20,7 +20,8 @@ export const VisualizationTools = () => {
     handleGenerate3DImage,
     handleGenerateRealistic3DImage,
     handleGenerateBusinessStrategy,
-    handleGenerateCustomMarketingImage
+    handleGenerateCustomMarketingImage,
+    handleRunAllVisualizations
   } = useVisualizationState();
 
   return (
@@ -41,6 +42,7 @@ export const VisualizationTools = () => {
             onGenerate3DImage={handleGenerate3DImage}
             onGenerateBusinessStrategy={handleGenerateBusinessStrategy}
             onGenerateCustomMarketingImage={handleGenerateCustomMarketingImage}
+            onRunAllVisualizations={handleRunAllVisualizations}
           />
           
           <div className="flex justify-center">
