@@ -13,4 +13,5 @@ export interface VisualizationResult {
   type: string;
   error?: string;
   svg?: string | null;
+  svgCode?: string | null;
 }
