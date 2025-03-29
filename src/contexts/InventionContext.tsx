@@ -27,6 +27,15 @@ export interface InventionAsset {
   createdAt: number;
 }
 
+export interface GeneratedItem {
+  id: string;
+  type: 'sketch' | 'image' | 'business-strategy' | 'document' | '3d' | string;
+  url?: string | null;
+  svg?: string | null;
+  name?: string;
+  createdAt: number;
+}
+
 export interface InventionState {
   inventionId?: string;
   title: string;
@@ -41,6 +50,7 @@ export interface InventionState {
     html: string | null;
   };
   businessStrategySvg: string | null;
+  mostRecentGeneration: GeneratedItem | null;
   analysisResults: {
     technical: string[];
     market: string[];
@@ -61,6 +71,7 @@ type InventionAction =
   | { type: 'SAVE_TO_DATABASE'; payload: boolean }
   | { type: 'SET_THREEJS_VISUALIZATION'; payload: { code: string | null; html: string | null } }
   | { type: 'SET_BUSINESS_STRATEGY_SVG'; payload: string | null }
+  | { type: 'SET_MOST_RECENT_GENERATION'; payload: GeneratedItem | null }
   | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } }
   | { type: 'ADD_AUDIO_TRANSCRIPTION'; payload: AudioTranscription }
   | { type: 'LOAD_INVENTION'; payload: InventionState }
@@ -79,6 +90,7 @@ interface InventionContextType {
   loadInvention: (id: string) => Promise<boolean>;
   setThreejsVisualization: (code: string | null, html: string | null) => void;
   setBusinessStrategySvg: (svgData: string | null) => void;
+  setMostRecentGeneration: (item: GeneratedItem | null) => void;
   setAnalysisResults: (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => void;
   addAudioTranscription: (transcription: AudioTranscription) => void;
 }
@@ -97,6 +109,7 @@ const initialState: InventionState = {
     html: null
   },
   businessStrategySvg: null,
+  mostRecentGeneration: null,
   analysisResults: {
     technical: [],
     market: [],
@@ -139,6 +152,8 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
       return { ...state, threejsVisualization: action.payload };
     case 'SET_BUSINESS_STRATEGY_SVG':
       return { ...state, businessStrategySvg: action.payload };
+    case 'SET_MOST_RECENT_GENERATION':
+      return { ...state, mostRecentGeneration: action.payload };
     case 'SET_ANALYSIS_RESULTS':
       return { 
         ...state, 
@@ -180,6 +195,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
   const removeAsset = (assetId: string) => dispatch({ type: 'REMOVE_ASSET', payload: assetId });
   
   const update3DVisualization = (dataUrl: string | null) => dispatch({ type: 'UPDATE_3D_VISUALIZATION', payload: dataUrl });
+  
   const updateVisualizations = (prompts: VisualizationPrompts) => dispatch({ type: 'UPDATE_VISUALIZATIONS', payload: prompts });
   
   const saveToDatabase = useCallback(async (showToast: boolean = false): Promise<void> => {
@@ -201,9 +217,6 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
           id: "saving-invention"
         });
       }
-      
-      // Remove this return statement that's causing the type error
-      // return inventionId;
     } catch (error) {
       console.error("Error saving to database:", error);
       
@@ -252,10 +265,16 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
   
   const setThreejsVisualization = (code: string | null, html: string | null) => 
     dispatch({ type: 'SET_THREEJS_VISUALIZATION', payload: { code, html } });
+  
   const setBusinessStrategySvg = (svgData: string | null) => 
     dispatch({ type: 'SET_BUSINESS_STRATEGY_SVG', payload: svgData });
+  
+  const setMostRecentGeneration = (item: GeneratedItem | null) => 
+    dispatch({ type: 'SET_MOST_RECENT_GENERATION', payload: item });
+  
   const setAnalysisResults = (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => 
     dispatch({ type: 'SET_ANALYSIS_RESULTS', payload: { category, results } });
+  
   const addAudioTranscription = (transcription: AudioTranscription) => 
     dispatch({ type: 'ADD_AUDIO_TRANSCRIPTION', payload: transcription });
 
@@ -274,6 +293,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         loadInvention,
         setThreejsVisualization,
         setBusinessStrategySvg,
+        setMostRecentGeneration,
         setAnalysisResults,
         addAudioTranscription
       }}

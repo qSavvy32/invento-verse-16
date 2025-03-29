@@ -29,18 +29,24 @@ export const generateSketch = async (request: VisualizationRequest) => {
     throw new Error(error.message);
   }
 
-  // Return the data URL of the sketch for immediate display
-  return data.sketch_url;
+  // Return both the data URL and storage URL
+  return {
+    dataUrl: data.sketch_url,
+    storageUrl: data.storage_url || null,
+    type: 'sketch'
+  };
 };
 
 export const generate3DImage = async (request: VisualizationRequest) => {
-  const { title, description, userId } = request;
+  const { title, description, userId, prompt: customPrompt } = request;
   
-  if (!title && !description) {
+  if (!title && !description && !customPrompt) {
     throw new Error("Please provide a title and description first");
   }
 
-  const prompt = `Create a 3D mockup of ${title}. ${description}`;
+  const prompt = customPrompt || `Create marketing imagery for ${title}. ${description}`;
+
+  toast.info("Generating marketing imagery using Hugging Face...");
 
   const { data, error } = await supabase.functions.invoke("generate-flux-image", {
     body: {
@@ -54,7 +60,11 @@ export const generate3DImage = async (request: VisualizationRequest) => {
     throw new Error(error.message);
   }
 
-  return data.image_url || null;
+  return {
+    dataUrl: data.image_url,
+    storageUrl: data.storage_url || null,
+    type: 'marketing'
+  };
 };
 
 export const generateRealistic3DImage = async (request: VisualizationRequest) => {
@@ -65,6 +75,8 @@ export const generateRealistic3DImage = async (request: VisualizationRequest) =>
   }
 
   const prompt = `Create a realistic mockup of ${title}. ${description}`;
+
+  toast.info("Generating realistic mockup using Hugging Face...");
 
   const { data, error } = await supabase.functions.invoke("generate-flux-image", {
     body: {
@@ -78,7 +90,11 @@ export const generateRealistic3DImage = async (request: VisualizationRequest) =>
     throw new Error(error.message);
   }
 
-  return data.image_url || null;
+  return {
+    dataUrl: data.image_url,
+    storageUrl: data.storage_url || null,
+    type: 'realistic'
+  };
 };
 
 export const generateBusinessStrategy = async (request: VisualizationRequest) => {
@@ -100,5 +116,34 @@ export const generateBusinessStrategy = async (request: VisualizationRequest) =>
     throw new Error(error.message);
   }
 
-  return data.svgCode || null;
+  return {
+    svgCode: data.svgCode || null,
+    type: 'business-strategy'
+  };
+};
+
+export const generateCustomMarketingImage = async (request: VisualizationRequest) => {
+  if (!request.prompt) {
+    throw new Error("Please provide a prompt for your marketing image");
+  }
+
+  toast.info("Generating custom marketing imagery using Hugging Face...");
+
+  const { data, error } = await supabase.functions.invoke("generate-flux-image", {
+    body: {
+      prompt: request.prompt,
+      style: "3d_model",
+      userId: request.userId
+    }
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    dataUrl: data.image_url,
+    storageUrl: data.storage_url || null,
+    type: 'custom-marketing'
+  };
 };

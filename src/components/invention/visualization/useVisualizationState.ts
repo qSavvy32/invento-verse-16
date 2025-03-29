@@ -7,26 +7,30 @@ import {
   generate3DImage,
   generateRealistic3DImage,
   generateBusinessStrategy,
+  generateCustomMarketingImage,
   VisualizationRequest
 } from "./visualizationService";
 
 export interface LoadingState {
   sketch: boolean;
   image: boolean;
-  threejs: boolean;  // Added missing property
+  threejs: boolean;
   realistic3d: boolean;
   businessStrategy: boolean;
+  customMarketing: boolean;
   runAll: boolean;
 }
 
 export const useVisualizationState = () => {
-  const { state, updateSketchData, update3DVisualization, setBusinessStrategySvg, addAsset } = useInvention();
+  const { state, updateSketchData, update3DVisualization, setBusinessStrategySvg, addAsset, setMostRecentGeneration } = useInvention();
+  const [customPrompt, setCustomPrompt] = useState("");
   const [isLoading, setIsLoading] = useState<LoadingState>({
     sketch: false,
     image: false,
-    threejs: false,  // Initialize the property
+    threejs: false,
     realistic3d: false,
     businessStrategy: false,
+    customMarketing: false,
     runAll: false
   });
 
@@ -40,16 +44,26 @@ export const useVisualizationState = () => {
         description: state.description
       };
       
-      const sketchUrl = await generateSketch(request);
-      updateSketchData(sketchUrl);
+      const result = await generateSketch(request);
+      updateSketchData(result.dataUrl);
       
       // Add the sketch to the assets repository
-      if (sketchUrl) {
+      if (result.dataUrl) {
+        const assetId = `sketch-${Date.now()}`;
         addAsset({
-          id: `sketch-${Date.now()}`,
+          id: assetId,
           type: 'sketch',
-          url: sketchUrl,
-          thumbnailUrl: sketchUrl,
+          url: result.dataUrl,
+          thumbnailUrl: result.dataUrl,
+          name: `Sketch: ${state.title || "Untitled"}`,
+          createdAt: Date.now()
+        });
+        
+        // Set as most recent generation
+        setMostRecentGeneration({
+          id: assetId,
+          type: 'sketch',
+          url: result.dataUrl,
           name: `Sketch: ${state.title || "Untitled"}`,
           createdAt: Date.now()
         });
@@ -68,33 +82,44 @@ export const useVisualizationState = () => {
 
   const handleGenerate3DImage = async () => {
     setIsLoading(prev => ({ ...prev, image: true }));
-    toast.info("Generating 3D mockup...");
+    toast.info("Generating marketing imagery...");
 
     try {
       const request: VisualizationRequest = {
         title: state.title,
-        description: state.description
+        description: state.description,
+        prompt: customPrompt
       };
       
-      const imageUrl = await generate3DImage(request);
-      update3DVisualization(imageUrl);
+      const result = await generate3DImage(request);
+      update3DVisualization(result.dataUrl);
       
       // Add the 3D image to the assets repository
-      if (imageUrl) {
+      if (result.dataUrl) {
+        const assetId = `marketing-${Date.now()}`;
         addAsset({
-          id: `3d-${Date.now()}`,
+          id: assetId,
           type: 'image',
-          url: imageUrl,
-          thumbnailUrl: imageUrl,
-          name: `3D Mockup: ${state.title || "Untitled"}`,
+          url: result.dataUrl,
+          thumbnailUrl: result.dataUrl,
+          name: `Marketing: ${state.title || "Untitled"}`,
+          createdAt: Date.now()
+        });
+        
+        // Set as most recent generation
+        setMostRecentGeneration({
+          id: assetId,
+          type: 'image',
+          url: result.dataUrl,
+          name: `Marketing: ${state.title || "Untitled"}`,
           createdAt: Date.now()
         });
       }
       
-      toast.success("3D mockup generated successfully");
+      toast.success("Marketing imagery generated successfully");
     } catch (error) {
-      console.error("Error generating 3D mockup:", error);
-      toast.error("Failed to generate 3D mockup", {
+      console.error("Error generating marketing imagery:", error);
+      toast.error("Failed to generate marketing imagery", {
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });
     } finally {
@@ -112,16 +137,26 @@ export const useVisualizationState = () => {
         description: state.description
       };
       
-      const imageUrl = await generateRealistic3DImage(request);
-      update3DVisualization(imageUrl);
+      const result = await generateRealistic3DImage(request);
+      update3DVisualization(result.dataUrl);
       
       // Add the realistic 3D image to the assets repository
-      if (imageUrl) {
+      if (result.dataUrl) {
+        const assetId = `realistic-3d-${Date.now()}`;
         addAsset({
-          id: `realistic-3d-${Date.now()}`,
+          id: assetId,
           type: 'image',
-          url: imageUrl,
-          thumbnailUrl: imageUrl,
+          url: result.dataUrl,
+          thumbnailUrl: result.dataUrl,
+          name: `Realistic Mockup: ${state.title || "Untitled"}`,
+          createdAt: Date.now()
+        });
+        
+        // Set as most recent generation
+        setMostRecentGeneration({
+          id: assetId,
+          type: 'image',
+          url: result.dataUrl,
           name: `Realistic Mockup: ${state.title || "Untitled"}`,
           createdAt: Date.now()
         });
@@ -149,8 +184,21 @@ export const useVisualizationState = () => {
         sketchDataUrl: state.sketchDataUrl
       };
       
-      const svgCode = await generateBusinessStrategy(request);
-      setBusinessStrategySvg(svgCode);
+      const result = await generateBusinessStrategy(request);
+      setBusinessStrategySvg(result.svgCode);
+      
+      // Set as most recent generation if it's an SVG
+      if (result.svgCode) {
+        setMostRecentGeneration({
+          id: `business-strategy-${Date.now()}`,
+          type: 'business-strategy',
+          url: null,
+          svg: result.svgCode,
+          name: `Business Strategy: ${state.title || "Untitled"}`,
+          createdAt: Date.now()
+        });
+      }
+      
       toast.success("Business strategy visualization generated successfully");
     } catch (error) {
       console.error("Error generating business strategy:", error);
@@ -161,13 +209,68 @@ export const useVisualizationState = () => {
       setIsLoading(prev => ({ ...prev, businessStrategy: false }));
     }
   };
+  
+  const handleGenerateCustomMarketingImage = async (prompt: string) => {
+    if (!prompt.trim()) {
+      toast.error("Please enter a marketing image prompt");
+      return;
+    }
+    
+    setIsLoading(prev => ({ ...prev, customMarketing: true }));
+    toast.info("Generating custom marketing imagery...");
+
+    try {
+      const request: VisualizationRequest = {
+        title: state.title,
+        description: state.description,
+        prompt: prompt
+      };
+      
+      const result = await generateCustomMarketingImage(request);
+      update3DVisualization(result.dataUrl);
+      
+      // Add the custom marketing image to the assets repository
+      if (result.dataUrl) {
+        const assetId = `custom-marketing-${Date.now()}`;
+        addAsset({
+          id: assetId,
+          type: 'image',
+          url: result.dataUrl,
+          thumbnailUrl: result.dataUrl,
+          name: `Custom Marketing: ${prompt.substring(0, 30)}${prompt.length > 30 ? '...' : ''}`,
+          createdAt: Date.now()
+        });
+        
+        // Set as most recent generation
+        setMostRecentGeneration({
+          id: assetId,
+          type: 'image',
+          url: result.dataUrl,
+          name: `Custom Marketing: ${prompt.substring(0, 30)}${prompt.length > 30 ? '...' : ''}`,
+          createdAt: Date.now()
+        });
+      }
+      
+      toast.success("Custom marketing imagery generated successfully");
+    } catch (error) {
+      console.error("Error generating custom marketing imagery:", error);
+      toast.error("Failed to generate custom marketing imagery", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
+    } finally {
+      setIsLoading(prev => ({ ...prev, customMarketing: false }));
+    }
+  };
 
   return {
     state,
     isLoading,
+    customPrompt,
+    setCustomPrompt,
     handleGenerateSketch,
     handleGenerate3DImage,
     handleGenerateRealistic3DImage,
-    handleGenerateBusinessStrategy
+    handleGenerateBusinessStrategy,
+    handleGenerateCustomMarketingImage
   };
 };
