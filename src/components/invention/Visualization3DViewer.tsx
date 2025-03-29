@@ -1,7 +1,7 @@
 
 import { useInvention } from "@/contexts/InventionContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cube3dIcon } from "lucide-react";
+import { Cube } from "lucide-react";
 
 export const Visualization3DViewer = () => {
   const { state } = useInvention();
@@ -14,7 +14,7 @@ export const Visualization3DViewer = () => {
     <Card className="mt-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Cube3dIcon className="h-5 w-5" />
+          <Cube className="h-5 w-5" />
           3D Visualization
         </CardTitle>
         <CardDescription>
