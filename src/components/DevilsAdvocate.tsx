@@ -16,18 +16,24 @@ import {
   LightbulbIcon,
   ShieldAlertIcon,
   Skull,
+  Save,
+  Download
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useInvention } from "@/contexts/InventionContext";
 import { MarkdownContent } from "./invention/analysis/MarkdownContent";
+import PixelCard from "./ui/PixelCard";
 
 export const DevilsAdvocate = () => {
-  const { state } = useInvention();
+  const { state, saveToDatabase } = useInvention();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [critiques, setCritiques] = useState<Record<string, string[]> | null>(null);
+  
+  // Check if an idea is present
+  const hasIdea = Boolean(state.title || state.description);
   
   const generateCritique = async () => {
     if (!state.title && !state.description) {
@@ -76,35 +82,65 @@ export const DevilsAdvocate = () => {
     }
   };
   
+  const handleSaveDraft = () => {
+    console.log("Saving draft:", state);
+    saveToDatabase(true);
+    toast.success("Draft saved", {
+      description: "Your invention has been saved as a draft.",
+    });
+  };
+  
+  const handleExport = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `invention-${state.title || 'untitled'}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    
+    toast.success("Export successful", {
+      description: "Your invention has been exported as JSON.",
+    });
+  };
+  
+  // Only show if there's an idea
+  if (!hasIdea) {
+    return null;
+  }
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex flex-col items-center w-full">
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="w-full">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       
-      <Button 
-        onClick={generateCritique} 
-        disabled={isAnalyzing}
-        className="w-full"
-        variant="outline"
+      <PixelCard 
+        variant="pink" 
+        className="w-full max-w-md"
+        onClick={generateCritique}
+        active={isAnalyzing}
       >
-        {isAnalyzing ? (
-          <>
-            <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-            Generating critique...
-          </>
-        ) : (
-          <>
-            <Skull className="mr-2 h-4 w-4" />
-            Devil's Advocate Critique
-          </>
-        )}
-      </Button>
+        <div className="p-4 text-center">
+          {isAnalyzing ? (
+            <>
+              <Loader2Icon className="mx-auto h-6 w-6 animate-spin mb-2" />
+              <h3 className="font-bold text-lg">Generating critique...</h3>
+            </>
+          ) : (
+            <>
+              <Skull className="mx-auto h-6 w-6 mb-2" />
+              <h3 className="font-bold text-lg">Devil's Advocate Critique</h3>
+              <p className="text-sm opacity-80">Challenge your assumptions</p>
+            </>
+          )}
+        </div>
+      </PixelCard>
       
       {critiques && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-red-200 bg-red-50 w-full">
           <CardHeader className="pb-2">
             <CardTitle className="text-red-800 flex items-center gap-2">
               <Skull className="h-5 w-5" />
@@ -169,6 +205,23 @@ export const DevilsAdvocate = () => {
           </CardContent>
         </Card>
       )}
+      
+      {/* Save Your Work Section - moved from InventionForm */}
+      <div className="border rounded-lg p-4 w-full mt-6">
+        <div className="flex justify-between mb-4">
+          <h2 className="text-xl font-semibold">Save Your Work</h2>
+          <div className="space-x-4">
+            <Button onClick={handleSaveDraft}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Draft
+            </Button>
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

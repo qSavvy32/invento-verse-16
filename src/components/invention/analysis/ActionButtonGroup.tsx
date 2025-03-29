@@ -1,17 +1,13 @@
 
 import { Button } from "@/components/ui/button";
 import { 
-  Loader2,
-  Lightbulb,
-  Package,
-  Play,
-  PencilRuler,
-  ImageIcon
+  ArrowRightCircle, 
+  Cpu, 
+  Package, 
+  LayoutList,
+  Zap 
 } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useInvention } from "@/contexts/InventionContext";
+import PixelCard from "@/components/ui/PixelCard";
 
 interface ActionButtonGroupProps {
   isLoading: Record<string, boolean>;
@@ -28,128 +24,72 @@ export const ActionButtonGroup = ({
   onGenerateThreejsVisualization,
   onRunAllAnalyses
 }: ActionButtonGroupProps) => {
-  const [generatingSketch, setGeneratingSketch] = useState(false);
-  const { state, updateSketchData } = useInvention();
-
-  const generateSketch = async () => {
-    if (!state.title && !state.description) {
-      toast.error("Please provide a title and description first");
-      return;
-    }
-
-    setGeneratingSketch(true);
-    
-    try {
-      toast.info("Generating sketch...", {
-        description: "This may take a minute to complete"
-      });
-      
-      const { data, error } = await supabase.functions.invoke("generate-sketch", {
-        body: {
-          prompt: `${state.title}: ${state.description}`
-        }
-      });
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      if (data?.sketch_url) {
-        // Download the image and convert to data URL
-        const response = await fetch(data.sketch_url);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        
-        reader.onloadend = () => {
-          const dataUrl = reader.result as string;
-          updateSketchData(dataUrl);
-          
-          toast.success("Sketch generated", {
-            description: "Your sketch has been created successfully"
-          });
-        };
-        
-        reader.readAsDataURL(blob);
-      } else {
-        throw new Error("No sketch URL returned");
-      }
-    } catch (error) {
-      console.error("Error generating sketch:", error);
-      toast.error("Sketch generation failed", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred"
-      });
-    } finally {
-      setGeneratingSketch(false);
-    }
-  };
-
   return (
-    <div className="space-y-6 pt-2">
-      <div className="space-y-4">
-        <h3 className="text-md font-medium mb-2">Visualization Tools</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button 
-            onClick={onGenerate3DVisualization} 
-            disabled={isLoading.visualization || isDisabled}
+    <div className="space-y-4">
+      <h3 className="text-md font-medium mb-2">Actions</h3>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <PixelCard 
+          variant="default"
+          onClick={onRunAllAnalyses}
+          className="h-24"
+          active={isLoading.runAll}
+        >
+          <div className="text-center">
+            {isLoading.runAll ? (
+              <div className="animate-pulse">
+                <Zap className="mx-auto h-6 w-6 mb-2" />
+                <p className="font-medium">Running all analyses...</p>
+              </div>
+            ) : (
+              <>
+                <Zap className="mx-auto h-6 w-6 mb-2" />
+                <p className="font-medium">Run All Analyses</p>
+                <p className="text-xs opacity-80">Complete invention assessment</p>
+              </>
+            )}
+          </div>
+        </PixelCard>
+        
+        <div className="flex flex-col space-y-2">
+          <Button
             variant="outline"
-            className="flex items-center"
+            onClick={onGenerate3DVisualization}
+            disabled={isDisabled || isLoading.visualization}
+            className="h-12 justify-start"
           >
             {isLoading.visualization ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <span className="animate-pulse flex items-center">
+                <Cpu className="mr-2 h-4 w-4 animate-spin" />
+                Generating 3D model...
+              </span>
             ) : (
-              <ImageIcon className="mr-2 h-4 w-4" />
+              <>
+                <Cpu className="mr-2 h-4 w-4" />
+                Generate 3D Model
+              </>
             )}
-            <span>Generate AI Image</span>
-          </Button>
-          
-          <Button 
-            onClick={generateSketch} 
-            disabled={generatingSketch || isDisabled}
-            variant="outline"
-            className="flex items-center"
-          >
-            {generatingSketch ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <PencilRuler className="mr-2 h-4 w-4" />
-            )}
-            <span>Generate Sketch</span>
           </Button>
           
           <Button
-            onClick={onGenerateThreejsVisualization}
-            disabled={isLoading.threejs || isDisabled}
             variant="outline"
-            className="flex items-center"
+            onClick={onGenerateThreejsVisualization}
+            disabled={isDisabled || isLoading.threejs}
+            className="h-12 justify-start"
           >
             {isLoading.threejs ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <span className="animate-pulse flex items-center">
+                <Package className="mr-2 h-4 w-4 animate-spin" />
+                Generating visualization...
+              </span>
             ) : (
-              <Package className="mr-2 h-4 w-4" />
+              <>
+                <Package className="mr-2 h-4 w-4" />
+                Generate Web 3D Visualization
+              </>
             )}
-            <span>Generate 3D Model</span>
           </Button>
         </div>
-      </div>
-      
-      <div className="space-y-2">
-        <div className="flex justify-center">
-          <Button
-            onClick={onRunAllAnalyses}
-            disabled={isDisabled}
-            className="w-full md:w-1/2 flex items-center justify-center"
-          >
-            {isLoading.runAll ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Play className="mr-2 h-4 w-4" />
-            )}
-            <span>Run All Analyses</span>
-          </Button>
-        </div>
-        <p className="text-xs text-center text-muted-foreground">
-          Run all analysis tools at once to get a comprehensive evaluation
-        </p>
       </div>
     </div>
   );

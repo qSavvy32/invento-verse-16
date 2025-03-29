@@ -26,31 +26,28 @@ const WorkspaceContent = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <InventionForm />
+        <div className="mb-16">
+          <InventionForm />
             
-            {/* Show analysis results */}
-            <div className="mt-8">
-              <AnalysisResults />
-            </div>
-            
-            {state.threejsVisualization.html && (
-              <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  3D Visualization
-                </h2>
-                <ThreejsVisualizer />
-              </div>
-            )}
+          {/* Show analysis results */}
+          <div className="mt-8">
+            <AnalysisResults />
           </div>
           
-          <div className="lg:col-span-1">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Skull className="h-5 w-5" />
-              <span className="text-red-800">Devil's Advocate Critique</span>
-            </h2>
+          {state.threejsVisualization.html && (
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                3D Visualization
+              </h2>
+              <ThreejsVisualizer />
+            </div>
+          )}
+        </div>
+        
+        {/* Devil's Advocate Section - Moved to bottom and centered */}
+        <div className="py-8 flex justify-center">
+          <div className="w-full max-w-2xl">
             <DevilsAdvocate />
           </div>
         </div>
