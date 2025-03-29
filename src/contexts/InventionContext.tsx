@@ -2,11 +2,19 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react';
 
 // Types
+export interface VisualizationPrompts {
+  concept?: string;
+  materials?: string;
+  users?: string;
+  problem?: string;
+}
+
 export interface InventionState {
   title: string;
   description: string;
   sketchDataUrl: string | null;
   visualization3dUrl: string | null;
+  visualizationPrompts: VisualizationPrompts;
   savedToDatabase: boolean;
   analysisResults: {
     technical: string[];
@@ -21,6 +29,7 @@ type InventionAction =
   | { type: 'UPDATE_DESCRIPTION'; payload: string }
   | { type: 'UPDATE_SKETCH_DATA'; payload: string | null }
   | { type: 'UPDATE_3D_VISUALIZATION'; payload: string | null }
+  | { type: 'UPDATE_VISUALIZATIONS'; payload: VisualizationPrompts }
   | { type: 'SAVE_TO_DATABASE'; payload: boolean }
   | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } };
 
@@ -30,6 +39,7 @@ interface InventionContextType {
   updateDescription: (description: string) => void;
   updateSketchData: (dataUrl: string | null) => void;
   update3DVisualization: (dataUrl: string | null) => void;
+  updateVisualizations: (prompts: VisualizationPrompts) => void;
   saveToDatabase: (saved: boolean) => void;
   setAnalysisResults: (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => void;
 }
@@ -40,6 +50,7 @@ const initialState: InventionState = {
   description: '',
   sketchDataUrl: null,
   visualization3dUrl: null,
+  visualizationPrompts: {},
   savedToDatabase: false,
   analysisResults: {
     technical: [],
@@ -60,6 +71,8 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
       return { ...state, sketchDataUrl: action.payload };
     case 'UPDATE_3D_VISUALIZATION':
       return { ...state, visualization3dUrl: action.payload };
+    case 'UPDATE_VISUALIZATIONS':
+      return { ...state, visualizationPrompts: { ...state.visualizationPrompts, ...action.payload } };
     case 'SAVE_TO_DATABASE':
       return { ...state, savedToDatabase: action.payload };
     case 'SET_ANALYSIS_RESULTS':
@@ -86,6 +99,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
   const updateDescription = (description: string) => dispatch({ type: 'UPDATE_DESCRIPTION', payload: description });
   const updateSketchData = (dataUrl: string | null) => dispatch({ type: 'UPDATE_SKETCH_DATA', payload: dataUrl });
   const update3DVisualization = (dataUrl: string | null) => dispatch({ type: 'UPDATE_3D_VISUALIZATION', payload: dataUrl });
+  const updateVisualizations = (prompts: VisualizationPrompts) => dispatch({ type: 'UPDATE_VISUALIZATIONS', payload: prompts });
   const saveToDatabase = (saved: boolean) => dispatch({ type: 'SAVE_TO_DATABASE', payload: saved });
   const setAnalysisResults = (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => 
     dispatch({ type: 'SET_ANALYSIS_RESULTS', payload: { category, results } });
@@ -98,6 +112,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         updateDescription, 
         updateSketchData, 
         update3DVisualization,
+        updateVisualizations,
         saveToDatabase,
         setAnalysisResults
       }}

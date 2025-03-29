@@ -105,7 +105,13 @@ Analyze the entirety of the provided context. Synthesize the information to unde
     "string",
     "string",
     ...
-  ]
+  ],
+  "visualization_prompts": { // Add visualization prompts for different aspects of the analysis
+    "concept": "string", // A prompt to generate an image visualizing the core concept
+    "materials": "string", // A prompt to generate an image of suggested materials/components
+    "users": "string", // A prompt to visualize the target users using the invention
+    "problem": "string" // A prompt to visualize the problem being solved
+  }
 }
 \`\`\`
 
@@ -119,13 +125,14 @@ Analyze the entirety of the provided context. Synthesize the information to unde
 6.  **No External Knowledge:** Base your analysis solely on the provided input context. Do not invent features, solutions, or details not present or strongly implied.
 7.  **No Legal/Patent Advice:** Do not include any text that could be construed as legal or patent advice. Focus on the technical and conceptual aspects.
 8.  **Helpful Tone:** While analytical, frame \`unclear_aspects_questions\` and \`suggested_next_steps\` in a constructive and encouraging manner suitable for an inventor's assistant.
+9.  **Visualization Prompts:** Create detailed image generation prompts for each aspect of the visualization_prompts object that accurately reflects the invention based on all inputs.
 
 Generate the JSON structure based on the multimodal input provided in the user's message.
 `;
 
     console.log("Sending request to Anthropic API...");
     
-    // Call Anthropic API
+    // Call Anthropic API with updated model
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -134,7 +141,7 @@ Generate the JSON structure based on the multimodal input provided in the user's
         "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify({
-        model: "claude-3-7-sonnet-20240229",
+        model: "claude-3-sonnet-20240229",
         max_tokens: 4096,
         temperature: 0.5,
         system: system_prompt,

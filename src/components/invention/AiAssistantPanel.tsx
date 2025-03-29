@@ -3,7 +3,7 @@ import { useInvention } from "@/contexts/InventionContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useState } from "react";
 import { Box, Loader2Icon, BarChart3, Database, Lightbulb, Target, Users, Search, Award, FileText } from "lucide-react";
 import { IdeaGenerator } from "@/components/IdeaGenerator";
@@ -14,7 +14,7 @@ interface AiAssistantPanelProps {
 }
 
 export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) => {
-  const { state, setAnalysisResults, update3DVisualization } = useInvention();
+  const { state, setAnalysisResults, update3DVisualization, updateVisualizations } = useInvention();
   const [analyzing, setAnalyzing] = useState(false);
   const [generating3D, setGenerating3D] = useState(false);
   
@@ -54,12 +54,18 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       
       const marketResults = [
         `Problem solved: ${data.problem_solved}`,
-        `Potential users: ${data.potential_target_users}`
+        `Potential users: ${data.potential_target_users}`,
+        ...(data.market_insights || [])
       ];
       
       const legalResults = data.unclear_aspects_questions || [];
       
       const businessResults = data.suggested_next_steps || [];
+      
+      // Update visualization prompts if available
+      if (data.visualization_prompts) {
+        updateVisualizations(data.visualization_prompts);
+      }
       
       // Update the context with the results
       setAnalysisResults('technical', technicalResults);
@@ -161,7 +167,14 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         "Conductive fabric for integrated sensor connectivity."
       ];
       
+      // Add visualization prompt for materials
+      const visualizationPrompts = {
+        materials: "An exploded view diagram showing the various materials used in the invention: medical-grade silicone, thermoplastic polymers, recycled aluminum, and conductive fabric, all labeled clearly against a blueprint background"
+      };
+      
       setAnalysisResults('technical', materialSuggestions);
+      updateVisualizations(visualizationPrompts);
+      
       setAnalyzing(false);
       toast({
         title: "Materials suggested",
@@ -192,7 +205,14 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         "Environmental resistance for outdoor usability."
       ];
       
+      // Add visualization prompt for challenges
+      const visualizationPrompts = {
+        concept: "Technical diagram highlighting the core challenges of the invention with callouts showing power efficiency issues, miniaturization constraints, UI complexity, and environmental protection features"
+      };
+      
       setAnalysisResults('technical', challenges);
+      updateVisualizations(visualizationPrompts);
+      
       setAnalyzing(false);
       toast({
         title: "Challenges identified",
@@ -223,7 +243,14 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         "Early adopters: Tech enthusiasts and DIY makers."
       ];
       
+      // Add visualization prompt for target users
+      const visualizationPrompts = {
+        users: "A visual collage showing the diverse target users of the invention: urban professionals using the device in a modern office, health-conscious individuals using it during exercise, medical professionals in a clinical setting, and tech enthusiasts in a maker space"
+      };
+      
       setAnalysisResults('market', targetUsers);
+      updateVisualizations(visualizationPrompts);
+      
       setAnalyzing(false);
       toast({
         title: "Target users identified",
@@ -254,7 +281,14 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         "Emerging threats: Two startups with seed funding developing similar concepts."
       ];
       
+      // Add visualization prompt for competition
+      const visualizationPrompts = {
+        concept: "A comparative market positioning chart showing the invention positioned against competitors on axes of price vs. functionality, highlighting the market gap being filled"
+      };
+      
       setAnalysisResults('market', competitionInsights);
+      updateVisualizations(visualizationPrompts);
+      
       setAnalyzing(false);
       toast({
         title: "Competition analyzed",
@@ -285,7 +319,14 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         "Execute confidentiality agreements before sharing with potential partners."
       ];
       
+      // Add visualization prompt for IP protection
+      const visualizationPrompts = {
+        concept: "A visual guide to IP protection showing the invention with patent document overlays, design patent callouts, documentation process, and confidentiality agreement icons"
+      };
+      
       setAnalysisResults('legal', ipTips);
+      updateVisualizations(visualizationPrompts);
+      
       setAnalyzing(false);
       toast({
         title: "IP protection tips provided",
@@ -316,7 +357,14 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         "Review GDPR compliance requirements for data collection features."
       ];
       
+      // Add visualization prompt for regulatory checklist
+      const visualizationPrompts = {
+        concept: "A regulatory compliance roadmap showing certification paths for the invention, with FCC, UL, FDA, and GDPR certification processes illustrated as a timeline"
+      };
+      
       setAnalysisResults('legal', regulatoryItems);
+      updateVisualizations(visualizationPrompts);
+      
       setAnalyzing(false);
       toast({
         title: "Regulatory checklist generated",
@@ -374,11 +422,20 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
         "Partner with complementary product makers for bundled offerings."
       ];
       
+      // Add visualization prompts for comprehensive analysis
+      const visualizationPrompts = {
+        concept: "A detailed technical diagram of the invention showing its modular components, energy efficiency features, Bluetooth connectivity, and compact design elements",
+        materials: "Cross-section view of the invention showing the internal components and materials used in construction",
+        users: "Diverse users interacting with the invention in different contexts: home, work, and on-the-go scenarios",
+        problem: "Before and after comparison showing the problem being solved by the invention, with clear visual demonstration of the benefits"
+      };
+      
       // Update all analysis categories
       setAnalysisResults('technical', technicalInsights);
       setAnalysisResults('market', marketInsights);
       setAnalysisResults('legal', legalInsights);
       setAnalysisResults('business', businessInsights);
+      updateVisualizations(visualizationPrompts);
       
       setAnalyzing(false);
       toast({
@@ -489,7 +546,7 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             disabled={analyzing}
           >
             {analyzing ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Analyze with Claude 3.7 Sonnet
+            Analyze with Claude 3 Sonnet
           </Button>
           
           <Button 

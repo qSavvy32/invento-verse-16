@@ -18,6 +18,7 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
   const [drawingMode, setDrawingMode] = useState<"pen" | "eraser">("pen");
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   // Initialize canvas
   useEffect(() => {
@@ -35,6 +36,15 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     fabricCanvas.freeDrawingBrush.color = "#4A3C31";
     fabricCanvas.freeDrawingBrush.width = 3;
     
+    // Track drawing state to ensure lines remain visible
+    fabricCanvas.on('mouse:down', () => {
+      setIsDrawing(true);
+    });
+    
+    fabricCanvas.on('mouse:up', () => {
+      setIsDrawing(false);
+    });
+    
     setCanvas(fabricCanvas);
     
     // Save initial state
@@ -48,11 +58,18 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     };
   }, [width, height]);
   
-  // Save state after each object added
+  // Save state after each object added and ensure paths remain visible
   useEffect(() => {
     if (!canvas) return;
     
-    const handlePathCreated = () => {
+    const handlePathCreated = (e: any) => {
+      // Make sure the path stays visible on canvas
+      const path = e.path;
+      if (path) {
+        path.selectable = false;
+        path.evented = false;
+      }
+      
       const currentState = canvas.toDataURL();
       
       // If we're not at the end of history, truncate
@@ -291,9 +308,15 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
         </Button>
       </div>
       
-      <div className="sketch-canvas-container overflow-hidden">
+      <div className="sketch-canvas-container overflow-hidden rounded-md border border-gray-300">
         <canvas ref={canvasRef} className="sketch-canvas" />
       </div>
+      
+      {isDrawing && (
+        <div className="text-xs text-muted-foreground text-center">
+          Drawing in progress...
+        </div>
+      )}
     </div>
   );
 };
