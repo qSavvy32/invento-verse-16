@@ -4,7 +4,7 @@ import { useInvention } from "@/contexts/InventionContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { CircleIcon, PlusIcon, RefreshCw, Send } from "lucide-react";
+import { CircleIcon, PlusIcon, RefreshCw, Send, Archive } from "lucide-react";
 import { GeminiService } from "@/services/GeminiService";
 import { ChatMessage, ChatMode } from "./types";
 import { MessageList } from "./MessageList";
@@ -13,11 +13,12 @@ import { processGeminiResponse } from "./responseProcessor";
 import { toast } from "sonner";
 
 export const ChatInterface = () => {
-  const { state, addAnalysisResult } = useInvention();
+  const { state, addAnalysisResult, setMostRecentGeneration } = useInvention();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [chatMode, setChatMode] = useState<ChatMode>("ideation");
+  const [isRefining, setIsRefining] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Add initial welcome message
@@ -186,6 +187,135 @@ export const ChatInterface = () => {
     setChatMode("ideation");
   };
 
+  const endChatAndRefine = async () => {
+    try {
+      setIsRefining(true);
+      toast.loading("Organizing your data...", { id: "refining-data" });
+
+      // Gather all structured data from the conversation
+      const allStructuredData = messages
+        .filter(msg => msg.structuredData)
+        .map(msg => msg.structuredData);
+      
+      // Prepare final summary data
+      const summaryData = {
+        title: state.title || "Untitled Invention",
+        description: state.description || "",
+        timestamp: Date.now(),
+        technical: [] as string[],
+        market: [] as string[],
+        legal: [] as string[],
+        business: [] as string[],
+        engineeringChallenges: [] as any[],
+        designConsiderations: [] as any[],
+        technicalFeasibility: null as any,
+        userAnalysis: {
+          primaryUserGroup: null as any,
+          targetUserGroups: [] as any[]
+        }
+      };
+      
+      // Merge all the structured data together
+      allStructuredData.forEach(data => {
+        if (!data) return;
+        
+        if (data.technical) {
+          summaryData.technical = [...summaryData.technical, ...data.technical];
+        }
+        if (data.market) {
+          summaryData.market = [...summaryData.market, ...data.market];
+        }
+        if (data.legal) {
+          summaryData.legal = [...summaryData.legal, ...data.legal];
+        }
+        if (data.business) {
+          summaryData.business = [...summaryData.business, ...data.business];
+        }
+        if (data.engineeringChallenges) {
+          summaryData.engineeringChallenges = [
+            ...summaryData.engineeringChallenges,
+            ...data.engineeringChallenges
+          ];
+        }
+        if (data.designConsiderations) {
+          summaryData.designConsiderations = [
+            ...summaryData.designConsiderations,
+            ...data.designConsiderations
+          ];
+        }
+        if (data.technicalFeasibility && !summaryData.technicalFeasibility) {
+          summaryData.technicalFeasibility = data.technicalFeasibility;
+        }
+        if (data.userAnalysis) {
+          if (data.userAnalysis.primaryUserGroup && !summaryData.userAnalysis.primaryUserGroup) {
+            summaryData.userAnalysis.primaryUserGroup = data.userAnalysis.primaryUserGroup;
+          }
+          if (data.userAnalysis.targetUserGroups) {
+            summaryData.userAnalysis.targetUserGroups = [
+              ...summaryData.userAnalysis.targetUserGroups,
+              ...data.userAnalysis.targetUserGroups
+            ];
+          }
+        }
+      });
+      
+      // Store the final data in the invention context
+      setMostRecentGeneration({
+        id: `chat-summary-${Date.now()}`,
+        type: 'chat-summary',
+        name: 'Chat Analysis Summary',
+        createdAt: Date.now(),
+        data: summaryData
+      });
+      
+      // Save the final technical analysis
+      if (summaryData.technical.length > 0) {
+        addAnalysisResult("technical", "## Chat Analysis Summary - Technical\n\n" + 
+          summaryData.technical.join("\n\n"));
+      }
+      
+      // Save the final market analysis
+      if (summaryData.market.length > 0) {
+        addAnalysisResult("market", "## Chat Analysis Summary - Market\n\n" + 
+          summaryData.market.join("\n\n"));
+      }
+      
+      // Save the final legal analysis
+      if (summaryData.legal.length > 0) {
+        addAnalysisResult("legal", "## Chat Analysis Summary - Legal\n\n" + 
+          summaryData.legal.join("\n\n"));
+      }
+      
+      // Save the final business analysis
+      if (summaryData.business.length > 0) {
+        addAnalysisResult("business", "## Chat Analysis Summary - Business\n\n" + 
+          summaryData.business.join("\n\n"));
+      }
+      
+      // Save chat data to Supabase
+      const { ChatDataService } = await import("@/services/ChatDataService");
+      await ChatDataService.saveChatSummary(summaryData);
+      
+      toast.dismiss("refining-data");
+      toast.success("Your invention data has been refined and stored!");
+      
+      // Add a closing message to the chat
+      setMessages((prev) => [...prev, {
+        id: `summary-${Date.now()}`,
+        role: "assistant",
+        content: "I've analyzed our conversation and stored the key insights about your invention. You can now view the organized data in the Analysis tab and Asset Repository.",
+        timestamp: Date.now()
+      }]);
+      
+    } catch (error) {
+      console.error("Error refining chat data:", error);
+      toast.dismiss("refining-data");
+      toast.error("Failed to process the chat data. Please try again.");
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
   return (
     <Card className="flex flex-col h-[600px] max-h-[80vh]">
       <div className="flex items-center justify-between p-4 border-b">
@@ -209,6 +339,22 @@ export const ChatInterface = () => {
       </div>
 
       <div className="p-4 border-t">
+        <div className="flex gap-2 mb-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={endChatAndRefine}
+            disabled={isLoading || isRefining || messages.length <= 1}
+            className="ml-auto flex items-center gap-1"
+          >
+            {isRefining ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Archive className="h-4 w-4" />
+            )}
+            End Chat & Refine
+          </Button>
+        </div>
         <div className="flex gap-2">
           <Textarea
             value={inputMessage}
@@ -216,11 +362,11 @@ export const ChatInterface = () => {
             onKeyDown={handleKeyDown}
             placeholder="Type your message..."
             className="min-h-[60px] flex-1"
-            disabled={isLoading}
+            disabled={isLoading || isRefining}
           />
           <Button 
             onClick={handleSendMessage}
-            disabled={isLoading || !inputMessage.trim()}
+            disabled={isLoading || isRefining || !inputMessage.trim()}
             className="self-end"
           >
             {isLoading ? (
