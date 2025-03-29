@@ -132,7 +132,7 @@ Generate the JSON structure based on the multimodal input provided in the user's
 
     console.log("Sending request to Anthropic API...");
     
-    // Call Anthropic API with updated model
+    // Call Anthropic API with updated model and format
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -150,7 +150,11 @@ Generate the JSON structure based on the multimodal input provided in the user's
             role: "user",
             content: combined_input
           }
-        ]
+        ],
+        thinking: {
+          type: "enabled",
+          budget_tokens: 2000
+        }
       })
     });
 
