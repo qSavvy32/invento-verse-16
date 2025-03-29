@@ -103,8 +103,9 @@ serve(async (req) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title || "Invention"} - 3D Visualization</title>
   <style>
-    * { margin: 0; padding: 0; }
-    body { overflow: hidden; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body { background-color: #000; }
     canvas { width: 100%; height: 100%; display: block; }
     #info {
       position: absolute;
@@ -115,6 +116,7 @@ serve(async (req) => {
       font-family: Arial, sans-serif;
       pointer-events: none;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      z-index: 100;
     }
   </style>
 </head>
@@ -123,12 +125,24 @@ serve(async (req) => {
     <h1>${title || "Invention"}</h1>
     <p>Click and drag to rotate. Scroll to zoom.</p>
   </div>
-  <div id="scene-container"></div>
+  <div id="scene-container" style="width: 100%; height: 100%;"></div>
   <script type="module">
     ${scriptContent}
 
-    const container = document.getElementById('scene-container');
-    createInventionScene(container);
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.getElementById('scene-container');
+      if (typeof createInventionScene === 'function') {
+        try {
+          createInventionScene(container);
+        } catch (error) {
+          console.error('Error creating scene:', error);
+          container.innerHTML = '<div style="color: white; padding: 20px;">Error creating 3D scene: ' + error.message + '</div>';
+        }
+      } else {
+        console.error('createInventionScene function not found');
+        container.innerHTML = '<div style="color: white; padding: 20px;">Error: 3D visualization function not found</div>';
+      }
+    });
   </script>
 </body>
 </html>`;
