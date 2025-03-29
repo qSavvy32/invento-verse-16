@@ -13,6 +13,11 @@ export const DevilsAdvocate = () => {
   const handleGenerateCritique = async () => {
     await generateCritique(state.title, state.description, state.sketchDataUrl);
   };
+
+  // Create a wrapper function that properly returns a Promise
+  const handleSaveToDatabase = async (showToast?: boolean): Promise<void> => {
+    return saveToDatabase(showToast);
+  };
   
   return (
     <div className="space-y-6 flex flex-col items-center w-full">
@@ -32,7 +37,7 @@ export const DevilsAdvocate = () => {
       {/* Save Your Work Section */}
       <SaveExportSection 
         state={state} 
-        saveToDatabase={(showToast?: boolean) => saveToDatabase(showToast)} 
+        saveToDatabase={handleSaveToDatabase} 
       />
     </div>
   );
