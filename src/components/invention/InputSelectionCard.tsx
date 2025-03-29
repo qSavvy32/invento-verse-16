@@ -74,11 +74,12 @@ export const InputSelectionCard = ({
   }, [isActive]);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative h-full">
       {!isActive && (
         <PixelCard 
           variant={variant} 
           onClick={handleCardClick}
+          className="h-full"
         >
           <div className="flex flex-col items-center justify-center h-full w-full">
             <div className="text-3xl mb-2">{icon}</div>

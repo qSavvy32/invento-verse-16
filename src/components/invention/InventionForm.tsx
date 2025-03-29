@@ -1,6 +1,5 @@
 
 import { useInvention } from "@/contexts/InventionContext";
-import { InventionMetadata } from "./InventionMetadata";
 import { MultimodalInputArea } from "./MultimodalInputArea";
 import { AiAssistantPanel } from "./AiAssistantPanel";
 import { AnalysisResults } from "./AnalysisResults";
@@ -13,7 +12,6 @@ import { IdeaGenerator } from "@/components/idea-generator/IdeaGenerator";
 import { 
   Save, 
   Download, 
-  ListTodo, 
   Image, 
   Package, 
   LightbulbIcon, 
@@ -55,17 +53,7 @@ export const InventionForm = () => {
       <div className="border rounded-lg p-4 pb-8 relative min-h-[350px]" id="invention-design-container">
         <h2 className="text-xl font-semibold mb-6">Design Your Invention</h2>
         
-        <div className="card-container">
-          <InputSelectionCard
-            id="metadata"
-            title="Basic Information"
-            description="Define the core details of your invention"
-            icon={<ListTodo className="h-6 w-6" />}
-            variant="blue"
-          >
-            <InventionMetadata />
-          </InputSelectionCard>
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <InputSelectionCard
             id="sketch"
             title="Visual Input"
