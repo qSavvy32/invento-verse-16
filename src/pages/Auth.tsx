@@ -13,7 +13,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { BrainIcon } from "lucide-react";
 import { useEffect } from "react";
 
 const Auth = () => {
@@ -53,13 +52,17 @@ const Auth = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1 flex flex-col items-center">
             <div className="flex items-center mb-2">
-              <BrainIcon className="h-8 w-8 text-invention-accent mr-2" />
+              <img 
+                src="/public/lovable-uploads/59c6581d-3d12-4bbd-b6c9-cb0618679145.png" 
+                alt="Vinci Logo" 
+                className="h-12 w-12 mr-2"
+              />
               <span className="text-3xl font-leonardo font-semibold text-invention-ink">
-                InventoVerse
+                Vinci
               </span>
             </div>
             <CardTitle className="text-2xl font-bold text-center">
-              Welcome to InventoVerse
+              Welcome to Vinci
             </CardTitle>
             <CardDescription className="text-center">
               Your AI-powered invention studio
@@ -131,7 +134,7 @@ const Auth = () => {
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-sm text-center text-muted-foreground">
-              By continuing, you agree to InventoVerse's<br />
+              By continuing, you agree to Vinci's<br />
               Terms of Service and Privacy Policy
             </p>
           </CardFooter>

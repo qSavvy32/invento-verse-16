@@ -5,7 +5,7 @@ import { AuthHeader } from "@/components/AuthHeader";
 import { IdeaGenerator } from "@/components/IdeaGenerator";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BrainIcon, LightbulbIcon, RocketIcon, BookOpenIcon } from "lucide-react";
+import { LightbulbIcon, RocketIcon, BookOpenIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function Home() {
@@ -21,13 +21,17 @@ export function Home() {
         <section className="py-20 px-6 text-center">
           <div className="max-w-4xl mx-auto">
             <div className="flex justify-center mb-6">
-              <BrainIcon className="h-16 w-16 text-invention-accent" />
+              <img 
+                src="/public/lovable-uploads/59c6581d-3d12-4bbd-b6c9-cb0618679145.png" 
+                alt="Vinci Logo" 
+                className="h-24 w-24"
+              />
             </div>
             <h1 className="text-5xl md:text-6xl font-leonardo font-bold mb-6 text-invention-ink">
               Where Ideas Become Inventions
             </h1>
             <p className="text-xl mb-10 text-invention-ink/80 max-w-3xl mx-auto">
-              InventoVerse combines AI-powered tools with your creativity to bring 
+              Vinci combines AI-powered tools with your creativity to bring 
               your revolutionary ideas to life. Sketch, prototype, and launch your 
               next big invention.
             </p>

@@ -18,7 +18,7 @@ const WorkspaceContent = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold font-leonardo mb-2 flex items-center gap-2">
             <FlaskConicalIcon className="h-7 w-7 text-invention-accent" />
-            The Lab
+            The Studio
           </h1>
           <p className="text-muted-foreground">
             Experiment, test, and perfect your invention with advanced AI tools

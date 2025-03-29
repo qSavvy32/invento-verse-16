@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MoonIcon, SunIcon, MenuIcon, LightbulbIcon, BrainIcon } from "lucide-react";
+import { MoonIcon, SunIcon, MenuIcon, LightbulbIcon, FlaskConicalIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -28,10 +28,14 @@ export const Header = () => {
   return (
     <header className="border-b border-invention-accent/30 py-4 px-6">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <div className="flex items-center space-x-1">
-          <BrainIcon className="h-6 w-6 text-invention-accent" />
+        <div className="flex items-center space-x-2">
+          <img 
+            src="/public/lovable-uploads/59c6581d-3d12-4bbd-b6c9-cb0618679145.png" 
+            alt="Vinci Logo" 
+            className="h-8 w-8"
+          />
           <h1 className="text-2xl font-leonardo font-semibold text-invention-ink">
-            InventoVerse
+            Vinci
           </h1>
         </div>
         

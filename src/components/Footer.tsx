@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GithubIcon, TwitterIcon, LinkedinIcon, BrainIcon } from "lucide-react";
+import { GithubIcon, TwitterIcon, LinkedinIcon } from "lucide-react";
 
 export const Footer = () => {
   return (
@@ -10,9 +10,13 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <BrainIcon className="h-6 w-6 text-invention-accent" />
+              <img 
+                src="/public/lovable-uploads/59c6581d-3d12-4bbd-b6c9-cb0618679145.png" 
+                alt="Vinci Logo" 
+                className="h-8 w-8"
+              />
               <h2 className="text-xl font-leonardo font-semibold text-invention-ink">
-                InventoVerse
+                Vinci
               </h2>
             </div>
             <p className="text-invention-ink/80 mb-4">
@@ -44,8 +48,8 @@ export const Footer = () => {
           <div className="space-y-4">
             <h3 className="font-leonardo font-semibold text-invention-ink">Resources</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-invention-ink/80 hover:text-invention-accent">Patent Guide</a></li>
-              <li><a href="#" className="text-invention-ink/80 hover:text-invention-accent">Invention Blog</a></li>
+              <li><a href="#" className="text-invention-ink/80 hover:text-invention-accent">Innovation Guide</a></li>
+              <li><a href="#" className="text-invention-ink/80 hover:text-invention-accent">Vinci Blog</a></li>
               <li><a href="#" className="text-invention-ink/80 hover:text-invention-accent">Community</a></li>
               <li><a href="#" className="text-invention-ink/80 hover:text-invention-accent">Support</a></li>
             </ul>
@@ -64,7 +68,7 @@ export const Footer = () => {
         </div>
         
         <div className="mt-12 pt-6 border-t border-invention-accent/20 text-center text-invention-ink/60 text-sm">
-          <p>© {new Date().getFullYear()} InventoVerse. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Vinci. All rights reserved.</p>
         </div>
       </div>
     </footer>
