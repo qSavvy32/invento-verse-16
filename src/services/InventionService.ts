@@ -4,6 +4,23 @@ import { toast } from "sonner";
 import { InventionState, InventionAsset, AssetType } from "@/contexts/InventionContext";
 import { v4 as uuidv4 } from "uuid";
 
+// Define an extended type for the invention data as it comes from the database
+interface InventionDataFromDB {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  sketch_data_url: string | null;
+  visualization_3d_url: string | null;
+  threejs_html: string | null;
+  business_strategy_svg: string | null;
+  visualization_prompts_json: string | null;
+  threejs_visualization_json: string | null;
+  analysis_results_json: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export class InventionService {
   /**
    * Save an invention to the database
@@ -161,6 +178,9 @@ export class InventionService {
         throw new Error("Invention not found");
       }
       
+      // Cast the invention to our extended type that includes JSON fields
+      const inventionData = invention as unknown as InventionDataFromDB;
+      
       // Get the invention assets
       const { data: assets, error: assetsError } = await supabase
         .from('invention_assets')
@@ -186,18 +206,18 @@ export class InventionService {
       // Parse JSON data from metadata columns or use defaults
       let visualizationPrompts = {};
       try {
-        visualizationPrompts = invention.visualization_prompts_json ? 
-          JSON.parse(invention.visualization_prompts_json) : {};
+        visualizationPrompts = inventionData.visualization_prompts_json ? 
+          JSON.parse(inventionData.visualization_prompts_json) : {};
       } catch (e) {
         console.error("Error parsing visualization_prompts_json:", e);
       }
       
-      let threejsVisualization = { code: null, html: invention.threejs_html };
+      let threejsVisualization = { code: null, html: inventionData.threejs_html };
       try {
-        threejsVisualization = invention.threejs_visualization_json ? 
-          JSON.parse(invention.threejs_visualization_json) : {
+        threejsVisualization = inventionData.threejs_visualization_json ? 
+          JSON.parse(inventionData.threejs_visualization_json) : {
             code: null,
-            html: invention.threejs_html
+            html: inventionData.threejs_html
           };
       } catch (e) {
         console.error("Error parsing threejs_visualization_json:", e);
@@ -210,8 +230,8 @@ export class InventionService {
         business: []
       };
       try {
-        analysisResults = invention.analysis_results_json ? 
-          JSON.parse(invention.analysis_results_json) : {
+        analysisResults = inventionData.analysis_results_json ? 
+          JSON.parse(inventionData.analysis_results_json) : {
             technical: [],
             market: [],
             legal: [],
@@ -223,10 +243,10 @@ export class InventionService {
       
       // Convert database model to application model
       const inventionState: InventionState = {
-        inventionId: invention.id,
-        title: invention.title || '',
-        description: invention.description || '',
-        sketchDataUrl: invention.sketch_data_url || null,
+        inventionId: inventionData.id,
+        title: inventionData.title || '',
+        description: inventionData.description || '',
+        sketchDataUrl: inventionData.sketch_data_url || null,
         assets: (assets || []).map((asset): InventionAsset => ({
           id: asset.id,
           type: asset.type as AssetType,
@@ -235,11 +255,11 @@ export class InventionService {
           name: asset.name || '',
           createdAt: new Date(asset.created_at).getTime()
         })),
-        visualization3dUrl: invention.visualization_3d_url || null,
+        visualization3dUrl: inventionData.visualization_3d_url || null,
         visualizationPrompts: visualizationPrompts,
         savedToDatabase: true,
         threejsVisualization: threejsVisualization,
-        businessStrategySvg: invention.business_strategy_svg || null,
+        businessStrategySvg: inventionData.business_strategy_svg || null,
         mostRecentGeneration: null, // Set to null initially
         analysisResults: analysisResults,
         audioTranscriptions: (transcriptions || []).map(t => ({
@@ -295,9 +315,12 @@ export class InventionService {
       
       // Convert database models to application models
       const inventionStates: InventionState[] = inventions.map(invention => {
+        // Cast the invention to our extended type that includes JSON fields
+        const inventionData = invention as unknown as InventionDataFromDB;
+        
         // Find assets for this invention
         const inventionAssets = (allAssets || [])
-          .filter(asset => asset.invention_id === invention.id)
+          .filter(asset => asset.invention_id === inventionData.id)
           .map((asset): InventionAsset => ({
             id: asset.id,
             type: asset.type as AssetType,
@@ -310,18 +333,18 @@ export class InventionService {
         // Parse JSON data from metadata columns or use defaults
         let visualizationPrompts = {};
         try {
-          visualizationPrompts = invention.visualization_prompts_json ? 
-            JSON.parse(invention.visualization_prompts_json) : {};
+          visualizationPrompts = inventionData.visualization_prompts_json ? 
+            JSON.parse(inventionData.visualization_prompts_json) : {};
         } catch (e) {
           console.error("Error parsing visualization_prompts_json:", e);
         }
         
-        let threejsVisualization = { code: null, html: invention.threejs_html };
+        let threejsVisualization = { code: null, html: inventionData.threejs_html };
         try {
-          threejsVisualization = invention.threejs_visualization_json ? 
-            JSON.parse(invention.threejs_visualization_json) : {
+          threejsVisualization = inventionData.threejs_visualization_json ? 
+            JSON.parse(inventionData.threejs_visualization_json) : {
               code: null,
-              html: invention.threejs_html
+              html: inventionData.threejs_html
             };
         } catch (e) {
           console.error("Error parsing threejs_visualization_json:", e);
@@ -334,8 +357,8 @@ export class InventionService {
           business: []
         };
         try {
-          analysisResults = invention.analysis_results_json ? 
-            JSON.parse(invention.analysis_results_json) : {
+          analysisResults = inventionData.analysis_results_json ? 
+            JSON.parse(inventionData.analysis_results_json) : {
               technical: [],
               market: [],
               legal: [],
@@ -346,16 +369,16 @@ export class InventionService {
         }
           
         return {
-          inventionId: invention.id,
-          title: invention.title || '',
-          description: invention.description || '',
-          sketchDataUrl: invention.sketch_data_url || null,
+          inventionId: inventionData.id,
+          title: inventionData.title || '',
+          description: inventionData.description || '',
+          sketchDataUrl: inventionData.sketch_data_url || null,
           assets: inventionAssets,
-          visualization3dUrl: invention.visualization_3d_url || null,
+          visualization3dUrl: inventionData.visualization_3d_url || null,
           visualizationPrompts: visualizationPrompts,
           savedToDatabase: true,
           threejsVisualization: threejsVisualization,
-          businessStrategySvg: invention.business_strategy_svg || null,
+          businessStrategySvg: inventionData.business_strategy_svg || null,
           mostRecentGeneration: null, // Set to null initially
           analysisResults: analysisResults,
           audioTranscriptions: []

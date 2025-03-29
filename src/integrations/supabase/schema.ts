@@ -7,7 +7,7 @@ export interface InventionTables {
     id: string;
     user_id: string;
     title: string;
-    description: string;
+    description: string | null;
     sketch_data_url: string | null;
     visualization_3d_url: string | null;
     threejs_html: string | null;
