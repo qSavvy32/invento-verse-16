@@ -47,7 +47,7 @@ export default function PixelCard({
     handleAnimation("disappear");
   };
   return <div ref={containerRef} className={`pixel-card ${active ? 'active' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onFocus={finalNoFocus ? undefined : onFocus} onBlur={finalNoFocus ? undefined : onBlur} tabIndex={finalNoFocus || disabled ? -1 : 0} onClick={disabled ? undefined : onClick}>
-      <canvas className="pixel-card-canvas" ref={canvasRef} />
+      
       
     </div>;
 }
