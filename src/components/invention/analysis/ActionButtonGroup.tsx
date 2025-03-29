@@ -64,7 +64,7 @@ export const ActionButtonGroup = ({
         active={isLoading.runAll}
         disabled={isDisabled || isLoading.runAll}
       >
-        <div className="p-3 text-center relative z-10 text-white">
+        <div className="p-3 text-center relative z-10">
           {isLoading.runAll ? (
             <>
               <Loader2 className="mx-auto h-5 w-5 animate-spin mb-1 text-white" />

@@ -1,3 +1,4 @@
+
 import { useInvention } from "@/contexts/InventionContext";
 import { Button } from "../ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -212,13 +213,13 @@ export const GenerateButtons = () => {
         <div className="text-center">
           {isLoading.runAll ? (
             <div className="animate-pulse">
-              <Loader2 className="mx-auto h-6 w-6 mb-2 animate-spin" />
-              <p className="font-medium">Running all processes...</p>
+              <Loader2 className="mx-auto h-6 w-6 mb-2 animate-spin text-white" />
+              <p className="font-medium text-white">Running all processes...</p>
             </div>
           ) : (
             <>
-              <Zap className="mx-auto h-6 w-6 mb-2" />
-              <p className="font-medium">Run All Analysis</p>
+              <Zap className="mx-auto h-6 w-6 mb-2 text-white" />
+              <p className="font-medium text-white">Run All Analysis</p>
             </>
           )}
         </div>
