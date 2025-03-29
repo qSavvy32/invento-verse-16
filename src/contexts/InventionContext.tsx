@@ -9,6 +9,13 @@ export interface VisualizationPrompts {
   problem?: string;
 }
 
+export interface AudioTranscription {
+  audioUrl?: string;
+  language: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface InventionState {
   title: string;
   description: string;
@@ -26,6 +33,7 @@ export interface InventionState {
     legal: string[];
     business: string[];
   };
+  audioTranscriptions: AudioTranscription[];
 }
 
 type InventionAction = 
@@ -36,18 +44,20 @@ type InventionAction =
   | { type: 'UPDATE_VISUALIZATIONS'; payload: VisualizationPrompts }
   | { type: 'SAVE_TO_DATABASE'; payload: boolean }
   | { type: 'SET_THREEJS_VISUALIZATION'; payload: { code: string | null; html: string | null } }
-  | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } };
+  | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } }
+  | { type: 'ADD_AUDIO_TRANSCRIPTION'; payload: AudioTranscription };
 
 interface InventionContextType {
   state: InventionState;
   updateTitle: (title: string) => void;
-  updateDescription: (description: string) => void;
+  updateDescription: (description: string | ((prev: string) => string)) => void;
   updateSketchData: (dataUrl: string | null) => void;
   update3DVisualization: (dataUrl: string | null) => void;
   updateVisualizations: (prompts: VisualizationPrompts) => void;
   saveToDatabase: (saved: boolean) => void;
   setThreejsVisualization: (code: string | null, html: string | null) => void;
   setAnalysisResults: (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => void;
+  addAudioTranscription: (transcription: AudioTranscription) => void;
 }
 
 // Initial state
@@ -67,7 +77,8 @@ const initialState: InventionState = {
     market: [],
     legal: [],
     business: []
-  }
+  },
+  audioTranscriptions: []
 };
 
 // Reducer
@@ -76,7 +87,10 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
     case 'UPDATE_TITLE':
       return { ...state, title: action.payload };
     case 'UPDATE_DESCRIPTION':
-      return { ...state, description: action.payload };
+      return { ...state, description: typeof action.payload === 'function' 
+        ? action.payload(state.description) 
+        : action.payload 
+      };
     case 'UPDATE_SKETCH_DATA':
       return { ...state, sketchDataUrl: action.payload };
     case 'UPDATE_3D_VISUALIZATION':
@@ -95,6 +109,11 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
           [action.payload.category]: action.payload.results
         }
       };
+    case 'ADD_AUDIO_TRANSCRIPTION':
+      return {
+        ...state,
+        audioTranscriptions: [...state.audioTranscriptions, action.payload]
+      };
     default:
       return state;
   }
@@ -108,7 +127,10 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
   const [state, dispatch] = useReducer(inventionReducer, initialState);
 
   const updateTitle = (title: string) => dispatch({ type: 'UPDATE_TITLE', payload: title });
-  const updateDescription = (description: string) => dispatch({ type: 'UPDATE_DESCRIPTION', payload: description });
+  
+  const updateDescription = (descriptionOrFn: string | ((prev: string) => string)) => 
+    dispatch({ type: 'UPDATE_DESCRIPTION', payload: descriptionOrFn });
+  
   const updateSketchData = (dataUrl: string | null) => dispatch({ type: 'UPDATE_SKETCH_DATA', payload: dataUrl });
   const update3DVisualization = (dataUrl: string | null) => dispatch({ type: 'UPDATE_3D_VISUALIZATION', payload: dataUrl });
   const updateVisualizations = (prompts: VisualizationPrompts) => dispatch({ type: 'UPDATE_VISUALIZATIONS', payload: prompts });
@@ -117,6 +139,8 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
     dispatch({ type: 'SET_THREEJS_VISUALIZATION', payload: { code, html } });
   const setAnalysisResults = (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => 
     dispatch({ type: 'SET_ANALYSIS_RESULTS', payload: { category, results } });
+  const addAudioTranscription = (transcription: AudioTranscription) => 
+    dispatch({ type: 'ADD_AUDIO_TRANSCRIPTION', payload: transcription });
 
   return (
     <InventionContext.Provider 
@@ -129,7 +153,8 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         updateVisualizations,
         saveToDatabase,
         setThreejsVisualization,
-        setAnalysisResults
+        setAnalysisResults,
+        addAudioTranscription
       }}
     >
       {children}

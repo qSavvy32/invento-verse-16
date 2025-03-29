@@ -3,10 +3,28 @@ import { useInvention } from "@/contexts/InventionContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Image, Package } from "lucide-react";
+import { FileText, Image, Package, Mic, Languages } from "lucide-react";
+import { VoiceInput } from "@/components/VoiceInput";
+import { useState } from "react";
+import { LANGUAGE_OPTIONS } from "@/components/voice/LanguageSelector";
 
 export const InventionRepository = () => {
   const { state, updateTitle, updateDescription } = useInvention();
+  
+  const handleTranscriptionComplete = (text: string) => {
+    // Append the transcribed text to the existing description
+    const newDescription = state.description 
+      ? `${state.description}\n\n${text}` 
+      : text;
+    
+    updateDescription(newDescription);
+  };
+  
+  // Helper function to get language label from code
+  const getLanguageLabel = (code: string) => {
+    const language = LANGUAGE_OPTIONS.find(option => option.value === code);
+    return language ? language.label : code;
+  };
   
   return (
     <Card className="p-4 h-full">
@@ -25,7 +43,13 @@ export const InventionRepository = () => {
         </div>
         
         <div>
-          <label htmlFor="description" className="text-sm font-medium mb-1 block">Description</label>
+          <label htmlFor="description" className="text-sm font-medium mb-1 flex justify-between items-center">
+            <span>Description</span>
+            <VoiceInput 
+              onTranscriptionComplete={handleTranscriptionComplete} 
+              className="ml-auto"
+            />
+          </label>
           <Textarea
             id="description"
             placeholder="Describe your invention..."
@@ -69,9 +93,38 @@ export const InventionRepository = () => {
                 </div>
               </div>
             )}
+            
+            {/* Display audio transcriptions */}
+            {state.audioTranscriptions.map((transcription, index) => (
+              <div key={index} className="flex items-center p-2 border rounded-md">
+                <Mic className="h-4 w-4 mr-2" />
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex items-center">
+                    <span className="text-sm truncate">Voice Note</span>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2 flex items-center">
+                      <Languages className="h-3 w-3 mr-1" />
+                      {getLanguageLabel(transcription.language)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate mt-1">
+                    {transcription.text.substring(0, 50)}...
+                  </p>
+                </div>
+                {transcription.audioUrl && (
+                  <audio 
+                    src={transcription.audioUrl} 
+                    controls 
+                    className="h-8 w-24 ml-auto"
+                  />
+                )}
+              </div>
+            ))}
           </div>
           
-          {!state.sketchDataUrl && !state.visualization3dUrl && !state.threejsVisualization.html && (
+          {!state.sketchDataUrl && 
+           !state.visualization3dUrl && 
+           !state.threejsVisualization.html &&
+           state.audioTranscriptions.length === 0 && (
             <div className="text-sm text-muted-foreground italic">
               No assets uploaded yet. Use the tools to add sketches and visualizations.
             </div>

@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInvention } from "@/contexts/InventionContext";
 
 interface UseVoiceRecorderProps {
   onTranscriptionComplete: (text: string) => void;
@@ -15,6 +16,7 @@ export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderPr
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const { user } = useAuth();
+  const { addAudioTranscription } = useInvention();
 
   const startRecording = async () => {
     try {
@@ -54,6 +56,34 @@ export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderPr
     }
   };
 
+  const saveAudioToStorage = async (audioBlob: Blob): Promise<string | null> => {
+    if (!user) return null;
+    
+    try {
+      const timestamp = Date.now();
+      const fileName = `audio_${user.id}_${timestamp}.webm`;
+      const filePath = `audio/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('invention-assets')
+        .upload(filePath, audioBlob);
+        
+      if (uploadError) {
+        console.error("Error uploading audio:", uploadError);
+        return null;
+      }
+      
+      const { data } = supabase.storage
+        .from('invention-assets')
+        .getPublicUrl(filePath);
+        
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Error saving audio:", error);
+      return null;
+    }
+  };
+
   const processAudio = async () => {
     if (audioChunksRef.current.length === 0) {
       toast.error("No audio recorded");
@@ -63,6 +93,12 @@ export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderPr
     try {
       setIsProcessing(true);
       const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+      
+      // Save audio to storage if user is authenticated
+      let audioUrl: string | null = null;
+      if (user) {
+        audioUrl = await saveAudioToStorage(audioBlob);
+      }
       
       // Convert blob to base64
       const reader = new FileReader();
@@ -101,6 +137,14 @@ export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderPr
           setIsProcessing(false);
           onTranscriptionComplete(elevenLabsData.text);
           
+          // Add transcription to context
+          addAudioTranscription({
+            audioUrl: audioUrl,
+            language: language,
+            text: elevenLabsData.text,
+            timestamp: Date.now()
+          });
+          
           toast.success("Voice transcribed", {
             description: "Your spoken description has been added.",
             id: "transcription"
@@ -136,6 +180,13 @@ export const useVoiceRecorder = ({ onTranscriptionComplete }: UseVoiceRecorderPr
       
       if (data?.text) {
         onTranscriptionComplete(data.text);
+        
+        // Add transcription to context (without audio URL since not authenticated)
+        addAudioTranscription({
+          language: language,
+          text: data.text,
+          timestamp: Date.now()
+        });
         
         toast.success("Voice transcribed", {
           description: "Your spoken description has been added.",
