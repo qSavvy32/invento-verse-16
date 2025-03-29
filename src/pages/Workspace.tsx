@@ -6,7 +6,7 @@ import { InventionContextProvider, useInvention } from "@/contexts/InventionCont
 import { DevilsAdvocate } from "@/components/DevilsAdvocate";
 import { ThreejsVisualizer } from "@/components/invention/ThreejsVisualizer";
 import { AnalysisResults } from "@/components/invention/AnalysisResults";
-import { Package } from "lucide-react";
+import { Package, Skull } from "lucide-react";
 
 const WorkspaceContent = () => {
   const { state } = useInvention();
@@ -46,7 +46,10 @@ const WorkspaceContent = () => {
           </div>
           
           <div className="lg:col-span-1">
-            <h2 className="text-xl font-semibold mb-4">Critical Feedback</h2>
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Skull className="h-5 w-5" />
+              <span className="text-red-800">Devil's Advocate Critique</span>
+            </h2>
             <DevilsAdvocate />
           </div>
         </div>

@@ -1,89 +1,69 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 36 35% 97%;
-    --foreground: 29 20% 24%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-    --card: 36 35% 97%;
-    --card-foreground: 29 20% 24%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 36 35% 97%;
-    --popover-foreground: 29 20% 24%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 30 38% 58%;
-    --primary-foreground: 36 30% 98%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 39 84% 66%;
-    --secondary-foreground: 29 30% 24%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 36 25% 92%;
-    --muted-foreground: 29 10% 42%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 39 84% 66%;
-    --accent-foreground: 29 30% 24%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 29 15% 85%;
-    --input: 29 15% 85%;
-    --ring: 30 38% 58%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
-
-    --sidebar-background: 36 35% 97%;
-    --sidebar-foreground: 29 20% 24%;
-    --sidebar-primary: 30 38% 58%;
-    --sidebar-primary-foreground: 36 30% 98%;
-    --sidebar-accent: 36 25% 92%;
-    --sidebar-accent-foreground: 29 30% 24%;
-    --sidebar-border: 29 15% 85%;
-    --sidebar-ring: 30 38% 58%;
   }
 
   .dark {
-    --background: 29 20% 11%;
-    --foreground: 36 25% 92%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 29 20% 11%;
-    --card-foreground: 36 25% 92%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 29 20% 11%;
-    --popover-foreground: 36 25% 92%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 30 38% 58%;
-    --primary-foreground: 36 30% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 39 57% 45%;
-    --secondary-foreground: 36 25% 92%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 29 15% 20%;
-    --muted-foreground: 36 10% 80%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 39 57% 45%;
-    --accent-foreground: 36 25% 92%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 36 25% 92%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 29 15% 25%;
-    --input: 29 15% 25%;
-    --ring: 30 38% 58%;
-    
-    --sidebar-background: 29 20% 13%;
-    --sidebar-foreground: 36 25% 92%;
-    --sidebar-primary: 30 38% 58%;
-    --sidebar-primary-foreground: 36 30% 98%;
-    --sidebar-accent: 29 15% 20%;
-    --sidebar-accent-foreground: 36 25% 92%;
-    --sidebar-border: 29 15% 25%;
-    --sidebar-ring: 30 38% 58%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -91,49 +71,65 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }
 }
 
-.sketch-canvas {
-  background-color: #F5F1E6;
-  background-image: 
-    radial-gradient(#C19A6B 1px, transparent 1px),
-    radial-gradient(#C19A6B 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: 0 0, 10px 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 0.5rem;
-  border: 1px solid #C19A6B;
+/* Enhanced markdown styling for critiques */
+.critique-content strong {
+  @apply font-bold text-red-800;
 }
 
-.da-vinci-note {
-  position: relative;
-  background-color: #F5F1E6;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  font-family: 'Cormorant Garamond', serif;
-  color: #4A3C31;
-  border: 1px solid #C19A6B;
-  overflow: hidden;
+.critique-content em {
+  @apply italic text-red-700;
 }
 
-.da-vinci-note::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23C19A6B' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
-  opacity: 0.5;
-  z-index: 0;
+.critique-content blockquote {
+  @apply border-l-4 border-red-300 pl-4 py-1 my-2 bg-red-100 text-red-800 font-medium;
 }
 
-.da-vinci-note > * {
-  position: relative;
-  z-index: 1;
+.critique-content h2 {
+  @apply text-xl font-bold text-red-900 mt-4 mb-2;
+}
+
+.critique-content h3 {
+  @apply text-lg font-bold text-red-800 mt-3 mb-1;
+}
+
+.critique-content code {
+  @apply bg-red-100 text-red-800 px-1 py-0.5 rounded;
+}
+
+.critique-content ul {
+  @apply list-disc pl-5 space-y-1 mt-1;
+}
+
+.critique-content ol {
+  @apply list-decimal pl-5 space-y-1 mt-1;
+}
+
+/* Enhance the MarkdownContent component styling */
+.markdown-content strong {
+  @apply font-bold;
+}
+
+.markdown-content em {
+  @apply italic;
+}
+
+.markdown-content blockquote {
+  @apply border-l-4 border-slate-300 pl-4 py-1 my-2 bg-slate-50;
+}
+
+.markdown-content code {
+  @apply bg-slate-100 px-1 py-0.5 rounded;
+}
+
+.markdown-content h2 {
+  @apply text-xl font-bold mt-4 mb-2;
+}
+
+.markdown-content h3 {
+  @apply text-lg font-bold mt-3 mb-1;
 }

@@ -29,11 +29,20 @@ serve(async (req) => {
       apiKey: ANTHROPIC_API_KEY,
     });
 
-    // Prepare the system prompt
+    // Enhanced system prompt with instructions for rich formatting
     const systemPrompt = `You are the Devil's Advocate, a brutally honest invention critic who challenges the feasibility, market viability, and originality of new invention ideas. 
     Your job is to identify flaws, roadblocks, and potential failures that the inventor has overlooked.
+    
     Be respectfully harsh but constructive - point out problems but also suggest improvements where possible.
-    Use a direct, slightly provocative tone that makes the inventor defend and improve their idea.
+    Use a direct, provocative tone that makes the inventor defend and improve their idea.
+    
+    FORMAT YOUR CRITIQUE USING RICH MARKDOWN:
+    - Use **bold** for critical points 
+    - Use *italics* for emphasis
+    - Use emojis liberally to convey danger, warnings, and problems (💥, ⚠️, 🚫, 🔥, 💀, ⛔, 🧨, etc.)
+    - Use markdown headings (## and ###) to structure your critique
+    - Use bullet points for lists of issues
+    - Use > blockquotes for particularly important warnings
     
     For each invention, provide critique in these categories:
     1. Technical Feasibility - engineering challenges, physics limitations, technical roadblocks
@@ -50,7 +59,7 @@ serve(async (req) => {
       userMessage += `\n\nI've also created a sketch of the invention which you can analyze.`;
     }
 
-    userMessage += `\n\nPlease act as the Devil's Advocate and critique this invention idea harshly but constructively.`;
+    userMessage += `\n\nPlease act as the Devil's Advocate and critique this invention idea harshly but constructively. USE RICH MARKDOWN FORMATTING and emojis to make your critique more engaging and impactful.`;
 
     console.log("Sending request to Anthropic API for devil's advocate critique...");
 
