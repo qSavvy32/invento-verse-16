@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Loader2Icon } from "lucide-react";
+import { Cube3dIcon, Loader2Icon } from "lucide-react";
 import { IdeaGenerator } from "@/components/IdeaGenerator";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,8 +14,9 @@ interface AiAssistantPanelProps {
 }
 
 export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) => {
-  const { state, setAnalysisResults } = useInvention();
+  const { state, setAnalysisResults, update3DVisualization } = useInvention();
   const [analyzing, setAnalyzing] = useState(false);
+  const [generating3D, setGenerating3D] = useState(false);
   
   const runAnthropicAnalysis = async () => {
     if (!state.title && !state.description) {
@@ -81,6 +82,61 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
       });
     } finally {
       setAnalyzing(false);
+    }
+  };
+  
+  const generate3DVisualization = async () => {
+    if (!state.sketchDataUrl) {
+      toast({
+        title: "Missing sketch",
+        description: "Please create a sketch first to generate a 3D visualization.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setGenerating3D(true);
+    
+    try {
+      // For demonstration purposes, we'll simulate this with a timeout
+      // In a real implementation, you would call the generate-3d-visualization edge function
+      /* 
+      const { data, error } = await supabase.functions.invoke("generate-3d-visualization", {
+        body: {
+          sketchDataUrl: state.sketchDataUrl,
+          prompt: state.title || "Invention visualization"
+        }
+      });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      // Update the context with the visualization URL
+      update3DVisualization(data.visualizationUrl);
+      */
+      
+      // Simulate successful response after 3 seconds
+      setTimeout(() => {
+        // Use the same sketch as a placeholder for the 3D visualization
+        update3DVisualization(state.sketchDataUrl);
+        
+        toast({
+          title: "3D visualization generated",
+          description: "Your sketch has been transformed into a 3D visualization."
+        });
+        
+        setGenerating3D(false);
+      }, 3000);
+      
+    } catch (error) {
+      console.error("Error generating 3D visualization:", error);
+      toast({
+        title: "Visualization failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+      setGenerating3D(false);
     }
   };
   
@@ -168,6 +224,18 @@ export const AiAssistantPanel = ({ onAnalysisComplete }: AiAssistantPanelProps) 
             </Button>
             <Button className="w-full" disabled={analyzing}>Suggest Materials</Button>
             <Button className="w-full" disabled={analyzing}>Identify Challenges</Button>
+            
+            {state.sketchDataUrl && (
+              <Button 
+                className="w-full" 
+                variant="secondary"
+                onClick={generate3DVisualization}
+                disabled={generating3D}
+              >
+                {generating3D ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Cube3dIcon className="mr-2 h-4 w-4" />}
+                Generate 3D Visualization
+              </Button>
+            )}
           </TabsContent>
           
           <TabsContent value="market" className="space-y-4">

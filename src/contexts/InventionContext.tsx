@@ -6,6 +6,7 @@ export interface InventionState {
   title: string;
   description: string;
   sketchDataUrl: string | null;
+  visualization3dUrl: string | null;
   savedToDatabase: boolean;
   analysisResults: {
     technical: string[];
@@ -19,6 +20,7 @@ type InventionAction =
   | { type: 'UPDATE_TITLE'; payload: string }
   | { type: 'UPDATE_DESCRIPTION'; payload: string }
   | { type: 'UPDATE_SKETCH_DATA'; payload: string | null }
+  | { type: 'UPDATE_3D_VISUALIZATION'; payload: string | null }
   | { type: 'SAVE_TO_DATABASE'; payload: boolean }
   | { type: 'SET_ANALYSIS_RESULTS'; payload: { category: 'technical' | 'market' | 'legal' | 'business', results: string[] } };
 
@@ -27,6 +29,7 @@ interface InventionContextType {
   updateTitle: (title: string) => void;
   updateDescription: (description: string) => void;
   updateSketchData: (dataUrl: string | null) => void;
+  update3DVisualization: (dataUrl: string | null) => void;
   saveToDatabase: (saved: boolean) => void;
   setAnalysisResults: (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => void;
 }
@@ -36,6 +39,7 @@ const initialState: InventionState = {
   title: '',
   description: '',
   sketchDataUrl: null,
+  visualization3dUrl: null,
   savedToDatabase: false,
   analysisResults: {
     technical: [],
@@ -54,6 +58,8 @@ const inventionReducer = (state: InventionState, action: InventionAction): Inven
       return { ...state, description: action.payload };
     case 'UPDATE_SKETCH_DATA':
       return { ...state, sketchDataUrl: action.payload };
+    case 'UPDATE_3D_VISUALIZATION':
+      return { ...state, visualization3dUrl: action.payload };
     case 'SAVE_TO_DATABASE':
       return { ...state, savedToDatabase: action.payload };
     case 'SET_ANALYSIS_RESULTS':
@@ -79,6 +85,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
   const updateTitle = (title: string) => dispatch({ type: 'UPDATE_TITLE', payload: title });
   const updateDescription = (description: string) => dispatch({ type: 'UPDATE_DESCRIPTION', payload: description });
   const updateSketchData = (dataUrl: string | null) => dispatch({ type: 'UPDATE_SKETCH_DATA', payload: dataUrl });
+  const update3DVisualization = (dataUrl: string | null) => dispatch({ type: 'UPDATE_3D_VISUALIZATION', payload: dataUrl });
   const saveToDatabase = (saved: boolean) => dispatch({ type: 'SAVE_TO_DATABASE', payload: saved });
   const setAnalysisResults = (category: 'technical' | 'market' | 'legal' | 'business', results: string[]) => 
     dispatch({ type: 'SET_ANALYSIS_RESULTS', payload: { category, results } });
@@ -90,6 +97,7 @@ export const InventionContextProvider = ({ children }: { children: ReactNode }) 
         updateTitle, 
         updateDescription, 
         updateSketchData, 
+        update3DVisualization,
         saveToDatabase,
         setAnalysisResults
       }}

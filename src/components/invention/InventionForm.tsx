@@ -4,6 +4,7 @@ import { InventionMetadata } from "./InventionMetadata";
 import { MultimodalInputArea } from "./MultimodalInputArea";
 import { AiAssistantPanel } from "./AiAssistantPanel";
 import { AnalysisResults } from "./AnalysisResults";
+import { Visualization3DViewer } from "./Visualization3DViewer";
 import { useState } from "react";
 
 export const InventionForm = () => {
@@ -44,6 +45,8 @@ export const InventionForm = () => {
         <InventionMetadata />
         
         <MultimodalInputArea />
+        
+        {state.visualization3dUrl && <Visualization3DViewer />}
         
         {showResults && <AnalysisResults />}
       </div>
