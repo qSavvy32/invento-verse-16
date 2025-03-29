@@ -1,3 +1,4 @@
+
 import { useInvention } from "@/contexts/InventionContext";
 import { Button } from "../ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +12,8 @@ import {
   Pencil,
   Box,
   Zap,
-  BarChart4
+  BarChart4,
+  Camera3d
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -22,6 +24,7 @@ export const VisualizationTools = () => {
     sketch: false,
     image: false,
     threejs: false,
+    realistic3d: false,
     businessStrategy: false,
     runAll: false
   });
@@ -88,6 +91,40 @@ export const VisualizationTools = () => {
       });
     } finally {
       setIsLoading(prev => ({ ...prev, image: false }));
+    }
+  };
+
+  const generateRealistic3DImage = async () => {
+    if (!state.title && !state.description) {
+      toast.error("Please provide a title and description for your invention first");
+      return;
+    }
+
+    setIsLoading(prev => ({ ...prev, realistic3d: true }));
+    toast.info("Generating realistic 3D image...");
+
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-realistic-3d-image", {
+        body: {
+          title: state.title,
+          description: state.description,
+          sketchDataUrl: state.sketchDataUrl
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      update3DVisualization(data.image || null);
+      toast.success("Realistic 3D image generated successfully");
+    } catch (error) {
+      console.error("Error generating realistic 3D image:", error);
+      toast.error("Failed to generate realistic 3D image", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred"
+      });
+    } finally {
+      setIsLoading(prev => ({ ...prev, realistic3d: false }));
     }
   };
 
@@ -169,7 +206,7 @@ export const VisualizationTools = () => {
         <h3 className="text-lg font-medium mb-4">Visualization Tools</h3>
         
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             <Button
               variant="outline"
               onClick={generateSketch}
@@ -186,6 +223,20 @@ export const VisualizationTools = () => {
             
             <Button
               variant="outline"
+              onClick={generateRealistic3DImage}
+              disabled={isLoading.realistic3d || (!state.title && !state.description)}
+              className="h-16 flex flex-col justify-center items-center p-2 space-y-1"
+            >
+              {isLoading.realistic3d ? (
+                <Loader2 className="h-5 w-5 animate-spin mb-1" />
+              ) : (
+                <Camera3d className="h-5 w-5 mb-1" />
+              )}
+              <span className="text-sm">Realistic 3D Image</span>
+            </Button>
+            
+            <Button
+              variant="outline"
               onClick={generate3DImage}
               disabled={isLoading.image || !state.sketchDataUrl}
               className="h-16 flex flex-col justify-center items-center p-2 space-y-1"
@@ -195,7 +246,7 @@ export const VisualizationTools = () => {
               ) : (
                 <Image className="h-5 w-5 mb-1" />
               )}
-              <span className="text-sm">Generate 3D Image</span>
+              <span className="text-sm">Generate 3D Model</span>
             </Button>
             
             <Button
@@ -209,7 +260,7 @@ export const VisualizationTools = () => {
               ) : (
                 <Box className="h-5 w-5 mb-1" />
               )}
-              <span className="text-sm">Generate 3D Model</span>
+              <span className="text-sm">Interactive 3D</span>
             </Button>
             
             <Button
