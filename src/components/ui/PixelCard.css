@@ -73,6 +73,7 @@
   gap: 1.5rem;
   width: 100%;
   min-height: 250px;
+  z-index: 10;
 }
 
 .input-container {
@@ -81,4 +82,20 @@
   padding: 1rem;
   max-height: calc(100vh - 300px);
   overflow-y: auto;
+}
+
+/* Overlay styles for the expanded card */
+.overlay-active {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+}
+
+#invention-design-container {
+  position: relative;
+  z-index: 5;
 }

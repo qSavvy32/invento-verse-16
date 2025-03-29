@@ -78,8 +78,14 @@ export const InputSelectionCard = ({
               ease: [0.19, 1, 0.22, 1],
               scale: { duration: 0.4 }
             }}
-            className="absolute top-0 left-0 right-0 bg-background border rounded-lg p-6 shadow-lg z-50"
-            style={{ width: "100%" }}
+            className="fixed inset-0 top-0 left-0 z-50 bg-background border rounded-lg p-6 shadow-lg"
+            style={{ 
+              width: "calc(100% - 2rem)", 
+              maxWidth: "100%",
+              margin: "0 auto",
+              maxHeight: "calc(100vh - 10rem)",
+              overflow: "auto"
+            }}
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold text-lg flex items-center gap-2">
