@@ -41,7 +41,7 @@ const AnalysisCard = ({ title, icon, results, timestamp }: AnalysisCardProps) =>
       </CardHeader>
       {isOpen && (
         <CardContent className="p-4 pt-2">
-          <ScrollArea className="h-[300px]">
+          <ScrollArea className="max-h-[250px]" type="always">
             <ul className="list-disc pl-5 space-y-2">
               {results.map((result, index) => (
                 <li key={index} className="markdown-content">
@@ -126,8 +126,8 @@ export const AnalysisResults = () => {
   return (
     <div className="space-y-6 mb-8">
       <h2 className="text-xl font-semibold">Analysis Results</h2>
-      <div className="space-y-4 max-h-[800px] overflow-hidden">
-        <ScrollArea className="max-h-[800px]">
+      <div className="space-y-4 overflow-hidden">
+        <ScrollArea className="max-h-[600px]" type="always">
           <div className="space-y-4 pr-4">
             {analysisCards.map(card => {
               let title = "";
