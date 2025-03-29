@@ -103,16 +103,28 @@ export const AnalysisResults = () => {
       });
     }
     
+    // Replace the cards instead of adding to them
     setAnalysisCards(allCards);
   }, [state.analysisResults]);
   
-  if (analysisCards.length === 0 && 
-      !state.analysisResults.technical.length && 
-      !state.analysisResults.market.length && 
-      !state.analysisResults.legal.length && 
-      !state.analysisResults.business.length) {
+  // If there are no analysis results at all, don't show anything
+  if (
+    !state.analysisResults.technical.length && 
+    !state.analysisResults.market.length && 
+    !state.analysisResults.legal.length && 
+    !state.analysisResults.business.length
+  ) {
     return null;
   }
+  
+  // Debug output to console for troubleshooting
+  console.log("Rendering AnalysisResults with:", {
+    technicalLength: state.analysisResults.technical.length,
+    marketLength: state.analysisResults.market.length,
+    legalLength: state.analysisResults.legal.length,
+    businessLength: state.analysisResults.business.length,
+    cardsCount: analysisCards.length
+  });
   
   return (
     <div className="space-y-6">

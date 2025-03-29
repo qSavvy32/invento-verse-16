@@ -73,13 +73,35 @@ serve(async (req) => {
     }
 
     // Add instructions for output format based on analysis type
-    if (analysisType === "challenges") {
+    if (analysisType === "technical") {
       systemPrompt += `
         Return your analysis in this JSON format:
         {
-          "analysis_type": "challenges",
+          "analysis_type": "invention_technical_analysis",
           "invention_title": "Title of the invention",
           "invention_description": "Brief description of the invention",
+          "technical_feasibility": {
+            "assessment": "low|medium|high",
+            "explanation": "Explanation of technical feasibility assessment"
+          },
+          "engineering_challenges": [
+            {
+              "challenge": "Name of the challenge",
+              "description": "Detailed description of the challenge"
+            }
+          ],
+          "design_considerations": [
+            {
+              "consideration": "Name of the consideration",
+              "description": "Description of the design consideration"
+            }
+          ]
+        }
+      `;
+    } else if (analysisType === "challenges") {
+      systemPrompt += `
+        Return your analysis in this JSON format:
+        {
           "key_challenges": [
             {
               "challenge": "Name of the first challenge",
@@ -110,8 +132,29 @@ serve(async (req) => {
           }
         }
       `;
+    } else if (analysisType === "users") {
+      systemPrompt += `
+        Return your analysis in this JSON format:
+        {
+          "user_analysis": {
+            "target_user_groups": [
+              {
+                "group_name": "Name of user group",
+                "description": "Description of the user group"
+              }
+            ],
+            "primary_user_group": {
+              "group_name": "Primary user group",
+              "needs_addressed": [
+                "First need addressed by the invention",
+                "Second need addressed by the invention"
+              ]
+            }
+          }
+        }
+      `;
     } else {
-      systemPrompt += `\n\nOutput your analysis in a structured JSON format appropriate for the analysis type.`;
+      systemPrompt += `\n\nOutput your analysis in a structured JSON format with key findings as an array of strings.`;
     }
 
     // Prepare user message with invention details
@@ -149,26 +192,78 @@ serve(async (req) => {
         analysisResults = JSON.parse(jsonMatch[1] || jsonMatch[0]);
         console.log("Successfully parsed JSON response:", analysisResults);
       } else {
-        // If no JSON found, use the full text response
-        console.log("No JSON found in response, using full text");
-        analysisResults = { analysis: response.content[0].text };
+        // If no JSON found, convert the full text response into structured format
+        console.log("No JSON found in response, converting text to structured format");
+        
+        // Split by lines and filter out empty lines
+        const lines = response.content[0].text
+          .split('\n')
+          .filter(line => line.trim().length > 0)
+          .map(line => line.replace(/^[•\-*]\s*/, '')); // Remove bullet points
+          
+        // Create structured response based on analysis type
+        if (analysisType === "technical" || analysisType === "challenges" || analysisType === "materials") {
+          analysisResults = {
+            technical: lines
+          };
+        } else if (analysisType === "users" || analysisType === "competition") {
+          analysisResults = {
+            market: lines
+          };
+        } else if (analysisType === "ip" || analysisType === "regulatory") {
+          analysisResults = {
+            legal: lines
+          };
+        } else {
+          // For comprehensive analysis, split into categories
+          const third = Math.ceil(lines.length / 3);
+          analysisResults = {
+            technical: lines.slice(0, third),
+            market: lines.slice(third, 2 * third),
+            legal: lines.slice(2 * third)
+          };
+        }
       }
     } catch (error) {
       console.error("Error parsing JSON from Anthropic response:", error);
-      analysisResults = { analysis: response.content[0].text };
+      
+      // Create a basic structured response with the raw text
+      const lines = response.content[0].text
+        .split('\n')
+        .filter(line => line.trim().length > 0)
+        .map(line => line.replace(/^[•\-*]\s*/, '')); // Remove bullet points
+      
+      if (analysisType === "technical" || analysisType === "challenges" || analysisType === "materials") {
+        analysisResults = {
+          technical: lines
+        };
+      } else if (analysisType === "users" || analysisType === "competition") {
+        analysisResults = {
+          market: lines
+        };
+      } else if (analysisType === "ip" || analysisType === "regulatory") {
+        analysisResults = {
+          legal: lines
+        };
+      } else {
+        // For comprehensive analysis, split into categories
+        const third = Math.ceil(lines.length / 3);
+        analysisResults = {
+          technical: lines.slice(0, third),
+          market: lines.slice(third, 2 * third),
+          legal: lines.slice(2 * third)
+        };
+      }
     }
 
-    // For challenges analysis, transform the response to the format expected by the frontend
+    // Transform specialized formats to standardized structure expected by the frontend
     if (analysisType === "challenges" && analysisResults.key_challenges) {
       const technicalResults = analysisResults.key_challenges.map(challenge => 
-        `${challenge.challenge}: ${challenge.description}`
+        typeof challenge === 'string' ? challenge : `${challenge.challenge || 'Challenge'}: ${challenge.description || ''}`
       );
       
       analysisResults = {
-        technical: technicalResults,
-        market: [],
-        legal: [],
-        business: []
+        technical: technicalResults
       };
     } 
     // For materials analysis, transform the response
@@ -183,48 +278,35 @@ serve(async (req) => {
       ];
       
       analysisResults = {
-        technical: technicalResults,
-        market: [],
-        legal: [],
-        business: []
+        technical: technicalResults
       };
     }
-    // If we received raw analysis text, convert it to the expected format
-    else if (analysisResults.analysis) {
-      // Convert plain text analysis to bullet points based on analysis type
-      const analysisLines = analysisResults.analysis.split('\n').filter(line => line.trim().length > 0);
+    // User analysis transformation
+    else if (analysisType === "users" && analysisResults.user_analysis) {
+      const marketResults = [];
       
-      if (analysisType === "technical" || analysisType === "challenges" || analysisType === "materials") {
-        analysisResults = {
-          technical: analysisLines.slice(0, Math.min(5, analysisLines.length)),
-          market: [],
-          legal: [],
-          business: []
-        };
-      } else if (analysisType === "users" || analysisType === "competition") {
-        analysisResults = {
-          technical: [],
-          market: analysisLines.slice(0, Math.min(5, analysisLines.length)),
-          legal: [],
-          business: []
-        };
-      } else if (analysisType === "ip" || analysisType === "regulatory") {
-        analysisResults = {
-          technical: [],
-          market: [],
-          legal: analysisLines.slice(0, Math.min(5, analysisLines.length)),
-          business: []
-        };
-      } else {
-        // For comprehensive analysis, distribute points across categories
-        const third = Math.ceil(analysisLines.length / 3);
-        analysisResults = {
-          technical: analysisLines.slice(0, third),
-          market: analysisLines.slice(third, 2 * third),
-          legal: analysisLines.slice(2 * third, analysisLines.length),
-          business: []
-        };
+      // Add primary user group info
+      if (analysisResults.user_analysis.primary_user_group) {
+        const primary = analysisResults.user_analysis.primary_user_group;
+        marketResults.push(`Primary users: ${primary.group_name || 'Unknown'}`);
+        
+        if (primary.needs_addressed && Array.isArray(primary.needs_addressed)) {
+          primary.needs_addressed.forEach(need => {
+            marketResults.push(`- Need: ${need}`);
+          });
+        }
       }
+      
+      // Add target user groups
+      if (analysisResults.user_analysis.target_user_groups && Array.isArray(analysisResults.user_analysis.target_user_groups)) {
+        analysisResults.user_analysis.target_user_groups.forEach(group => {
+          marketResults.push(`User group: ${group.group_name} - ${group.description || ''}`);
+        });
+      }
+      
+      analysisResults = {
+        market: marketResults
+      };
     }
 
     return new Response(JSON.stringify(analysisResults), {
