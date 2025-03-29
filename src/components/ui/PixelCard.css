@@ -76,7 +76,7 @@
 }
 
 .input-container {
-  transition: all 0.3s ease;
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
   width: 100%;
   padding: 1rem;
   max-height: calc(100vh - 300px);
