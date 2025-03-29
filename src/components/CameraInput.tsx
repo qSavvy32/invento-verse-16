@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Video, ImageIcon, SwitchCamera, X } from "lucide-react";
+import { Camera, Video, ImageIcon, SwitchCamera, X, Circle } from "lucide-react";
 import { toast } from "sonner";
 
 interface CameraInputProps {
@@ -143,32 +143,44 @@ export const CameraInput = ({ onCapture }: CameraInputProps) => {
             className="w-full max-h-[400px] object-contain"
           />
           <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+            {/* Highly visible capture button */}
             <Button 
               onClick={captureImage}
               variant="default"
               size="icon"
-              className="rounded-full h-12 w-12 bg-white/20 hover:bg-white/30"
+              className="rounded-full h-16 w-16 bg-white hover:bg-white/90 flex items-center justify-center"
             >
-              <ImageIcon size={20} className="text-white" />
+              <div className="h-14 w-14 rounded-full border-2 border-primary flex items-center justify-center">
+                <Circle fill="currentColor" size={40} className="text-primary" />
+              </div>
             </Button>
             
-            <Button 
-              onClick={switchCamera}
-              variant="outline"
-              size="icon"
-              className="rounded-full bg-white/20 hover:bg-white/30 border-0"
-            >
-              <SwitchCamera size={18} className="text-white" />
-            </Button>
-            
-            <Button 
-              onClick={cancelCamera}
-              variant="outline"
-              size="icon" 
-              className="rounded-full bg-white/20 hover:bg-white/30 border-0"
-            >
-              <X size={18} className="text-white" />
-            </Button>
+            <div className="absolute bottom-24 right-4 flex flex-col gap-2">
+              <Button 
+                onClick={switchCamera}
+                variant="outline"
+                size="icon"
+                className="rounded-full bg-white/20 hover:bg-white/30 border-0"
+                aria-label="Switch camera"
+              >
+                <SwitchCamera size={18} className="text-white" />
+              </Button>
+              
+              <Button 
+                onClick={cancelCamera}
+                variant="outline"
+                size="icon" 
+                className="rounded-full bg-white/20 hover:bg-white/30 border-0"
+                aria-label="Cancel"
+              >
+                <X size={18} className="text-white" />
+              </Button>
+            </div>
+          </div>
+          
+          {/* Camera instructions overlay */}
+          <div className="absolute top-0 left-0 right-0 bg-black/30 text-white p-2 text-center text-sm">
+            Tap the center button to capture a photo
           </div>
         </div>
       ) : (
@@ -177,7 +189,7 @@ export const CameraInput = ({ onCapture }: CameraInputProps) => {
           <p className="text-center text-muted-foreground">
             Use your camera to capture images of your invention or references
           </p>
-          <Button onClick={toggleCamera}>
+          <Button onClick={toggleCamera} className="flex items-center gap-2">
             <Camera className="mr-2 h-4 w-4" />
             Start Camera
           </Button>
