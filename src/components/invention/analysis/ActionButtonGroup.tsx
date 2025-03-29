@@ -4,7 +4,6 @@ import {
   BarChart4, 
   Package,
   Layers,
-  RotateCcw,
   Loader2
 } from "lucide-react";
 import PixelCard from "@/components/ui/PixelCard";

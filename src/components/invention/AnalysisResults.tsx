@@ -39,7 +39,7 @@ const AnalysisCard = ({ title, icon, results, timestamp }: AnalysisCardProps) =>
         </div>
       </CardHeader>
       {isOpen && (
-        <CardContent className="p-4 pt-2">
+        <CardContent className="p-4 pt-2 max-h-[400px] overflow-y-auto">
           <ul className="list-disc pl-5 space-y-2">
             {results.map((result, index) => (
               <li key={index} className="markdown-content">
@@ -64,12 +64,12 @@ export const AnalysisResults = () => {
   
   useEffect(() => {
     // When analysis results change, update the cards
-    const allCards = [] as typeof analysisCards;
+    const newCards = [];
     
     // Create cards for technical analysis
     if (state.analysisResults.technical.length > 0) {
-      allCards.push({
-        id: `technical-${Date.now()}`,
+      newCards.push({
+        id: 'technical',
         type: 'technical',
         results: state.analysisResults.technical,
         timestamp: new Date().toLocaleString()
@@ -78,8 +78,8 @@ export const AnalysisResults = () => {
     
     // Create cards for market analysis
     if (state.analysisResults.market.length > 0) {
-      allCards.push({
-        id: `market-${Date.now()}`,
+      newCards.push({
+        id: 'market',
         type: 'market',
         results: state.analysisResults.market,
         timestamp: new Date().toLocaleString()
@@ -88,8 +88,8 @@ export const AnalysisResults = () => {
     
     // Create cards for legal analysis
     if (state.analysisResults.legal.length > 0) {
-      allCards.push({
-        id: `legal-${Date.now()}`,
+      newCards.push({
+        id: 'legal',
         type: 'legal',
         results: state.analysisResults.legal,
         timestamp: new Date().toLocaleString()
@@ -98,8 +98,8 @@ export const AnalysisResults = () => {
     
     // Create cards for business analysis
     if (state.analysisResults.business.length > 0) {
-      allCards.push({
-        id: `business-${Date.now()}`,
+      newCards.push({
+        id: 'business',
         type: 'business',
         results: state.analysisResults.business,
         timestamp: new Date().toLocaleString()
@@ -107,7 +107,7 @@ export const AnalysisResults = () => {
     }
     
     // Replace the cards instead of adding to them
-    setAnalysisCards(allCards);
+    setAnalysisCards(newCards);
   }, [state.analysisResults]);
   
   // If there are no analysis results at all, don't show anything
@@ -120,19 +120,10 @@ export const AnalysisResults = () => {
     return null;
   }
   
-  // Debug output to console for troubleshooting
-  console.log("Rendering AnalysisResults with:", {
-    technicalLength: state.analysisResults.technical.length,
-    marketLength: state.analysisResults.market.length,
-    legalLength: state.analysisResults.legal.length,
-    businessLength: state.analysisResults.business.length,
-    cardsCount: analysisCards.length
-  });
-  
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-8">
       <h2 className="text-xl font-semibold">Analysis Results</h2>
-      <div className="space-y-4">
+      <div className="space-y-4 max-h-[1200px] overflow-y-auto pr-2">
         {analysisCards.map(card => {
           let title = "";
           let icon = null;
