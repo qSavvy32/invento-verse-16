@@ -223,7 +223,8 @@ function DitheredWaves({
     }
   });
 
-  const handlePointerMove = (event: THREE.Event) => {
+  // Fix: Properly type the pointer event parameter
+  const handlePointerMove = (event: THREE.ThreeEvent<PointerEvent>) => {
     if (!enableMouseInteraction) return;
     const rect = gl.domElement.getBoundingClientRect();
     const dpr = gl.getPixelRatio();
