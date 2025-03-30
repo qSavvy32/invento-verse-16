@@ -8,6 +8,8 @@ elevenlabs-convai {
   height: auto !important;
   min-height: 0 !important; /* Remove minimum height requirement */
   margin: 0 auto !important; /* Center the widget */
+  left: 50% !important;
+  transform: translateX(-50%) !important;
 }
 
 /* Override any fixed positioning from the widget */
@@ -56,6 +58,7 @@ elevenlabs-convai > div {
   left: 0 !important; /* Ensure no left offset */
   right: 0 !important; /* Ensure no right offset */
   max-width: 100% !important;
+  transform: none !important;
 }
 
 /* Force center alignment of widget controls */
@@ -143,4 +146,12 @@ elevenlabs-convai [style*="right"] {
   right: auto !important;
   margin: 0 auto !important;
   transform: none !important;
+}
+
+/* Target any fixed position elements that might be causing the issue */
+elevenlabs-convai [style*="position: fixed"] {
+  position: relative !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  margin: 0 auto !important;
 }

@@ -31,7 +31,7 @@ export const ChatbotContainer = () => {
           <ChatInterface />
         </TabsContent>
         
-        <TabsContent value="voice" className="border rounded-lg flex justify-center items-center p-0 overflow-hidden">
+        <TabsContent value="voice" className="border rounded-lg flex flex-col items-center justify-center p-0 overflow-hidden">
           {/* Only render the voice conversation component when the voice tab is active */}
           {activeTab === "voice" && (
             <div id="elevenlabs-widget-direct-mount" className="w-full flex justify-center items-center p-0 m-0">
