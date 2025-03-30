@@ -7,6 +7,7 @@ elevenlabs-convai {
   display: block !important;
   height: auto !important;
   min-height: 0 !important; /* Remove minimum height requirement */
+  margin: 0 auto !important; /* Center the widget */
 }
 
 /* Override any fixed positioning from the widget */
@@ -15,8 +16,8 @@ elevenlabs-convai > div > div {
   position: relative !important;
   width: 100% !important;
   max-width: 100% !important;
-  left: auto !important;
-  right: auto !important;
+  left: 0 !important;
+  right: 0 !important;
   bottom: auto !important;
   transform: none !important; /* Reset any transforms */
 }
@@ -54,6 +55,7 @@ elevenlabs-convai > div {
   padding: 0 !important;
   left: 0 !important; /* Ensure no left offset */
   right: 0 !important; /* Ensure no right offset */
+  max-width: 100% !important;
 }
 
 /* Force center alignment of widget controls */
@@ -65,6 +67,7 @@ elevenlabs-convai .input-container {
   margin-right: auto !important;
   left: 0 !important; /* Ensure no left offset */
   right: 0 !important; /* Ensure no right offset */
+  transform: none !important;
 }
 
 /* Additional positioning for any absolute positioned elements */
@@ -80,6 +83,7 @@ elevenlabs-convai .widget-container {
   margin: 0 auto !important; /* Center horizontally */
   left: 0 !important;
   right: 0 !important;
+  transform: none !important;
 }
 
 /* Target the actual chat interface to make it more compact */
@@ -89,6 +93,7 @@ elevenlabs-convai .chat-container {
   margin: 0 auto !important; /* Center horizontally */
   left: 0 !important;
   right: 0 !important;
+  transform: none !important;
 }
 
 /* Make sure the avatar and controls are properly centered */
@@ -98,6 +103,7 @@ elevenlabs-convai .avatar-container {
   justify-content: center !important;
   left: 0 !important;
   right: 0 !important;
+  transform: none !important;
 }
 
 /* Force center alignment for any content-containing elements */
@@ -106,5 +112,35 @@ elevenlabs-convai .convai-container {
   margin: 0 auto !important;
   left: 0 !important;
   right: 0 !important;
+  transform: none !important;
+}
+
+/* Target main widget container */
+elevenlabs-convai .main-container {
+  margin: 0 auto !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* Target inner wrapper */
+elevenlabs-convai .inner-wrapper {
+  margin: 0 auto !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Reset any right-biased positioning */
+elevenlabs-convai [style*="right"] {
+  right: auto !important;
+  margin: 0 auto !important;
   transform: none !important;
 }
