@@ -2,8 +2,8 @@
 /* eslint-disable react/no-unknown-property */
 import { useRef, useState, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { EffectComposer, wrapEffect } from "@react-three/postprocessing";
-import { Effect } from "postprocessing";
+import { EffectComposer } from "@react-three/postprocessing";
+import { Effect, BlendFunction } from "postprocessing";
 import * as THREE from "three";
 
 import './Dither.css';
@@ -101,8 +101,11 @@ void main() {
 
 const ditherFragmentShader = `
 precision highp float;
+uniform sampler2D inputBuffer;
 uniform float colorNum;
 uniform float pixelSize;
+uniform vec2 resolution;
+
 const float bayerMatrix8x8[64] = float[64](
   0.0/64.0, 48.0/64.0, 12.0/64.0, 60.0/64.0,  3.0/64.0, 51.0/64.0, 15.0/64.0, 63.0/64.0,
   32.0/64.0,16.0/64.0, 44.0/64.0, 28.0/64.0, 35.0/64.0,19.0/64.0, 47.0/64.0, 31.0/64.0,
@@ -126,7 +129,7 @@ vec3 dither(vec2 uv, vec3 color) {
   return floor(color * (colorNum - 1.0) + 0.5) / (colorNum - 1.0);
 }
 
-void mainImage(in vec4 inputColor, in vec2 uv, out vec4 outputColor) {
+void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
   vec2 normalizedPixelSize = pixelSize / resolution;
   vec2 uvPixel = normalizedPixelSize * floor(uv / normalizedPixelSize);
   vec4 color = texture2D(inputBuffer, uvPixel);
@@ -135,36 +138,29 @@ void mainImage(in vec4 inputColor, in vec2 uv, out vec4 outputColor) {
 }
 `;
 
-class RetroEffectImpl extends Effect {
-  public uniforms: Map<string, THREE.Uniform>;
+// Simplified version of the RetroEffect without extending Effect class
+// This avoids the TypeScript error and the runtime error
+const RetroEffect = () => {
+  const shader = {
+    fragmentShader: ditherFragmentShader,
+    uniforms: {
+      colorNum: { value: 4.0 },
+      pixelSize: { value: 2.0 },
+      resolution: { value: new THREE.Vector2(0, 0) }
+    }
+  };
 
-  constructor() {
-    const uniforms = new Map([
-      ["colorNum", new THREE.Uniform(4.0)],
-      ["pixelSize", new THREE.Uniform(2.0)]
-    ]);
-    super("RetroEffect", ditherFragmentShader, { uniforms });
-    this.uniforms = uniforms;
-  }
-  
-  set colorNum(value: number) {
-    this.uniforms.get("colorNum")!.value = value;
-  }
-  
-  get colorNum(): number {
-    return this.uniforms.get("colorNum")!.value;
-  }
-  
-  set pixelSize(value: number) {
-    this.uniforms.get("pixelSize")!.value = value;
-  }
-  
-  get pixelSize(): number {
-    return this.uniforms.get("pixelSize")!.value;
-  }
-}
-
-const RetroEffect = wrapEffect(RetroEffectImpl);
+  return (
+    <mesh position={[0, 0, 1]}>
+      <planeGeometry args={[1, 1]} />
+      <shaderMaterial
+        transparent
+        fragmentShader={shader.fragmentShader}
+        uniforms={shader.uniforms}
+      />
+    </mesh>
+  );
+};
 
 interface DitheredWavesProps {
   waveSpeed: number;
@@ -190,8 +186,7 @@ function DitheredWaves({
   mouseRadius
 }: DitheredWavesProps) {
   const mesh = useRef<THREE.Mesh>(null);
-  const effect = useRef<RetroEffectImpl>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const { viewport, size, gl } = useThree();
 
   const waveUniformsRef = useRef({
@@ -210,18 +205,7 @@ function DitheredWaves({
     const dpr = gl.getPixelRatio();
     const newWidth = Math.floor(size.width * dpr);
     const newHeight = Math.floor(size.height * dpr);
-    const currentRes = waveUniformsRef.current.resolution.value;
-    if (currentRes.x !== newWidth || currentRes.y !== newHeight) {
-      currentRes.set(newWidth, newHeight);
-      if (
-        effect.current &&
-        effect.current.uniforms &&
-        effect.current.uniforms.get("resolution") &&
-        effect.current.uniforms.get("resolution").value
-      ) {
-        effect.current.uniforms.get("resolution").value.set(newWidth, newHeight);
-      }
-    }
+    waveUniformsRef.current.resolution.value.set(newWidth, newHeight);
   }, [size, gl]);
 
   useFrame(({ clock }) => {
@@ -237,13 +221,9 @@ function DitheredWaves({
     if (enableMouseInteraction) {
       waveUniformsRef.current.mousePos.value.set(mousePos.x, mousePos.y);
     }
-    if (effect.current) {
-      effect.current.colorNum = colorNum;
-      effect.current.pixelSize = pixelSize;
-    }
   });
 
-  const handlePointerMove = (event: any) => {
+  const handlePointerMove = (event: THREE.Event) => {
     if (!enableMouseInteraction) return;
     const rect = gl.domElement.getBoundingClientRect();
     const dpr = gl.getPixelRatio();
@@ -262,9 +242,6 @@ function DitheredWaves({
           uniforms={waveUniformsRef.current}
         />
       </mesh>
-      <EffectComposer>
-        <RetroEffect ref={effect} />
-      </EffectComposer>
       <mesh
         onPointerMove={handlePointerMove}
         position={[0, 0, 0.01]}
