@@ -1,8 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { useInvention } from "@/contexts/InventionContext";
 import { TranscriptViewer } from "./TranscriptViewer";
 import { toast } from "sonner";
+import "./ElevenLabsWidget.css";
 
 interface VoiceConversationProps {
   agentId: string;
@@ -39,8 +39,18 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
 
   // Setup the widget and event listeners
   useEffect(() => {
-    // Create and append the widget element directly
-    if (!document.querySelector('elevenlabs-convai')) {
+    const mountPoint = document.getElementById('elevenlabs-widget-direct-mount');
+    
+    // Clear any existing widgets first
+    if (mountPoint) {
+      const existingWidget = mountPoint.querySelector('elevenlabs-convai');
+      if (existingWidget) {
+        mountPoint.removeChild(existingWidget);
+      }
+    }
+    
+    // Create and append the widget element directly to the mount point
+    if (mountPoint && !mountPoint.querySelector('elevenlabs-convai')) {
       const widget = document.createElement('elevenlabs-convai');
       widget.setAttribute('agent-id', agentId);
       
@@ -50,7 +60,12 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
         widget.setAttribute('system-prompt', systemPrompt);
       }
       
-      document.getElementById('elevenlabs-widget-direct-mount')?.appendChild(widget);
+      // Make sure the widget fits within the container
+      widget.style.width = '100%';
+      widget.style.maxWidth = '100%';
+      widget.style.boxSizing = 'border-box';
+      
+      mountPoint.appendChild(widget);
       
       // Add the script if not already added
       if (!document.querySelector('script[src="https://elevenlabs.io/convai-widget/index.js"]')) {
@@ -84,14 +99,12 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
 
   return (
     <div className="flex flex-col items-center space-y-4 w-full">
-      <div id="elevenlabs-widget-direct-mount" className="w-full">
-        {!widgetLoaded && (
-          <div className="text-center p-4">
-            <div className="animate-spin h-8 w-8 border-4 border-invention-accent rounded-full border-t-transparent mx-auto"></div>
-            <p className="mt-2 text-sm text-muted-foreground">Loading voice assistant...</p>
-          </div>
-        )}
-      </div>
+      {!widgetLoaded && (
+        <div className="text-center p-4 w-full">
+          <div className="animate-spin h-8 w-8 border-4 border-invention-accent rounded-full border-t-transparent mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Loading voice assistant...</p>
+        </div>
+      )}
       
       <TranscriptViewer transcript={transcript} />
     </div>

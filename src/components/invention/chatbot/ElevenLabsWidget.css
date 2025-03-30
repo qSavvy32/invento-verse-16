@@ -1,0 +1,21 @@
+
+/* Ensure the ElevenLabs ConvAI widget stays within its container */
+elevenlabs-convai {
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative !important;
+  display: block !important;
+  height: auto !important;
+  min-height: 400px !important;
+}
+
+/* Override any fixed positioning from the widget */
+elevenlabs-convai > div,
+elevenlabs-convai > div > div {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+}
