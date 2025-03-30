@@ -1,8 +1,10 @@
+import React from 'react';
+import RobotScene from '../components/RobotScene';
 
-import { Home } from "./Home";
-
-const Index = () => {
-  return <Home />;
-};
-
-export default Index;
+export default function Index() {
+  return (
+    <div className="w-full h-screen overflow-hidden">
+      <RobotScene />
+    </div>
+  );
+}

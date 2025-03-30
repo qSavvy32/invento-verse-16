@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -12,21 +11,34 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // If already logged in, redirect to homepage
-    if (user && !loading) {
-      navigate("/");
+    // Store the returnUrl if present in the URL
+    const searchParams = new URLSearchParams(location.search);
+    const returnUrl = searchParams.get('returnUrl');
+    if (returnUrl) {
+      localStorage.setItem('authReturnUrl', returnUrl);
     }
-  }, [user, loading, navigate]);
+
+    // If already logged in, redirect to saved returnUrl or homepage
+    if (user && !loading) {
+      const savedReturnUrl = localStorage.getItem('authReturnUrl');
+      if (savedReturnUrl) {
+        localStorage.removeItem('authReturnUrl');
+        navigate(savedReturnUrl);
+      } else {
+        navigate("/");
+      }
+    }
+  }, [user, loading, navigate, location.search]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

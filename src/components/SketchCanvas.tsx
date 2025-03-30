@@ -1,16 +1,35 @@
-
 import { useEffect, useRef, useState } from "react";
 import { fabric } from "fabric";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Pen, Eraser, UndoIcon, RedoIcon, Download, FileUp, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 interface SketchCanvasProps {
   onSketchSave?: (dataUrl: string) => void;
   width?: number;
   height?: number;
 }
+
+// Animation variants for toolbar buttons
+const toolbarIconVariants = {
+  hover: { scale: 1.1, y: -2 },
+  tap: { scale: 0.9 }
+};
+
+// Animation variants for the canvas container
+const canvasContainerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { 
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  }
+};
 
 export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: SketchCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -20,6 +39,8 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isDrawing, setIsDrawing] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
+  // Track if canvas is ready for animations
+  const [canvasReady, setCanvasReady] = useState(false);
 
   // Initialize canvas
   useEffect(() => {
@@ -52,6 +73,9 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
     const initialState = fabricCanvas.toDataURL();
     setHistory([initialState]);
     setHistoryIndex(0);
+    
+    // Set canvas as ready for animations
+    setTimeout(() => setCanvasReady(true), 100);
     
     // Cleanup
     return () => {
@@ -225,124 +249,144 @@ export const SketchCanvas = ({ onSketchSave, width = 800, height = 600 }: Sketch
   };
   
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-        <Button
-          variant={drawingMode === "pen" ? "default" : "outline"}
-          size="icon"
-          onClick={() => toggleDrawingMode("pen")}
-          title="Pen Tool"
-        >
-          <Pen size={20} />
-        </Button>
-        <Button
-          variant={drawingMode === "eraser" ? "default" : "outline"}
-          size="icon"
-          onClick={() => toggleDrawingMode("eraser")}
-          title="Eraser Tool"
-        >
-          <Eraser size={20} />
-        </Button>
+    <motion.div
+      className="flex flex-col border rounded-lg overflow-hidden bg-white shadow-sm"
+      variants={canvasContainerVariants}
+      initial="hidden"
+      animate={canvasReady ? "visible" : "hidden"}
+    >
+      <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
+        <div className="flex items-center space-x-1">
+          <motion.div whileHover="hover" whileTap="tap">
+            <Button
+              size="icon"
+              variant={drawingMode === "pen" ? "default" : "outline"}
+              onClick={() => toggleDrawingMode("pen")}
+              className="h-9 w-9"
+              title="Pen"
+            >
+              <motion.div variants={toolbarIconVariants}>
+                <Pen className="h-4 w-4" />
+              </motion.div>
+            </Button>
+          </motion.div>
+          
+          <motion.div whileHover="hover" whileTap="tap">
+            <Button
+              size="icon"
+              variant={drawingMode === "eraser" ? "default" : "outline"}
+              onClick={() => toggleDrawingMode("eraser")}
+              className="h-9 w-9"
+              title="Eraser"
+            >
+              <motion.div variants={toolbarIconVariants}>
+                <Eraser className="h-4 w-4" />
+              </motion.div>
+            </Button>
+          </motion.div>
+          
+          <Separator orientation="vertical" className="mx-1 h-8" />
+          
+          <motion.div whileHover="hover" whileTap="tap">
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={undo}
+              disabled={historyIndex <= 0}
+              className="h-9 w-9"
+              title="Undo"
+            >
+              <motion.div variants={toolbarIconVariants}>
+                <UndoIcon className="h-4 w-4" />
+              </motion.div>
+            </Button>
+          </motion.div>
+          
+          <motion.div whileHover="hover" whileTap="tap">
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={redo}
+              disabled={historyIndex >= history.length - 1}
+              className="h-9 w-9"
+              title="Redo"
+            >
+              <motion.div variants={toolbarIconVariants}>
+                <RedoIcon className="h-4 w-4" />
+              </motion.div>
+            </Button>
+          </motion.div>
+        </div>
         
-        <Separator orientation="vertical" className="h-10" />
-        
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={undo}
-          disabled={historyIndex <= 0}
-          title="Undo"
-        >
-          <UndoIcon size={20} />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={redo}
-          disabled={historyIndex >= history.length - 1}
-          title="Redo"
-        >
-          <RedoIcon size={20} />
-        </Button>
-        
-        <Separator orientation="vertical" className="h-10" />
-        
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={loadImage}
-          title="Import Image"
-        >
-          <FileUp size={20} />
-        </Button>
-        <Button
-          variant={unsavedChanges ? "default" : "outline"}
-          size="icon"
-          onClick={saveSketch}
-          title="Save Sketch"
-        >
-          <Save size={20} />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => {
-            const dataUrl = canvas?.toDataURL({
-              format: 'png',
-              quality: 1
-            });
-            if (dataUrl) {
-              const link = document.createElement('a');
-              link.download = 'invention-sketch.png';
-              link.href = dataUrl;
-              link.click();
-              toast.success("Sketch downloaded!");
-            }
-          }}
-          title="Download Sketch"
-        >
-          <Download size={20} />
-        </Button>
-        
-        <Separator orientation="vertical" className="h-10" />
-        
-        <Button
-          variant="destructive"
-          size="icon"
-          onClick={clearCanvas}
-          title="Clear Canvas"
-        >
-          <Trash2 size={20} />
-        </Button>
+        <div className="flex items-center space-x-1">
+          <motion.div whileHover="hover" whileTap="tap">
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={loadImage}
+              className="h-9 w-9"
+              title="Upload Image"
+            >
+              <motion.div variants={toolbarIconVariants}>
+                <FileUp className="h-4 w-4" />
+              </motion.div>
+            </Button>
+          </motion.div>
+          
+          <motion.div whileHover="hover" whileTap="tap">
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={saveSketch}
+              className="h-9 w-9"
+              title="Save"
+            >
+              <motion.div variants={toolbarIconVariants}>
+                <Save className="h-4 w-4" />
+              </motion.div>
+            </Button>
+          </motion.div>
+          
+          <motion.div whileHover="hover" whileTap="tap">
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={clearCanvas}
+              className="h-9 w-9 text-destructive"
+              title="Clear Canvas"
+            >
+              <motion.div variants={toolbarIconVariants}>
+                <Trash2 className="h-4 w-4" />
+              </motion.div>
+            </Button>
+          </motion.div>
+        </div>
       </div>
       
-      <div className="sketch-canvas-container overflow-hidden rounded-md border border-gray-300">
-        <canvas ref={canvasRef} className="sketch-canvas" />
-      </div>
-      
-      <div className="flex items-center justify-between">
-        {isDrawing && (
-          <div className="text-xs text-muted-foreground">
-            Drawing in progress...
-          </div>
-        )}
-        {unsavedChanges && (
-          <div className="text-xs text-amber-500 ml-auto">
-            Unsaved changes
-          </div>
-        )}
-      </div>
-      
-      {unsavedChanges && (
-        <Button 
-          className="w-full" 
-          variant="default" 
-          onClick={saveSketch}
+      <div className="canvas-container p-4 flex justify-center items-center bg-background/50">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="relative shadow-md"
         >
-          <Save size={16} className="mr-2" />
-          Save Changes
-        </Button>
-      )}
-    </div>
+          <canvas ref={canvasRef} />
+          {unsavedChanges && (
+            <motion.div 
+              className="absolute top-2 right-2 h-2 w-2 rounded-full bg-invention-accent"
+              animate={{ 
+                scale: [1, 1.5, 1], 
+                opacity: [0.5, 1, 0.5] 
+              }}
+              transition={{ 
+                duration: 2, 
+                repeat: Infinity,
+                ease: "easeInOut" 
+              }}
+            />
+          )}
+        </motion.div>
+      </div>
+    </motion.div>
   );
 };

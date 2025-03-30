@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -89,7 +88,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) throw error;
       
-      navigate("/");
+      // Check for saved return URL from localStorage
+      const savedReturnUrl = localStorage.getItem('authReturnUrl');
+      if (savedReturnUrl) {
+        localStorage.removeItem('authReturnUrl');
+        navigate(savedReturnUrl);
+      } else {
+        navigate("/");
+      }
     } catch (error: any) {
       toast({
         title: "Error signing in",
@@ -116,7 +122,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "Please check your email to verify your account.",
       });
       
-      navigate("/auth");
+      // No need to navigate away on sign up - let the auth state change handle it
+      // The returnUrl will be preserved in localStorage
     } catch (error: any) {
       toast({
         title: "Error signing up",

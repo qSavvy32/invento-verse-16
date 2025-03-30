@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AuthHeader } from "@/components/AuthHeader";
@@ -35,16 +34,16 @@ const WorkspaceContent = () => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-700 to-gray-300 font-davinci2">
       <AuthHeader />
       
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-8 overflow-hidden">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold font-leonardo mb-2 flex items-center gap-2">
-            <FlaskConicalIcon className="h-7 w-7 text-invention-accent" />
+          <h1 className="text-3xl font-bold font-davinci mb-2 flex items-center gap-2 text-white">
+            <FlaskConicalIcon className="h-7 w-7 text-gray-300" />
             The Studio
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-gray-300">
             Experiment, test, and perfect your invention with advanced AI tools
           </p>
         </div>
@@ -67,7 +66,7 @@ const WorkspaceContent = () => {
           
           {state.threejsVisualization.html && (
             <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 font-davinci text-white">
                 <Package className="h-5 w-5" />
                 3D Visualization
               </h2>

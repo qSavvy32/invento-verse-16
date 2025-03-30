@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -116,7 +115,9 @@ export default {
 			},
 			fontFamily: {
 				sketch: ['Architects Daughter', 'cursive'],
-				leonardo: ['Cormorant Garamond', 'serif']
+				leonardo: ['Cormorant Garamond', 'serif'],
+				davinci: ['Cinzel', 'serif'],
+				davinci2: ['Playfair Display', 'serif']
 			},
 			backgroundImage: {
 				'paper-texture': "url('/paper-texture.png')"
