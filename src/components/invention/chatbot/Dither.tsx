@@ -136,7 +136,7 @@ void mainImage(in vec4 inputColor, in vec2 uv, out vec4 outputColor) {
 `;
 
 class RetroEffectImpl extends Effect {
-  private internalUniforms: Map<string, THREE.Uniform>;
+  public uniforms: Map<string, THREE.Uniform>;
 
   constructor() {
     const uniforms = new Map([
@@ -144,19 +144,23 @@ class RetroEffectImpl extends Effect {
       ["pixelSize", new THREE.Uniform(2.0)]
     ]);
     super("RetroEffect", ditherFragmentShader, { uniforms });
-    this.internalUniforms = uniforms;
+    this.uniforms = uniforms;
   }
+  
   set colorNum(value: number) {
-    this.internalUniforms.get("colorNum")!.value = value;
+    this.uniforms.get("colorNum")!.value = value;
   }
+  
   get colorNum(): number {
-    return this.internalUniforms.get("colorNum")!.value;
+    return this.uniforms.get("colorNum")!.value;
   }
+  
   set pixelSize(value: number) {
-    this.internalUniforms.get("pixelSize")!.value = value;
+    this.uniforms.get("pixelSize")!.value = value;
   }
+  
   get pixelSize(): number {
-    return this.internalUniforms.get("pixelSize")!.value;
+    return this.uniforms.get("pixelSize")!.value;
   }
 }
 
@@ -211,11 +215,11 @@ function DitheredWaves({
       currentRes.set(newWidth, newHeight);
       if (
         effect.current &&
-        effect.current.internalUniforms &&
-        effect.current.internalUniforms.get("resolution") &&
-        effect.current.internalUniforms.get("resolution").value
+        effect.current.uniforms &&
+        effect.current.uniforms.get("resolution") &&
+        effect.current.uniforms.get("resolution").value
       ) {
-        effect.current.internalUniforms.get("resolution").value.set(newWidth, newHeight);
+        effect.current.uniforms.get("resolution").value.set(newWidth, newHeight);
       }
     }
   }, [size, gl]);
@@ -239,12 +243,12 @@ function DitheredWaves({
     }
   });
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handlePointerMove = (event: any) => {
     if (!enableMouseInteraction) return;
     const rect = gl.domElement.getBoundingClientRect();
     const dpr = gl.getPixelRatio();
-    const x = (e.clientX - rect.left) * dpr;
-    const y = (e.clientY - rect.top) * dpr;
+    const x = (event.clientX - rect.left) * dpr;
+    const y = (event.clientY - rect.top) * dpr;
     setMousePos({ x, y });
   };
 
