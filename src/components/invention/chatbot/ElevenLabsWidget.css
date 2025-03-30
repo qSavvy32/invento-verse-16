@@ -18,6 +18,7 @@ elevenlabs-convai > div > div {
   left: auto !important;
   right: auto !important;
   bottom: auto !important;
+  transform: none !important; /* Reset any transforms */
 }
 
 /* Prevent automatic focus that scrolls the page */
@@ -39,8 +40,8 @@ elevenlabs-convai * {
   justify-content: center !important;
   align-items: center !important;
   width: 100% !important;
-  padding: 0 !important; /* Remove padding */
-  margin: 0 !important; /* Remove margin */
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* Target the inner elements of the widget to center them */
@@ -50,7 +51,9 @@ elevenlabs-convai > div {
   align-items: center !important;
   justify-content: center !important;
   margin: 0 auto !important;
-  padding: 0 !important; /* Remove padding */
+  padding: 0 !important;
+  left: 0 !important; /* Ensure no left offset */
+  right: 0 !important; /* Ensure no right offset */
 }
 
 /* Force center alignment of widget controls */
@@ -60,6 +63,8 @@ elevenlabs-convai .input-container {
   max-width: 100% !important;
   margin-left: auto !important;
   margin-right: auto !important;
+  left: 0 !important; /* Ensure no left offset */
+  right: 0 !important; /* Ensure no right offset */
 }
 
 /* Additional positioning for any absolute positioned elements */
@@ -72,14 +77,18 @@ elevenlabs-convai [style*="position: absolute"] {
 /* Remove extra space around the widget UI */
 elevenlabs-convai .widget-container {
   padding: 0 !important;
-  margin: 0 !important;
+  margin: 0 auto !important; /* Center horizontally */
+  left: 0 !important;
+  right: 0 !important;
 }
 
 /* Target the actual chat interface to make it more compact */
 elevenlabs-convai .chat-interface, 
 elevenlabs-convai .chat-container {
   padding: 0 !important;
-  margin: 0 !important;
+  margin: 0 auto !important; /* Center horizontally */
+  left: 0 !important;
+  right: 0 !important;
 }
 
 /* Make sure the avatar and controls are properly centered */
@@ -87,4 +96,15 @@ elevenlabs-convai .avatar-container {
   margin: 0 auto !important;
   display: flex !important;
   justify-content: center !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+/* Force center alignment for any content-containing elements */
+elevenlabs-convai .content-container,
+elevenlabs-convai .convai-container {
+  margin: 0 auto !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
 }
