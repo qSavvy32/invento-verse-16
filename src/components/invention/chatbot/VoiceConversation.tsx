@@ -65,13 +65,13 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
       widget.setAttribute('theme', 'light');
       widget.setAttribute('size', 'small');
       
-      // Controlled width and centered positioning
-      widget.style.width = '100%';
-      widget.style.maxWidth = '600px'; // Reduced from 700px to prevent overflow
+      // Use inline-block to only take up needed space
+      widget.style.display = 'inline-block';
+      widget.style.width = 'auto';
+      widget.style.maxWidth = '500px';
       widget.style.boxSizing = 'border-box';
       widget.style.margin = '0 auto';
       widget.style.padding = '0';
-      widget.style.display = 'block';
       widget.style.overflow = 'hidden';
       
       mountPoint.appendChild(widget);
@@ -109,13 +109,17 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
   }, [agentId, state.title, state.description, onConversationEnd]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full mx-auto" style={{ maxWidth: '600px', overflow: 'hidden' }}>
+    <div className="flex flex-col items-center justify-center w-full">
       {!widgetLoaded && (
         <div className="text-center p-2 w-full">
           <div className="animate-spin h-8 w-8 border-4 border-invention-accent rounded-full border-t-transparent mx-auto"></div>
           <p className="mt-2 text-sm text-muted-foreground">Loading voice assistant...</p>
         </div>
       )}
+      
+      <div id="elevenlabs-widget-direct-mount" className="flex justify-center items-center">
+        {/* The widget will be mounted here */}
+      </div>
       
       {transcript.length > 0 && (
         <TranscriptViewer transcript={transcript} />

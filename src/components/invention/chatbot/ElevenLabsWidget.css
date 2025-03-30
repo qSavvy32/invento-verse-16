@@ -1,10 +1,10 @@
 
 /* Ensure the ElevenLabs ConvAI widget stays within its container */
 elevenlabs-convai {
-  width: 100% !important;
-  max-width: 600px !important; /* Reduced from 700px to prevent overflow */
+  width: auto !important; /* Changed from 100% to auto to only take up needed space */
+  max-width: 500px !important; /* Reduced max-width further */
   position: relative !important;
-  display: block !important;
+  display: inline-block !important; /* Changed from block to inline-block */
   height: auto !important;
   min-height: 0 !important;
   margin: 0 auto !important;
@@ -18,7 +18,7 @@ elevenlabs-convai {
 elevenlabs-convai > div,
 elevenlabs-convai > div > div {
   position: relative !important;
-  width: 100% !important;
+  width: auto !important; /* Changed from 100% to auto */
   max-width: 100% !important;
   left: 0 !important;
   right: 0 !important;
@@ -89,8 +89,8 @@ elevenlabs-convai .main-container {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  width: 100% !important;
-  max-width: 600px !important; /* Reduced from 700px */
+  width: auto !important; /* Changed from 100% to auto */
+  max-width: 500px !important; /* Reduced max-width */
   box-sizing: border-box !important;
   overflow: hidden !important;
 }
@@ -134,8 +134,8 @@ elevenlabs-convai .dialog-wrapper {
 
 /* Specific fix for the right-side overflow */
 elevenlabs-convai .main-widget-container {
-  width: 100% !important;
-  max-width: 600px !important; /* Reduced from 700px */
+  width: auto !important; /* Changed from 100% to auto */
+  max-width: 500px !important; /* Reduced max-width */
   position: relative !important;
   left: 0 !important;
   right: 0 !important;
