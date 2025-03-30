@@ -1,7 +1,7 @@
 
 /* eslint-disable react/no-unknown-property */
 import { useRef, useState, useEffect } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, ThreeEvent } from "@react-three/fiber";
 import { EffectComposer } from "@react-three/postprocessing";
 import { Effect, BlendFunction } from "postprocessing";
 import * as THREE from "three";
@@ -223,8 +223,8 @@ function DitheredWaves({
     }
   });
 
-  // Fix: Properly type the pointer event parameter
-  const handlePointerMove = (event: THREE.ThreeEvent<PointerEvent>) => {
+  // Fix: Use the correct ThreeEvent type from @react-three/fiber
+  const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
     if (!enableMouseInteraction) return;
     const rect = gl.domElement.getBoundingClientRect();
     const dpr = gl.getPixelRatio();
