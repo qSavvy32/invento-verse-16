@@ -31,7 +31,7 @@ export const ChatbotContainer = () => {
           <ChatInterface />
         </TabsContent>
         
-        <TabsContent value="voice" className="border rounded-lg overflow-hidden p-4 flex justify-center">
+        <TabsContent value="voice" className="border rounded-lg overflow-hidden p-0 flex justify-center" style={{ minHeight: '600px' }}>
           {/* Only render the voice conversation component when the voice tab is active */}
           {activeTab === "voice" && (
             <VoiceConversation 

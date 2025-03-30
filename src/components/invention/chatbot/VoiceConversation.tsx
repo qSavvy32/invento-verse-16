@@ -4,6 +4,7 @@ import { useInvention } from "@/contexts/InventionContext";
 import { TranscriptViewer } from "./TranscriptViewer";
 import { toast } from "sonner";
 import "./ElevenLabsWidget.css";
+import Dither from "./Dither";
 
 interface VoiceConversationProps {
   agentId: string;
@@ -73,6 +74,8 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
       widget.style.margin = '0 auto';
       widget.style.padding = '0';
       widget.style.overflow = 'hidden';
+      widget.style.position = 'relative';
+      widget.style.zIndex = '10';
       
       mountPoint.appendChild(widget);
       
@@ -109,20 +112,36 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
   }, [agentId, state.title, state.description, onConversationEnd]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <div className="flex flex-col items-center justify-center w-full relative">
+      {/* Add the Dither background */}
+      <div style={{ width: '100%', height: '600px', position: 'absolute', top: 0, left: 0, zIndex: 1 }}>
+        <Dither
+          waveColor={[0.5, 0.5, 0.5]}
+          disableAnimation={false}
+          enableMouseInteraction={true}
+          mouseRadius={0.3}
+          colorNum={4}
+          waveAmplitude={0.3}
+          waveFrequency={3}
+          waveSpeed={0.05}
+        />
+      </div>
+      
       {!widgetLoaded && (
-        <div className="text-center p-2 w-full">
+        <div className="text-center p-2 w-full relative z-10">
           <div className="animate-spin h-8 w-8 border-4 border-invention-accent rounded-full border-t-transparent mx-auto"></div>
           <p className="mt-2 text-sm text-muted-foreground">Loading voice assistant...</p>
         </div>
       )}
       
-      <div id="elevenlabs-widget-direct-mount" className="flex justify-center items-center">
+      <div id="elevenlabs-widget-direct-mount" className="flex justify-center items-center relative z-10">
         {/* The widget will be mounted here */}
       </div>
       
       {transcript.length > 0 && (
-        <TranscriptViewer transcript={transcript} />
+        <div className="relative z-10 w-full mt-4">
+          <TranscriptViewer transcript={transcript} />
+        </div>
       )}
     </div>
   );
