@@ -6,7 +6,7 @@ elevenlabs-convai {
   position: relative !important;
   display: block !important;
   height: auto !important;
-  min-height: 400px !important;
+  min-height: 0 !important; /* Remove minimum height requirement */
 }
 
 /* Override any fixed positioning from the widget */
@@ -39,6 +39,8 @@ elevenlabs-convai * {
   justify-content: center !important;
   align-items: center !important;
   width: 100% !important;
+  padding: 0 !important; /* Remove padding */
+  margin: 0 !important; /* Remove margin */
 }
 
 /* Target the inner elements of the widget to center them */
@@ -48,13 +50,14 @@ elevenlabs-convai > div {
   align-items: center !important;
   justify-content: center !important;
   margin: 0 auto !important;
+  padding: 0 !important; /* Remove padding */
 }
 
 /* Force center alignment of widget controls */
 elevenlabs-convai .voice-control-container,
 elevenlabs-convai .message-container,
 elevenlabs-convai .input-container {
-  max-width: 90% !important;
+  max-width: 100% !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
@@ -64,4 +67,24 @@ elevenlabs-convai [style*="position: absolute"] {
   left: 50% !important;
   transform: translateX(-50%) !important;
   margin: 0 auto !important;
+}
+
+/* Remove extra space around the widget UI */
+elevenlabs-convai .widget-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Target the actual chat interface to make it more compact */
+elevenlabs-convai .chat-interface, 
+elevenlabs-convai .chat-container {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Make sure the avatar and controls are properly centered */
+elevenlabs-convai .avatar-container {
+  margin: 0 auto !important;
+  display: flex !important;
+  justify-content: center !important;
 }

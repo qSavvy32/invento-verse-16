@@ -61,14 +61,20 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
         widget.setAttribute('system-prompt', systemPrompt);
       }
       
+      // Add custom attributes to control the widget UI
+      widget.setAttribute('theme', 'light');
+      widget.setAttribute('size', 'small');
+      
       // Make sure the widget fits within the container
       widget.style.width = '100%';
-      widget.style.maxWidth = '100%';
+      widget.style.maxWidth = '400px';
       widget.style.boxSizing = 'border-box';
       widget.style.margin = '0 auto';
+      widget.style.padding = '0';
       widget.style.display = 'flex';
       widget.style.justifyContent = 'center';
       widget.style.alignItems = 'center';
+      widget.style.minHeight = 'auto';
       
       mountPoint.appendChild(widget);
       
@@ -105,15 +111,17 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
   }, [agentId, state.title, state.description, onConversationEnd]);
 
   return (
-    <div className="flex flex-col items-center space-y-4 w-full">
+    <div className="flex flex-col items-center w-full p-0 m-0">
       {!widgetLoaded && (
-        <div className="text-center p-4 w-full">
+        <div className="text-center p-2 w-full">
           <div className="animate-spin h-8 w-8 border-4 border-invention-accent rounded-full border-t-transparent mx-auto"></div>
           <p className="mt-2 text-sm text-muted-foreground">Loading voice assistant...</p>
         </div>
       )}
       
-      <TranscriptViewer transcript={transcript} />
+      {transcript.length > 0 && (
+        <TranscriptViewer transcript={transcript} />
+      )}
     </div>
   );
 };
