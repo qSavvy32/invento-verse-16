@@ -65,6 +65,10 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
       widget.style.width = '100%';
       widget.style.maxWidth = '100%';
       widget.style.boxSizing = 'border-box';
+      widget.style.margin = '0 auto';
+      widget.style.display = 'flex';
+      widget.style.justifyContent = 'center';
+      widget.style.alignItems = 'center';
       
       mountPoint.appendChild(widget);
       

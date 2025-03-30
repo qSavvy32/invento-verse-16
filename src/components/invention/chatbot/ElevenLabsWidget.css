@@ -32,3 +32,36 @@ elevenlabs-convai div:focus {
 elevenlabs-convai * {
   scroll-margin-top: 0 !important;
 }
+
+/* Center the widget and its contents */
+#elevenlabs-widget-direct-mount {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* Target the inner elements of the widget to center them */
+elevenlabs-convai > div {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+/* Force center alignment of widget controls */
+elevenlabs-convai .voice-control-container,
+elevenlabs-convai .message-container,
+elevenlabs-convai .input-container {
+  max-width: 90% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Additional positioning for any absolute positioned elements */
+elevenlabs-convai [style*="position: absolute"] {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  margin: 0 auto !important;
+}
