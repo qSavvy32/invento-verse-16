@@ -2,11 +2,11 @@
 /* Ensure the ElevenLabs ConvAI widget stays within its container */
 elevenlabs-convai {
   width: 100% !important;
-  max-width: 100% !important;
+  max-width: 700px !important; /* Set a maximum width */
   position: relative !important;
   display: block !important;
   height: auto !important;
-  min-height: 0 !important; /* Remove minimum height requirement */
+  min-height: 0 !important;
   margin: 0 auto !important; /* Center the widget */
   left: 0 !important; 
   transform: none !important;
@@ -21,7 +21,7 @@ elevenlabs-convai > div > div {
   left: 0 !important;
   right: 0 !important;
   bottom: auto !important;
-  transform: none !important; /* Reset any transforms */
+  transform: none !important;
 }
 
 /* Prevent automatic focus that scrolls the page */
@@ -57,8 +57,8 @@ elevenlabs-convai > div {
   justify-content: center !important;
   margin: 0 auto !important;
   padding: 0 !important;
-  left: 0 !important; /* Ensure no left offset */
-  right: 0 !important; /* Ensure no right offset */
+  left: 0 !important;
+  right: 0 !important;
   max-width: 100% !important;
   transform: none !important;
 }
@@ -70,8 +70,8 @@ elevenlabs-convai .input-container {
   max-width: 100% !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  left: 0 !important; /* Ensure no left offset */
-  right: 0 !important; /* Ensure no right offset */
+  left: 0 !important;
+  right: 0 !important;
   transform: none !important;
 }
 
@@ -86,7 +86,7 @@ elevenlabs-convai [style*="position: absolute"] {
 /* Remove extra space around the widget UI */
 elevenlabs-convai .widget-container {
   padding: 0 !important;
-  margin: 0 auto !important; /* Center horizontally */
+  margin: 0 auto !important;
   left: 0 !important;
   right: 0 !important;
   transform: none !important;
@@ -96,7 +96,7 @@ elevenlabs-convai .widget-container {
 elevenlabs-convai .chat-interface, 
 elevenlabs-convai .chat-container {
   padding: 0 !important;
-  margin: 0 auto !important; /* Center horizontally */
+  margin: 0 auto !important;
   left: 0 !important;
   right: 0 !important;
   transform: none !important;
@@ -131,6 +131,7 @@ elevenlabs-convai .main-container {
   justify-content: center !important;
   align-items: center !important;
   width: 100% !important;
+  max-width: 700px !important; /* Set a maximum width */
 }
 
 /* Target inner wrapper */
@@ -178,6 +179,27 @@ elevenlabs-convai .main-widget-container {
   right: 0 !important;
   margin: 0 auto !important;
   width: 100% !important;
-  max-width: 100% !important;
+  max-width: 700px !important; /* Set a maximum width */
   overflow: hidden !important;
+}
+
+/* Target specifically the widget buttons and controls */
+elevenlabs-convai button,
+elevenlabs-convai .control-bar,
+elevenlabs-convai .avatar-wrapper {
+  margin: 0 auto !important;
+  left: 0 !important;
+  right: 0 !important;
+  position: relative !important;
+}
+
+/* Ensure speech bubble and dialog elements are centered */
+elevenlabs-convai .speech-bubble,
+elevenlabs-convai .dialog,
+elevenlabs-convai .dialog-wrapper {
+  margin: 0 auto !important;
+  left: 0 !important;
+  right: 0 !important;
+  position: relative !important;
+  max-width: 100% !important;
 }
