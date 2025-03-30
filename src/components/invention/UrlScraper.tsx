@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Globe } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useInvention } from "@/contexts/InventionContext";
 import { InventionAsset } from "@/contexts/InventionContext";
+import { FirecrawlService } from "@/services/FirecrawlService";
 
 interface UrlScraperProps {
   onAddAsset?: (asset: InventionAsset) => void;
@@ -32,45 +32,54 @@ export const UrlScraper = ({ onAddAsset }: UrlScraperProps) => {
     toast.loading("Scraping website content...");
     
     try {
-      const { data, error } = await supabase.functions.invoke("scrape-website", {
-        body: { url }
-      });
+      // Use the FirecrawlService to scrape the URL
+      const result = await FirecrawlService.scrapeUrl(url);
       
-      if (error) {
-        throw new Error(error.message || "Failed to scrape website");
-      }
-      
-      toast.dismiss();
-      
-      if (data?.content) {
-        // Add the content to the description
-        updateDescription((prev) => {
-          const newContent = `Content from ${url}:\n\n${data.content}`;
-          if (prev) {
-            return `${prev}\n\n${newContent}`;
-          }
-          return newContent;
-        });
+      if (result.success) {
+        toast.dismiss();
         
-        // Add screenshot as asset if available
-        if (data.screenshot && onAddAsset) {
-          const timestamp = Date.now();
-          onAddAsset({
-            id: `screenshot-${timestamp}`,
-            type: "image",
-            url: data.screenshot,
-            thumbnailUrl: data.screenshot,
-            name: `Screenshot of ${url}`,
-            createdAt: timestamp
+        // Process and update the description with the scraped content
+        if (result.data) {
+          // Add the content to the description
+          updateDescription((prev) => {
+            const title = result.data.title ? `# ${result.data.title}\n\n` : '';
+            const metaDesc = result.data.metaDescription ? `${result.data.metaDescription}\n\n` : '';
+            const content = result.data.text || '';
+            
+            const newContent = `Content from ${url}:\n\n${title}${metaDesc}${content}`;
+            
+            if (prev) {
+              return `${prev}\n\n${newContent}`;
+            }
+            return newContent;
           });
+          
+          // Add screenshot as asset if available and onAddAsset is provided
+          if (result.data.screenshot && onAddAsset) {
+            const timestamp = Date.now();
+            onAddAsset({
+              id: `screenshot-${timestamp}`,
+              type: "image",
+              url: result.data.screenshot,
+              thumbnailUrl: result.data.screenshot,
+              name: `Screenshot of ${url}`,
+              createdAt: timestamp
+            });
+          }
+          
+          toast.success("Website content added to your description");
+        } else {
+          toast.info("No content was extracted from the website");
         }
-        
-        toast.success("Website content added to your description");
       } else {
-        toast.info("No content was extracted from the website");
+        toast.dismiss();
+        toast.error("Failed to scrape website", {
+          description: result.error || "An unexpected error occurred"
+        });
       }
     } catch (error) {
       console.error("Error scraping website:", error);
+      toast.dismiss();
       toast.error("Failed to scrape website", {
         description: error instanceof Error ? error.message : "An unexpected error occurred"
       });

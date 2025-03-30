@@ -10,12 +10,12 @@ interface ScrapingResponse {
 export class FirecrawlService {
   static async scrapeUrl(url: string): Promise<ScrapingResponse> {
     try {
-      const { data, error } = await supabase.functions.invoke('scrape-url', {
+      const { data, error } = await supabase.functions.invoke('scrape-website', {
         body: { url }
       });
       
       if (error) {
-        console.error('Error invoking scrape-url function:', error);
+        console.error('Error invoking scrape-website function:', error);
         return { 
           success: false, 
           error: error.message || 'Failed to scrape URL' 
