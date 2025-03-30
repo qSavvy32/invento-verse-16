@@ -65,19 +65,13 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
       widget.setAttribute('theme', 'light');
       widget.setAttribute('size', 'small');
       
-      // Advanced positioning to ensure centering
+      // Simpler positioning to prevent overcompensation
       widget.style.width = '100%';
       widget.style.maxWidth = '100%';
       widget.style.boxSizing = 'border-box';
       widget.style.margin = '0 auto';
       widget.style.padding = '0';
-      widget.style.display = 'flex';
-      widget.style.justifyContent = 'center';
-      widget.style.alignItems = 'center';
-      widget.style.minHeight = 'auto';
-      widget.style.left = '50%';
-      widget.style.transform = 'translateX(-50%)';
-      widget.style.position = 'relative';
+      widget.style.display = 'block';
       
       mountPoint.appendChild(widget);
       
@@ -114,7 +108,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
   }, [agentId, state.title, state.description, onConversationEnd]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full p-0 m-0" style={{ position: 'relative', left: '50%', transform: 'translateX(-50%)' }}>
+    <div className="flex flex-col items-center justify-center w-full p-0 m-0">
       {!widgetLoaded && (
         <div className="text-center p-2 w-full">
           <div className="animate-spin h-8 w-8 border-4 border-invention-accent rounded-full border-t-transparent mx-auto"></div>
