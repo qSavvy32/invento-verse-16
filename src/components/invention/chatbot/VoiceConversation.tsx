@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useInvention } from "@/contexts/InventionContext";
 import { TranscriptViewer } from "./TranscriptViewer";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
   const { state } = useInvention();
   const [transcript, setTranscript] = useState<string[]>([]);
   const [widgetLoaded, setWidgetLoaded] = useState(false);
+  const mountPointRef = useRef<HTMLDivElement>(null);
 
   // Function to track conversation content from widget
   const handleConversationMessage = (event: Event) => {
@@ -41,18 +42,18 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
 
   // Setup the widget and event listeners
   useEffect(() => {
-    const mountPoint = document.getElementById('elevenlabs-widget-direct-mount');
+    if (!mountPointRef.current) return;
+    
+    const mountPoint = mountPointRef.current;
     
     // Clear any existing widgets first
-    if (mountPoint) {
-      const existingWidget = mountPoint.querySelector('elevenlabs-convai');
-      if (existingWidget) {
-        mountPoint.removeChild(existingWidget);
-      }
+    const existingWidget = mountPoint.querySelector('elevenlabs-convai');
+    if (existingWidget) {
+      mountPoint.removeChild(existingWidget);
     }
     
     // Create and append the widget element directly to the mount point
-    if (mountPoint && !mountPoint.querySelector('elevenlabs-convai')) {
+    if (!mountPoint.querySelector('elevenlabs-convai')) {
       const widget = document.createElement('elevenlabs-convai');
       widget.setAttribute('agent-id', agentId);
       
@@ -65,6 +66,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
       // Add custom attributes to control the widget UI
       widget.setAttribute('theme', 'light');
       widget.setAttribute('size', 'small');
+      widget.setAttribute('tabindex', '-1'); // Prevent automatic focus
       
       // Use inline-block to only take up needed space
       widget.style.display = 'inline-block';
@@ -76,6 +78,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
       widget.style.overflow = 'hidden';
       widget.style.position = 'relative';
       widget.style.zIndex = '10';
+      widget.style.outline = 'none';
       
       mountPoint.appendChild(widget);
       
@@ -88,12 +91,23 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
         script.onload = () => {
           setWidgetLoaded(true);
           toast.success("ElevenLabs voice widget loaded successfully");
+          
+          // Prevent automatic focus
+          setTimeout(() => {
+            const focusableElements = mountPoint.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            focusableElements.forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.setAttribute('tabindex', '-1');
+                el.blur();
+              }
+            });
+          }, 100);
         };
         script.onerror = () => {
           toast.error("Failed to load ElevenLabs voice widget");
         };
         
-        // Add the script to the body instead of head to prevent automatic focus
+        // Add the script to the body
         document.body.appendChild(script);
       } else {
         setWidgetLoaded(true);
@@ -134,7 +148,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
         </div>
       )}
       
-      <div id="elevenlabs-widget-direct-mount" className="flex justify-center items-center relative z-10">
+      <div id="elevenlabs-widget-direct-mount" ref={mountPointRef} className="flex justify-center items-center relative z-10">
         {/* The widget will be mounted here */}
       </div>
       

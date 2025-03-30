@@ -1,4 +1,3 @@
-
 /* Ensure the ElevenLabs ConvAI widget stays within its container */
 elevenlabs-convai {
   width: auto !important; /* Changed from 100% to auto to only take up needed space */
@@ -12,6 +11,8 @@ elevenlabs-convai {
   transform: none !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
+  outline: none !important; /* Prevent focus outline */
+  scroll-margin: 0 !important; /* Prevent scroll on focus */
 }
 
 /* Override any fixed positioning from the widget */
@@ -41,6 +42,17 @@ elevenlabs-convai * {
   box-sizing: border-box !important;
 }
 
+/* Set tabindex to -1 on all focusable elements within the widget */
+elevenlabs-convai button,
+elevenlabs-convai [href],
+elevenlabs-convai input,
+elevenlabs-convai select,
+elevenlabs-convai textarea,
+elevenlabs-convai [tabindex]:not([tabindex="-1"]) {
+  tabindex: -1 !important;
+  outline: none !important;
+}
+
 /* Center the widget and its contents */
 #elevenlabs-widget-direct-mount {
   display: flex !important;
@@ -52,6 +64,7 @@ elevenlabs-convai * {
   position: relative !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
+  outline: none !important;
 }
 
 /* Target the inner elements of the widget to center them */
@@ -117,6 +130,8 @@ elevenlabs-convai .avatar-wrapper {
   right: 0 !important;
   position: relative !important;
   max-width: 100% !important;
+  outline: none !important;
+  tabindex: -1 !important;
 }
 
 /* Ensure speech bubble and dialog elements are centered and don't overflow */
@@ -157,4 +172,14 @@ elevenlabs-convai iframe {
   max-width: 100% !important;
   width: 100% !important;
   box-sizing: border-box !important;
+}
+
+/* Prevent scrolling on focus */
+html {
+  scroll-behavior: auto !important;
+}
+
+.voice-tab-container {
+  scroll-behavior: auto !important;
+  scroll-padding-top: 0 !important;
 }
