@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useInvention } from "@/contexts/InventionContext";
 import { TranscriptViewer } from "./TranscriptViewer";
@@ -80,6 +81,8 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
         script.onerror = () => {
           toast.error("Failed to load ElevenLabs voice widget");
         };
+        
+        // Add the script to the body instead of head to prevent automatic focus
         document.body.appendChild(script);
       } else {
         setWidgetLoaded(true);

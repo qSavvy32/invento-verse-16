@@ -19,3 +19,16 @@ elevenlabs-convai > div > div {
   right: auto !important;
   bottom: auto !important;
 }
+
+/* Prevent automatic focus that scrolls the page */
+elevenlabs-convai:focus {
+  outline: none !important;
+}
+
+elevenlabs-convai div:focus {
+  outline: none !important;
+}
+
+elevenlabs-convai * {
+  scroll-margin-top: 0 !important;
+}
