@@ -1,3 +1,4 @@
+
 /* Ensure the ElevenLabs ConvAI widget stays within its container */
 elevenlabs-convai {
   width: auto !important; /* Changed from 100% to auto to only take up needed space */
@@ -13,6 +14,10 @@ elevenlabs-convai {
   overflow: hidden !important;
   outline: none !important; /* Prevent focus outline */
   scroll-margin: 0 !important; /* Prevent scroll on focus */
+  -webkit-user-select: none !important; /* Prevent text selection */
+  user-select: none !important;
+  pointer-events: auto !important; /* Allow interaction but prevent default behaviors */
+  touch-action: none !important; /* Prevent touch actions that could cause scrolling */
 }
 
 /* Override any fixed positioning from the widget */
@@ -40,6 +45,7 @@ elevenlabs-convai div:focus {
 elevenlabs-convai * {
   scroll-margin-top: 0 !important;
   box-sizing: border-box !important;
+  outline: none !important;
 }
 
 /* Set tabindex to -1 on all focusable elements within the widget */
@@ -182,4 +188,39 @@ html {
 .voice-tab-container {
   scroll-behavior: auto !important;
   scroll-padding-top: 0 !important;
+}
+
+/* Extra strong focus prevention */
+.no-focus-scroll * {
+  scroll-margin-top: 0 !important;
+  scroll-margin-bottom: 0 !important;
+  scroll-padding-top: 0 !important;
+  scroll-padding-bottom: 0 !important;
+}
+
+/* Override focus and scroll behavior for the entire page when widget is active */
+body:has(elevenlabs-convai) {
+  overflow-anchor: none !important;
+  overflow-y: auto !important;
+  scroll-behavior: auto !important;
+  touch-action: pan-x pan-y !important;
+}
+
+/* Add specific styles to prevent iOS focus behavior */
+@supports (-webkit-touch-callout: none) {
+  elevenlabs-convai, 
+  elevenlabs-convai * {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+  }
+}
+
+/* Disable focus rings on all elements */
+* {
+  outline: none !important;
+}
+
+/* Override any scroll-into-view behaviors */
+[tabindex="-1"]:focus {
+  outline: none !important;
 }

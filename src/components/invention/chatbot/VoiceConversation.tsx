@@ -40,6 +40,24 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
     }
   };
 
+  // Prevent automatic focusing and scrolling
+  useEffect(() => {
+    // This prevents page from automatically scrolling when elements gain focus
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.scrollTo(0, 0); // Keep the scroll position at the top
+    };
+    
+    document.addEventListener('focus', preventScroll, true);
+    document.addEventListener('scroll', preventScroll, true);
+    
+    return () => {
+      document.removeEventListener('focus', preventScroll, true);
+      document.removeEventListener('scroll', preventScroll, true);
+    };
+  }, []);
+
   // Setup the widget and event listeners
   useEffect(() => {
     if (!mountPointRef.current) return;
@@ -67,6 +85,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
       widget.setAttribute('theme', 'light');
       widget.setAttribute('size', 'small');
       widget.setAttribute('tabindex', '-1'); // Prevent automatic focus
+      widget.setAttribute('aria-hidden', 'true'); // Add aria-hidden to prevent focus
       
       // Use inline-block to only take up needed space
       widget.style.display = 'inline-block';
@@ -92,12 +111,24 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
           setWidgetLoaded(true);
           toast.success("ElevenLabs voice widget loaded successfully");
           
-          // Prevent automatic focus
+          // Apply focus prevention more aggressively
           setTimeout(() => {
-            const focusableElements = mountPoint.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-            focusableElements.forEach(el => {
+            // Prevent focus on all elements in the widget
+            const widgetElements = document.querySelectorAll('elevenlabs-convai, elevenlabs-convai *, #elevenlabs-widget-direct-mount, #elevenlabs-widget-direct-mount *');
+            widgetElements.forEach(el => {
               if (el instanceof HTMLElement) {
                 el.setAttribute('tabindex', '-1');
+                el.style.outline = 'none';
+                el.style.scrollMarginTop = '0';
+                el.blur();
+              }
+            });
+            
+            // Override any autofocus attributes
+            const autofocusElements = document.querySelectorAll('[autofocus]');
+            autofocusElements.forEach(el => {
+              if (el instanceof HTMLElement) {
+                el.removeAttribute('autofocus');
                 el.blur();
               }
             });
@@ -126,7 +157,7 @@ export const VoiceConversation = ({ agentId, onConversationEnd }: VoiceConversat
   }, [agentId, state.title, state.description, onConversationEnd]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full relative">
+    <div className="flex flex-col items-center justify-center w-full relative no-focus-scroll">
       {/* Add the Dither background */}
       <div style={{ width: '100%', height: '600px', position: 'absolute', top: 0, left: 0, zIndex: 1 }}>
         <Dither
